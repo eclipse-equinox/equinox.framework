@@ -1,5 +1,5 @@
 /*
- * $Header: /home/technology/org.eclipse.equinox/plugins/org.eclipse.osgi/osgi/src/org/osgi/service/packageadmin/PackageAdmin.java,v 1.1 2003/11/10 17:49:34 jeff Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/service/packageadmin/PackageAdmin.java,v 1.1 2003/11/25 21:24:14 dj Exp $
  *
  * Copyright (c) The Open Services Gateway Initiative (2001, 2002).
  * All Rights Reserved.
@@ -161,4 +161,13 @@ public interface PackageAdmin {
      * permissions.
      */
     public void refreshPackages(Bundle[] bundles);
+
+    public SymbolicBundle[] getSymbolicBundles(String symbolicName);
+
+    public Bundle getBundle(String symbolicName);
+    public Bundle[] getBundles(String symbolicName, String version, String match);
+    public Bundle[] getFragments(Bundle bundle);
+    public Bundle[] getHosts(Bundle bundle);
+    public boolean isFragment(Bundle bundle);
+
 }

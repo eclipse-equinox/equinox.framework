@@ -19,6 +19,7 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.util.Headers;
+import org.osgi.framework.*;
 
 public class SystemBundleData implements BundleData {
 
