@@ -98,7 +98,7 @@ class StateBuilder {
 				return null;
 			allImports = new ArrayList(exported.length + (imported == null ? 0 : imported.length));
 			for (int i = 0; i < exported.length; i++) {
-				if (providedExports.contains(exported[i]))
+				if (providedExports.contains(exported[i].getName()))
 					continue;
 				ImportPackageSpecificationImpl result = new ImportPackageSpecificationImpl();
 				result.setName(exported[i].getName());
@@ -214,8 +214,8 @@ class StateBuilder {
 				result.setName(provides[i].getValue());
 				result.setRoot(true);
 				allExports.add(result);
-				providedExports.add(result);
 			}
+			providedExports.add(provides[i].getValue());
 		}
 	}
 
