@@ -188,6 +188,16 @@ public class DefaultClassLoader extends AbstractClassLoader {
 				}
 			}
 		}
+		if (!name.startsWith("java.")) { //$NON-NLS-1$
+			// First check the parent classloader for system classes.
+			ClassLoader parent = getParentPrivileged();
+			if (parent != null)
+				try {
+					return parent.loadClass(name);
+				} catch (ClassNotFoundException e) {
+					// Do nothing. continue to delegate.
+				}
+		}
 		throw new ClassNotFoundException(name);
 	}
 

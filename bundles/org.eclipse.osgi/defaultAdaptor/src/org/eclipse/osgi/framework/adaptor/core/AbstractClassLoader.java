@@ -218,16 +218,6 @@ public abstract class AbstractClassLoader extends ClassLoader implements BundleC
 	 * @throws ClassNotFoundException if the classname does not exist locally.
 	 */
 	public Class findLocalClass(String classname) throws ClassNotFoundException {
-		if (!classname.startsWith("java.")) { //$NON-NLS-1$
-			// First check the parent classloader for system classes.
-			ClassLoader parent = getParentPrivileged();
-			if (parent != null)
-				try {
-					return parent.loadClass(classname);
-				} catch (ClassNotFoundException e) {
-					// Do nothing. continue to delegate.
-				}
-		}
 		return findClass(classname);
 	}
 
