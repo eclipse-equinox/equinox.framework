@@ -1,5 +1,5 @@
 /*
- * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/Filter.java,v 1.2.4.1 2005/01/12 16:48:22 twatson Exp $
+ * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/Filter.java,v 1.5 2004/12/15 19:01:03 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 
@@ -47,7 +47,7 @@ import java.util.Dictionary;
  *     &quot;(o=univ*of*mich*)&quot;
  * </pre>
  * 
- * @version $Revision: 1.2.4.1 $
+ * @version $Revision: 1.5 $
  * @since 1.1
  */
 public interface Filter {

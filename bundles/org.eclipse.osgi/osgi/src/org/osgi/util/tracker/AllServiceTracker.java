@@ -1,5 +1,5 @@
 /*
- * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/util/tracker/Attic/AllServiceTracker.java,v 1.1.2.1 2005/01/12 16:48:25 twatson Exp $
+ * $Header: $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 

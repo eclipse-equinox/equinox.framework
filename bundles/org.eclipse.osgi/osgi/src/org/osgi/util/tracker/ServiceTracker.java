@@ -1,5 +1,5 @@
 /*
- * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/util/tracker/ServiceTracker.java,v 1.6.2.1 2005/01/12 16:48:25 twatson Exp $
+ * $Header: /cvshome/build/org.osgi.util.tracker/src/org/osgi/util/tracker/ServiceTracker.java,v 1.7 2004/12/15 20:26:40 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 
@@ -50,7 +50,7 @@ import org.osgi.framework.*;
  * <tt>getServices</tt> methods can be called to get the service objects for
  * the tracked service.
  * 
- * @version $Revision: 1.6.2.1 $
+ * @version $Revision: 1.7 $
  */
 public class ServiceTracker implements ServiceTrackerCustomizer {
 	/* set this to true to compile in debug messages */

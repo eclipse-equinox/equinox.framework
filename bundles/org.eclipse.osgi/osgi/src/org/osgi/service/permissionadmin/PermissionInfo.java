@@ -1,5 +1,5 @@
 /*
- * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/service/permissionadmin/PermissionInfo.java,v 1.2.4.1 2005/01/12 16:48:26 twatson Exp $
+ * $Header: /cvshome/build/org.osgi.service.permissionadmin/src/org/osgi/service/permissionadmin/PermissionInfo.java,v 1.5 2004/12/15 19:01:08 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2001, 2004). All Rights Reserved.
  * 
@@ -44,7 +44,7 @@ package org.osgi.service.permissionadmin;
  * <tt>PermissionInfo</tt> may be delayed until the package containing its
  * Permission class has been exported by a bundle.
  * 
- * @version $Revision: 1.2.4.1 $
+ * @version $Revision: 1.5 $
  */
 public class PermissionInfo {
 	private String	type;

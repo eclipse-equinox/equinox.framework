@@ -1,5 +1,5 @@
 /*
- * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/ServicePermission.java,v 1.3.2.1 2005/01/12 16:48:22 twatson Exp $
+ * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/ServicePermission.java,v 1.8 2004/12/15 19:01:03 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 
@@ -45,7 +45,7 @@ import java.util.Hashtable;
  * certain services unless they have the appropriate <tt>ServicePermission</tt>
  * to get the specific service.
  * 
- * @version $Revision: 1.3.2.1 $
+ * @version $Revision: 1.8 $
  */
 
 final public class ServicePermission extends BasicPermission {

@@ -1,5 +1,5 @@
 /*
- * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/service/packageadmin/ExportedPackage.java,v 1.2.4.1 2005/01/12 16:48:32 twatson Exp $
+ * $Header: /cvshome/build/org.osgi.service.packageadmin/src/org/osgi/service/packageadmin/ExportedPackage.java,v 1.6 2004/12/15 19:00:57 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2001, 2004). All Rights Reserved.
  * 
@@ -46,7 +46,7 @@ import org.osgi.framework.Bundle;
  * <tt>getExportingBundle()</tt> and <tt>getImportingBundles()</tt> return
  * <tt>null</tt>.
  * 
- * @version $Revision: 1.2.4.1 $
+ * @version $Revision: 1.6 $
  */
 public interface ExportedPackage {
 	/**

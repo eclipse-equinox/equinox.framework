@@ -1,5 +1,5 @@
 /*
- * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/BundleException.java,v 1.6.2.1 2005/01/12 16:48:22 twatson Exp $
+ * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/BundleException.java,v 1.7 2004/12/15 19:01:03 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 
@@ -40,7 +40,7 @@ package org.osgi.framework;
  * This exception is updated to conform to the general purpose exception
  * chaining mechanism.
  * 
- * @version $Revision: 1.6.2.1 $
+ * @version $Revision: 1.7 $
  */
 
 public class BundleException extends Exception {

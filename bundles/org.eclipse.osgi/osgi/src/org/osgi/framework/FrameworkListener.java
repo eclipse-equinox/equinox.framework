@@ -1,5 +1,5 @@
 /*
- * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/FrameworkListener.java,v 1.2.4.1 2005/01/12 16:48:22 twatson Exp $
+ * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/FrameworkListener.java,v 1.4 2004/12/15 19:01:03 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 
@@ -40,7 +40,7 @@ import java.util.EventListener;
  * <tt>FrameworkEvent</tt> objects when the Framework starts and when
  * asynchronous errors occur.
  * 
- * @version $Revision: 1.2.4.1 $
+ * @version $Revision: 1.4 $
  * @see FrameworkEvent
  */
 

@@ -1,5 +1,5 @@
 /*
- * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/ServiceFactory.java,v 1.2.4.1 2005/01/12 16:48:22 twatson Exp $
+ * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/ServiceFactory.java,v 1.4 2004/12/15 19:01:03 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 
@@ -52,7 +52,7 @@ package org.osgi.framework;
  * <tt>ServiceFactory</tt> objects are only used by the Framework and are not
  * made available to other bundles in the OSGi environment.
  * 
- * @version $Revision: 1.2.4.1 $
+ * @version $Revision: 1.4 $
  * @see BundleContext#getService
  */
 
