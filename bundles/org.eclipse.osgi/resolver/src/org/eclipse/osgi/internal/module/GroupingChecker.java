@@ -74,6 +74,8 @@ public class GroupingChecker {
 						return wire;
 					// Check against requires
 					for (int k = 0; k < requires.length; k++) {
+						if (requires[k].getMatchingBundle() == null)
+							continue;
 						ResolverExport[] exports = requires[k].getMatchingBundle().getExportPackages();
 						for (int m = 0; m < exports.length; m++) {
 							if (re.getExporter().isResolvable() && exports[m].getName().equals(re.getName()) && !exports[m].isOnRootPath(re.getExporter()))
@@ -96,6 +98,8 @@ public class GroupingChecker {
 		}
 		// Check imports against requires
 		for (int i = 0; i < requires.length; i++) {
+			if (requires[i].getMatchingBundle() == null)
+				continue;
 			ResolverExport[] exports = requires[i].getMatchingBundle().getExportPackages();
 			for (int j = 0; j < exports.length; j++) {
 				ArrayList list = (ArrayList) constraints.get(exports[j]);
@@ -312,6 +316,8 @@ public class GroupingChecker {
 		// Add constraints for reprovided exports
 		BundleConstraint[] requires = re.getExporter().getRequires();
 		for (int i = 0; i < requires.length; i++) {
+			if (requires[i].getMatchingBundle() == null)
+				return;
 			ResolverExport[] requireExports = requires[i].getMatchingBundle().getExportPackages();
 			for (int j = 0; j < requireExports.length; j++) {
 				if (!re.getName().equals(requireExports[j].getName()))

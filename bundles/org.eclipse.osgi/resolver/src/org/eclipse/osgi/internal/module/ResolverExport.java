@@ -75,6 +75,8 @@ public class ResolverExport implements VersionSupplier {
 	private ResolverExport getRootRequires(ResolverExport re, ResolverBundle reExporter) {
 		BundleConstraint[] requires = reExporter.getRequires();
 		for (int i = 0; i < requires.length; i++) {
+			if (requires[i].getMatchingBundle() == null)
+				continue;
 			ResolverExport[] exports = requires[i].getMatchingBundle().getExportPackages();
 			for (int j = 0; j < exports.length; j++) {
 				if (re.getName().equals(exports[j].getName())) {

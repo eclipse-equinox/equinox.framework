@@ -602,6 +602,8 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 			if (!((BundleSpecification) requires[i].getVersionConstraint()).isExported())
 				continue; // Skip require if it doesn't reprovide the packages
 			// Check exports to see if we've found the root
+			if (requires[i].getMatchingBundle() == null)
+				continue;
 			ResolverExport[] exports = requires[i].getMatchingBundle().getExportPackages();
 			for (int j = 0; j < exports.length; j++) {
 				if (imp.getName().equals(exports[j].getName())) {
