@@ -551,25 +551,37 @@ public class EclipseAdaptor extends DefaultAdaptor {
 		stopper.stopBundles();
 	}
 
+	private boolean isFatalException(Throwable error) {
+		if (error instanceof VirtualMachineError) {
+			return true;
+		}
+		if (error instanceof ThreadDeath) {
+			return true;
+		}
+		return false;
+	}
+	
 	public void handleRuntimeError(Throwable error) {
 		try {
 			// check the prop each time this happens (should NEVER happen!)
 			exitOnError = Boolean.valueOf(System.getProperty(PROP_EXITONERROR, "true")).booleanValue(); //$NON-NLS-1$
 			String message = EclipseAdaptorMsg.formatter.getString("ECLIPSE_ADAPTOR_RUNTIME_ERROR"); //$NON-NLS-1$
+			if (exitOnError && isFatalException(error))
+				message += ' ' + EclipseAdaptorMsg.formatter.getString("ECLIPSE_ADAPTOR_EXITING");  //$NON-NLS-1$
 			FrameworkLogEntry logEntry = new FrameworkLogEntry(FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME, message, 0, error, null);
 			frameworkLog.log(logEntry);
 		} catch (Throwable t) {
-			// we may be in a currupted state and must be able to handle any errors (ie OutOfMemoryError)
+			// we may be in a corrupted state and must be able to handle any errors (ie OutOfMemoryError)
 			// that may occur when handling the first error; this is REALLY the last resort.
 			try {
-				error.printStackTrace();
-				t.printStackTrace();
+				error.printStackTrace(System.err);
+				t.printStackTrace(System.err);
 			} catch (Throwable t1) {
 				// if we fail that then we are beyond help.
 			}
 		} finally {
 			// do the exit outside the try block just incase another runtime error was thrown while logging
-			if (exitOnError)
+			if (exitOnError && isFatalException(error))
 				System.exit(13);
 		}
 	}
