@@ -681,6 +681,7 @@ public class Framework implements EventDispatcher, EventPublisher {
 				}
 			}
 			bundle = createBundle(bundledata);
+			//TODO Verify the manifest... for example that the same package is imported twice 
 			try {
 				// Select the native code paths for the bundle;
 				// this is not done by the adaptor because this

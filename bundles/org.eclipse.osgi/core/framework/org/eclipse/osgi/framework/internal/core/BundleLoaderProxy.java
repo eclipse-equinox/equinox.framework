@@ -39,6 +39,7 @@ public class BundleLoaderProxy implements RequiredBundle {
 	 */
 	private boolean stale = false;
 
+	//TODO Needs a comment, and should not that belong to the Loader
 	private KeyedHashSet pkgSources;
 
 	public BundleLoaderProxy(BundleHost bundle, BundleDescription description) {
@@ -195,6 +196,7 @@ public class BundleLoaderProxy implements RequiredBundle {
 
 		if (storeSource) {
 			// if the package source is not null then store the source only if it is not already present
+			//TODO Is it normal that the getByKey in the if is not synchronized?
 			if (pkgSource != null && pkgSources.getByKey(export.getName()) == null)
 				synchronized (pkgSources) {
 					pkgSources.add(pkgSource);

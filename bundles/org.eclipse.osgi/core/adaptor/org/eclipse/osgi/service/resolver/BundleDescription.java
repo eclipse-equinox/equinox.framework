@@ -61,6 +61,7 @@ public interface BundleDescription extends BaseDescription{
 	 * @return the selected list of packages that this bundle exports.  If the bundle is
 	 * unresolved or has no shared packages then an empty array is returned.
 	 */
+	//TODO should this be name getResolvedExports()
 	public ExportPackageDescription[] getSelectedExports();
 
 	/**
@@ -82,7 +83,7 @@ public interface BundleDescription extends BaseDescription{
 	/**
 	 * Returns true if this bundle is resolved in its host state.
 	 * 
-	 * @return
+	 * @return true if this bundle is resolved in its host state.
 	 */
 	public boolean isResolved();
 
@@ -105,7 +106,7 @@ public interface BundleDescription extends BaseDescription{
 	 * Returns the host for this bundle. null is returned if this bundle is not
 	 * a fragment.
 	 * 
-	 * @return
+	 * @return the host for this bundle.
 	 */
 	public HostSpecification getHost();
 

@@ -710,9 +710,8 @@ public class BundleLoader implements ClassLoaderDelegate {
 			if (result != null) {
 				if (result.isNullSource()) {
 					return null;
-				} else {
-					return result;
 				}
+				return result;
 			}
 		}
 

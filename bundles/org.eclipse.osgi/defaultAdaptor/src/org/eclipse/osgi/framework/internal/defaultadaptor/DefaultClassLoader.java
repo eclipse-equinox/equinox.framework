@@ -43,7 +43,7 @@ public class DefaultClassLoader extends AbstractClassLoader {
 	 * The buffer size to use when loading classes.  This value is used 
 	 * only if we cannot determine the size of the class we are loading.
 	 */
-	protected int buffersize = 8 * 1024;
+	protected int buffersize = 8 * 1024; //TODO Could not that be a constant?
 
 	/**
 	 * BundleClassLoader constructor.
@@ -462,7 +462,7 @@ public class DefaultClassLoader extends AbstractClassLoader {
 	}
 
 	protected ClasspathEntry[] buildClasspath(String[] classpath, AbstractBundleData bundledata, ProtectionDomain domain) {
-		ArrayList result = new ArrayList(10);
+		ArrayList result = new ArrayList(classpath.length);
 
 		// If not in dev mode then just add the regular classpath entries and return
 		if (!DevClassPathHelper.inDevelopmentMode()) {

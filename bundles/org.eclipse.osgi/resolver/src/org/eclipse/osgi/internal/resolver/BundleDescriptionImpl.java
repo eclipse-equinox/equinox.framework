@@ -27,12 +27,13 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 	private byte stateBits = FULLY_LOADED; // set the fully loaded by default
 
 	private long bundleId = -1;
-	private HostSpecification host;
+	private HostSpecification host;	//null if the bundle is not a fragment
 	private StateImpl containingState;
 
 	private Object userObject;
 	private int lazyDataSize = -1;
 
+	//TODO These could be arrays
 	private ArrayList dependencies;
 	private ArrayList dependents;
 
@@ -260,8 +261,8 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 		Iterator iter = dependencies.iterator();
 		while (iter.hasNext()) {
 			((BundleDescriptionImpl)iter.next()).removeDependent(this);
-			iter.remove();
 		}
+		dependencies = null;
 	}
 
 	protected void addDependencies(BaseDescription[] newDependencies) {
@@ -392,6 +393,7 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 			lazyData = new LazyData();
 	}
 
+	//TODO Consider usage of softReferences
 	private final class LazyData {
 		String location;
 
