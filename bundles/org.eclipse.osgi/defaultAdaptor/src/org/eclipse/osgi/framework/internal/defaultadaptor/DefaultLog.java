@@ -204,12 +204,11 @@ public class DefaultLog implements FrameworkLog {
 			this.outFile = newOutFile;
 			this.writer = newWriter;
 			boolean copyFailed = false;
-			if (append && !newSession && oldOutFile != null) {
+			if (append && oldOutFile != null && oldOutFile.isFile()) {
 				Reader fileIn = null;
 				try {
 					openFile();
-					fileIn = new InputStreamReader(SecureAction.getFileInputStream(
-							oldOutFile), "UTF-8");
+					fileIn = new InputStreamReader(SecureAction.getFileInputStream(oldOutFile), "UTF-8");
 					copyReader(fileIn, this.writer);
 				} catch (IOException e) {
 					copyFailed = true;
