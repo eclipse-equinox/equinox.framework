@@ -125,6 +125,17 @@ abstract public class BundleFile {
 	}
 
 	/**
+	 * If bundle signing is supported then the authentication of this BundleFile's
+	 * signiture will be verified.  If the signitures of the bundle file cannot
+	 * be verified then a SecurityException is thrown.
+	 * @throws SecurityException if the signitures of the bundle file cannot be
+	 * verified.
+	 */
+	public void verifyAuthentication() throws SecurityException {
+		return;
+	}
+
+	/**
 	 * A BundleFile that uses a ZipFile as it base file.
 	 */
 	public static class ZipBundleFile extends BundleFile {
@@ -307,8 +318,12 @@ abstract public class BundleFile {
 				return null;
 			}
 
-			return new BundleEntry.ZipBundleEntry(zipEntry, this);
+			return createBundleEntry(zipEntry);
 
+		}
+
+		protected BundleEntry createBundleEntry(ZipEntry zipEntry) {
+			return new BundleEntry.ZipBundleEntry(zipEntry, this);
 		}
 
 		public Enumeration getEntryPaths(String path) {

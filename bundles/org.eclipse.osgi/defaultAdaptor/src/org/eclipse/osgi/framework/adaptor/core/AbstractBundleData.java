@@ -33,6 +33,7 @@ import org.osgi.framework.BundleException;
  * BundleData implementations can use.
  */
 public abstract class AbstractBundleData implements BundleData, Cloneable {
+	private static final String SINGED_ENTRY = "/OSGI-INF/permissions.perm"; //$NON-NLS-1$
 
 	/** the DefaultAdaptor for this BundleData */
 	protected AbstractFrameworkAdaptor adaptor;
@@ -459,6 +460,15 @@ public abstract class AbstractBundleData implements BundleData, Cloneable {
 	}
 
 	///////////////////// End Manifest Value Accessor Methods  /////////////////////
+
+	public String[] getBundleSigners() {
+		if (System.getSecurityManager() == null)
+			return null;
+		BundleEntry entry = getBaseBundleFile().getEntry(SINGED_ENTRY);
+		if (entry == null)
+			return null;
+		return entry.getSigners(true); // force the entry be read
+	}
 
 	/**
 	 * Return a copy of this object with the

@@ -246,4 +246,11 @@ public interface BundleData {
 	 * @return the DynamicImport-Packaget for this BundleData.
 	 */
 	public String getDynamicImports();
+
+	/**
+	 * If bundle signing is supported then the list of Signers for
+	 * the bundle file are returned.  If bundle
+	 * signing is not supported or the bundle is not signed then null is returned.
+	 */
+	public String[] getBundleSigners();
 }

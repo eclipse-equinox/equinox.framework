@@ -77,6 +77,15 @@ public abstract class BundleEntry {
 	}
 
 	/**
+	 * If bundle signing is supported then the list of Signers for
+	 * the entry are returned.  If bundle signing is not supported 
+	 * or the bundle is not signed then null is returned.
+	 */
+	public String[] getSigners(boolean readStream) {
+		return null;
+	}
+
+	/**
 	 * A BundleEntry represented by a ZipEntry in a ZipFile.  The ZipBundleEntry
 	 * class is used for bundles that are installed as a ZipFile on a file system.
 	 */

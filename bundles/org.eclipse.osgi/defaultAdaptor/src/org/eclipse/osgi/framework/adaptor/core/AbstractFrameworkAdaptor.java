@@ -12,6 +12,7 @@
 package org.eclipse.osgi.framework.adaptor.core;
 
 import java.io.*;
+import java.lang.reflect.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -36,6 +37,7 @@ import org.osgi.framework.*;
 public abstract class AbstractFrameworkAdaptor implements FrameworkAdaptor {
 	public static final String PROP_PARENT_CLASSLOADER = "osgi.parentClassloader"; //$NON-NLS-1$
 	public static final String PROP_FRAMEWORK_EXTENSIONS = "osgi.framework.extensions"; //$NON-NLS-1$
+	public static final String PROP_SIGNINGSUPPORT = "osgi.bundlesigning.support"; //$NON-NLS-1$
 	public static final String PARENT_CLASSLOADER_APP = "app"; //$NON-NLS-1$
 	public static final String PARENT_CLASSLOADER_EXT = "ext"; //$NON-NLS-1$
 	public static final String PARENT_CLASSLOADER_BOOT = "boot"; //$NON-NLS-1$
@@ -48,6 +50,7 @@ public abstract class AbstractFrameworkAdaptor implements FrameworkAdaptor {
 
 	/** Name of the Adaptor manifest file */
 	protected final String ADAPTOR_MANIFEST = "ADAPTOR.MF"; //$NON-NLS-1$
+	protected final String DEFAULT_SIGNEDBUNDLE_SUPPORT = "org.eclipse.osgi.jarvarifier.JarBundleFile"; //$NON-NLS-1$
 
 	/**
 	 * The EventPublisher for the FrameworkAdaptor
@@ -125,6 +128,9 @@ public abstract class AbstractFrameworkAdaptor implements FrameworkAdaptor {
 	protected Method addURLMethod = findaddURLMethod(AbstractFrameworkAdaptor.class.getClassLoader().getClass());
 
 	protected String[] configuredExtensions;
+
+	protected Constructor signedBundleSupport = null;
+	protected boolean supportSignedBundles = true;
 
 	/**
 	 * Constructor for DefaultAdaptor.  This constructor parses the arguments passed
@@ -626,11 +632,28 @@ public abstract class AbstractFrameworkAdaptor implements FrameworkAdaptor {
 	 * @throws IOException if an error occurred creating the BundleFile object.
 	 */
 	public BundleFile createBundleFile(File basefile, BundleData bundledata) throws IOException {
-		if (basefile.isDirectory()) {
+		if (basefile.isDirectory())
 			return new BundleFile.DirBundleFile(basefile);
-		} else {
-			return new BundleFile.ZipBundleFile(basefile, bundledata);
+
+		if (System.getSecurityManager() != null && supportSignedBundles) {
+			try {
+				if (signedBundleSupport == null) {
+					String clazzName = System.getProperty(PROP_SIGNINGSUPPORT, DEFAULT_SIGNEDBUNDLE_SUPPORT);
+					Class clazz = Class.forName(clazzName);
+					signedBundleSupport = clazz.getConstructor(new Class[] {File.class, BundleData.class});
+				}
+				return (BundleFile) signedBundleSupport.newInstance(new Object[] {basefile, bundledata});
+			}
+			catch (InvocationTargetException e) {
+				if (e.getTargetException() instanceof IOException)
+					throw (IOException)e.getTargetException();
+				supportSignedBundles = false;
+			}
+			catch (Exception e) {
+				supportSignedBundles = false;
+			}
 		}
+		return new BundleFile.ZipBundleFile(basefile, bundledata);
 	}
 
 	/**
@@ -714,6 +737,8 @@ public abstract class AbstractFrameworkAdaptor implements FrameworkAdaptor {
 							data.setFileName(fileName);
 							data.initializeNewBundle();
 						}
+						if (System.getSecurityManager() != null) // verify the signers
+							data.getBaseBundleFile().verifyAuthentication();
 					} finally {
 						try {
 							in.close();
@@ -953,6 +978,8 @@ public abstract class AbstractFrameworkAdaptor implements FrameworkAdaptor {
 							}
 							newData.createBaseBundleFile();
 						}
+						if (System.getSecurityManager() != null) // verify the signers
+							newData.getBaseBundleFile().verifyAuthentication();
 					} finally {
 						try {
 							in.close();
