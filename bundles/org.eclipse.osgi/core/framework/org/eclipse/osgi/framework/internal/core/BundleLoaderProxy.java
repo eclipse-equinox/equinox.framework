@@ -223,7 +223,7 @@ public class BundleLoaderProxy implements RequiredBundle {
 			return source.getSuppliers();
 		}
 
-		public Class loadClass(String name, String pkgName, boolean providePkg) {
+		public Class loadClass(String name, String pkgName) {
 			try {
 				return getBundleLoader().findClass(name);
 			}
@@ -231,10 +231,10 @@ public class BundleLoaderProxy implements RequiredBundle {
 				return null;
 			}
 		}
-		public URL getResource(String name, String pkgName, boolean providePkg) {
+		public URL getResource(String name, String pkgName) {
 			return getBundleLoader().findResource(name);
 		}
-		public Enumeration getResources(String name, String pkgName, boolean providePkg) throws IOException {
+		public Enumeration getResources(String name, String pkgName) throws IOException {
 			return getBundleLoader().findResources(name);
 		}
 	}

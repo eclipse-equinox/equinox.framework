@@ -43,9 +43,9 @@ public abstract class PackageSource implements KeyedElement {
 		return false;
 	}
 
-	public abstract Class loadClass(String name, String pkgName, boolean providePkg);
-	public abstract URL getResource(String name, String pkgName, boolean providePkg);
-	public abstract Enumeration getResources(String name, String pkgName, boolean providePkg) throws IOException;
+	public abstract Class loadClass(String name, String pkgName);
+	public abstract URL getResource(String name, String pkgName);
+	public abstract Enumeration getResources(String name, String pkgName) throws IOException;
 
 	public boolean hasCommonSource(PackageSource other) {
 		if (other == null)

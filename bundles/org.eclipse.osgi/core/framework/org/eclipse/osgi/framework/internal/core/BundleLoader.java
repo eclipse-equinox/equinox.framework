@@ -202,9 +202,6 @@ public class BundleLoader implements ClassLoaderDelegate {
 				PackageSource source = createExportPackageSource(packages[i]);
 				if (source == null)
 					return;
-				PackageSource existingSource = (PackageSource) importedPackages.getByKey(packages[i].getName());
-				if (existingSource != null && existingSource != source)
-					source = createMultiSource(packages[i].getName(), new PackageSource[] {existingSource, source});
 				importedPackages.add(source);
 			}
 		}
@@ -299,23 +296,6 @@ public class BundleLoader implements ClassLoaderDelegate {
 	 */
 	protected Enumeration getResources(String name) throws IOException {
 		return createClassLoader().getResources(name);
-	}
-
-	/**
-	 * Handle the lookup where provided classes can also be imported.
-	 * In this case the exporter need to be consulted. 
-	 */
-	protected Class requireClass(String name, String packageName) {
-		Class result = null;
-		try {
-			result = findImportedClass(name, packageName);
-		} catch (ImportClassNotFoundException e) {
-			//Capture the exception and return null because we want to continue the lookup.
-			return null;
-		}
-		if (result == null)
-			result = findLocalClass(name);
-		return result;
 	}
 
 	protected BundleClassLoader createClassLoader() {
@@ -447,23 +427,6 @@ public class BundleLoader implements ClassLoaderDelegate {
 	}
 
 	/**
-	 * Handle the lookup where provided resources can also be imported.
-	 * In this case the exporter need to be consulted. 
-	 */
-	protected URL requireResource(String name, String packageName) {
-		URL result = null;
-		try {
-			result = findImportedResource(name, packageName);
-		} catch (ImportResourceNotFoundException e) {
-			//Capture the exception and return null because we want to continue the lookup.
-			return null;
-		}
-		if (result == null)
-			result = findLocalResource(name);
-		return result;
-	}
-
-	/**
 	 * Finds a resource local to this bundle.  Only the classloader for this bundle is searched.
 	 * @param name The name of the resource to find.
 	 * @return The URL to the resource or null if the resource is not found.
@@ -476,23 +439,6 @@ public class BundleLoader implements ClassLoaderDelegate {
 				return createClassLoader().findLocalResource(name);
 			}
 		});
-	}
-
-	/**
-	 * Handle the lookup where provided resources can also be imported.
-	 * In this case the exporter need to be consulted. 
-	 */
-	protected Enumeration requireResources(String name, String packageName) throws IOException {
-		Enumeration result = null;
-		try {
-			result = findImportedResources(name, packageName);
-		} catch (ImportResourceNotFoundException e) {
-			//Capture the exception and return null because we want to continue the lookup.
-			return null;
-		}
-		if (result == null)
-			result = findLocalResources(name);
-		return result;
 	}
 
 	/**
@@ -704,7 +650,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 		try {
 			PackageSource source = getImportPackageSource(packageName);
 			if (source != null) {
-				result = source.loadClass(name, packageName, false);
+				result = source.loadClass(name, packageName);
 				if (result == null)
 					throw new ImportClassNotFoundException(name);
 			}
@@ -814,7 +760,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 		PackageSource source = getProvidersFor(packageName);
 		if (source == null)
 			return null;
-		return source.loadClass(name, packageName, true);
+		return source.loadClass(name, packageName);
 	}
 
 	protected boolean isProvidedPackage(String name) {
@@ -836,7 +782,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 
 		PackageSource source = getImportPackageSource(packageName);
 		if (source != null) {
-			URL url = source.getResource(name, packageName, false);
+			URL url = source.getResource(name, packageName);
 			if (url != null)
 				return url;
 			if (Debug.DEBUG && Debug.DEBUG_LOADER)
@@ -858,7 +804,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 		PackageSource source = getProvidersFor(packageName);
 		if (source == null)
 			return null;
-		return source.getResource(name, packageName, true);
+		return source.getResource(name, packageName);
 	}
 
 	/**
@@ -878,7 +824,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 
 		PackageSource source = getImportPackageSource(packageName);
 		if (source != null)
-			return source.getResources(name, packageName, false);
+			return source.getResources(name, packageName);
 		return null;
 	}
 
@@ -901,7 +847,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 		PackageSource source = getProvidersFor(packageName);
 		if (source == null)
 			return null;
-		return source.getResources(name, packageName, true);
+		return source.getResources(name, packageName);
 	}
 
 	/**

@@ -36,19 +36,15 @@ public class NullPackageSource extends PackageSource {
 		return id + " -> null"; //$NON-NLS-1$
 	}
 
-	public Class loadClass(String name, String pkgName, boolean providePkg) {
+	public Class loadClass(String name, String pkgName) {
 		return null;
 	}
 
-	public URL getResource(String name, String pkgName, boolean providePkg) {
+	public URL getResource(String name, String pkgName) {
 		return null;
 	}
 
-	public Enumeration getResources(String name, String pkgName, boolean providePkg) {
-		return null;
-	}
-
-	public Object getObject(String name, String pkgName, boolean providePkg) {
+	public Enumeration getResources(String name, String pkgName) {
 		return null;
 	}
 }

@@ -26,30 +26,30 @@ public class MultiSourcePackage extends PackageSource {
 		return suppliers;
 	}
 
-	public Class loadClass(String name, String pkgName, boolean providePkg) {
+	public Class loadClass(String name, String pkgName) {
 		Class result = null;
 		for (int i = 0; i < suppliers.length; i++) {
-			result = suppliers[i].loadClass(name, pkgName, providePkg);
+			result = suppliers[i].loadClass(name, pkgName);
 			if (result != null)
 				return result;
 		}
 		return result;
 	}
 
-	public URL getResource(String name, String pkgName, boolean providePkg) {
+	public URL getResource(String name, String pkgName) {
 		URL result = null;
 		for (int i = 0; i < suppliers.length; i++) {
-			result = suppliers[i].getResource(name, pkgName, providePkg);
+			result = suppliers[i].getResource(name, pkgName);
 			if (result != null)
 				return result;
 		}
 		return result;
 	}
 
-	public Enumeration getResources(String name, String pkgName, boolean providePkg) throws IOException {
+	public Enumeration getResources(String name, String pkgName) throws IOException {
 		Enumeration result = null;
 		for (int i = 0; i < suppliers.length; i++) {
-			result = suppliers[i].getResources(name, pkgName, providePkg);
+			result = suppliers[i].getResources(name, pkgName);
 			if (result != null)
 				return result;
 		}

@@ -28,20 +28,20 @@ public class FilteredSourcePackage extends SingleSourcePackage {
 			this.excludes = ManifestElement.getArrayFromList(excludes);
 	}
 
-	public URL getResource(String name, String pkgName, boolean providePkg) {
+	public URL getResource(String name, String pkgName) {
 		if (isFiltered(name, pkgName))
 			return null;
-		return super.getResource(name, pkgName, providePkg);
+		return super.getResource(name, pkgName);
 	}
-	public Enumeration getResources(String name, String pkgName, boolean providePkg) throws IOException {
+	public Enumeration getResources(String name, String pkgName) throws IOException {
 		if (isFiltered(name, pkgName))
 			return null;
-		return super.getResources(name, pkgName, providePkg);
+		return super.getResources(name, pkgName);
 	}
-	public Class loadClass(String name, String pkgName, boolean providePkg) {
+	public Class loadClass(String name, String pkgName) {
 		if (isFiltered(name, pkgName))
 			return null;
-		return super.loadClass(name, pkgName, providePkg);
+		return super.loadClass(name, pkgName);
 	}
 
 	private boolean isFiltered(String name, String pkgName) {

@@ -30,21 +30,15 @@ public class SingleSourcePackage extends PackageSource {
 		return id + " -> " + supplier; //$NON-NLS-1$
 	}
 
-	public Class loadClass(String name, String pkgName, boolean providePkg) {
-		if (providePkg)
-			return supplier.getBundleLoader().requireClass(name, pkgName);
+	public Class loadClass(String name, String pkgName) {
 		return supplier.getBundleLoader().findLocalClass(name);
 	}
 
-	public URL getResource(String name, String pkgName, boolean providePkg) {
-		if (providePkg)
-			return supplier.getBundleLoader().requireResource(name, pkgName);
+	public URL getResource(String name, String pkgName) {
 		return supplier.getBundleLoader().findLocalResource(name);
 	}
 
-	public Enumeration getResources(String name, String pkgName, boolean providePkg) throws IOException {
-		if (providePkg)
-			return supplier.getBundleLoader().requireResources(name, pkgName);
+	public Enumeration getResources(String name, String pkgName) throws IOException {
 		return supplier.getBundleLoader().findLocalResources(name);
 	}
 }
