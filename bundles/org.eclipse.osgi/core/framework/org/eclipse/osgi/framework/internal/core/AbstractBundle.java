@@ -596,6 +596,8 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		checkValid();
 		beginStateChange();
 		try {
+			final AccessControlContext callerContext = AccessController.getContext();
+			//note AdminPermission is checked again after updated bundle is loaded
 			updateWorker(new PrivilegedExceptionAction() {
 				public Object run() throws BundleException {
 					/* compute the update location */
@@ -609,10 +611,14 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 					/* Map the identity to a URLConnection */
 					URLConnection source = framework.adaptor.mapLocationToURLConnection(updateLocation);
 					/* call the worker */
-					updateWorkerPrivileged(source);
+					updateWorkerPrivileged(source, callerContext);
 					return null;
 				}
 			});
+		} catch (BundleException be) {
+			if (be.getCause() instanceof AccessControlException)
+				throw (AccessControlException) be.getCause();
+			throw be;
 		} finally {
 			completeStateChange();
 		}
@@ -639,15 +645,21 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		checkValid();
 		beginStateChange();
 		try {
+			final AccessControlContext callerContext = AccessController.getContext();
+			//note AdminPermission is checked again after updated bundle is loaded
 			updateWorker(new PrivilegedExceptionAction() {
 				public Object run() throws BundleException {
 					/* Map the InputStream to a URLConnection */
 					URLConnection source = new BundleSource(in);
 					/* call the worker */
-					updateWorkerPrivileged(source);
+					updateWorkerPrivileged(source, callerContext);
 					return null;
 				}
 			});
+		} catch (BundleException be) {
+			if (be.getCause() instanceof AccessControlException)
+				throw (AccessControlException) be.getCause();
+			throw be;
 		} finally {
 			completeStateChange();
 		}
@@ -690,7 +702,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	/**
 	 * Update worker. Assumes the caller has the state change lock.
 	 */
-	protected void updateWorkerPrivileged(URLConnection source) throws BundleException {
+	protected void updateWorkerPrivileged(URLConnection source, AccessControlContext callerContext) throws BundleException {
 		AbstractBundle oldBundle = AbstractBundle.createBundle(bundledata, framework);
 		boolean reloaded = false;
 		BundleOperation storage = framework.adaptor.updateBundle(this.bundledata, source);
@@ -698,7 +710,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		try {
 			BundleData newBundleData = storage.begin();
 			// Must call framework createBundle to check execution environment.
-			AbstractBundle newBundle = framework.createAndVerifyBundle(newBundleData);
+			final AbstractBundle newBundle = framework.createAndVerifyBundle(newBundleData);
 			String[] nativepaths = framework.selectNativeCode(newBundle);
 			if (nativepaths != null) {
 				bundledata.installNativeCode(nativepaths);
@@ -710,7 +722,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 				manifestLocalization = null;
 			}
 			// indicate we have loaded from the new version of the bundle
-			reloaded = true; 
+			reloaded = true;
 			if (System.getSecurityManager() != null && (bundledata.getType() & (BundleData.TYPE_BOOTCLASSPATH_EXTENSION | BundleData.TYPE_FRAMEWORK_EXTENSION)) != 0) {
 				// must check for AllPermission before allow a bundle extension to be installed
 				try {
@@ -718,6 +730,16 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 				} catch (SecurityException se) {
 					throw new BundleException(Msg.formatter.getString("BUNDLE_EXTENSION_PERMISSION"), se); //$NON-NLS-1$
 				}
+			}
+			try {
+				AccessController.doPrivileged(new PrivilegedExceptionAction() {
+					public Object run() throws Exception {
+						framework.checkAdminPermission(newBundle, AdminPermission.LIFECYCLE);
+						return null;
+					}
+				}, callerContext);
+			} catch (Exception e) {
+				throw new BundleException(e.getMessage(), e);
 			}
 			// send out unresolved events outside synch block (defect #80610)
 			if (st == RESOLVED)
