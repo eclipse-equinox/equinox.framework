@@ -128,7 +128,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 
 		// init the require bundles list.
 		BundleDescription[] required = description.getResolvedRequires();
-		if (required != null && required.length > 0) {
+		if (required.length > 0) {
 			// get a list of re-exported symbolic names
 			HashSet reExportSet = new HashSet(required.length);
 			BundleSpecification[] requiredSpecs = description.getRequiredBundles();

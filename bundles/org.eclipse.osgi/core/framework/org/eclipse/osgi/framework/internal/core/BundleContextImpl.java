@@ -589,7 +589,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		framework.checkRegisterServicePermission(clazzes);
 
 		if (!(service instanceof ServiceFactory)) {
-			String invalidService = getInvalidServiceClass(clazzes, service);
+			String invalidService = checkServiceClass(clazzes, service);
 			if (invalidService != null) {
 				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
 					Debug.println("Service object is not an instanceof " + invalidService); //$NON-NLS-1$
@@ -601,7 +601,8 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		return (createServiceRegistration(clazzes, service, properties));
 	}
 
-	static String getInvalidServiceClass(final String[] clazzes, final Object serviceObject) {
+	//Return the name of the class that is not satisfied by the service object 
+	static String checkServiceClass(final String[] clazzes, final Object serviceObject) {
 		ClassLoader cl = (ClassLoader) AccessController.doPrivileged(new PrivilegedAction() {
 			public Object run() {
 				return serviceObject.getClass().getClassLoader();
@@ -613,23 +614,24 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 				if (!serviceClazz.isInstance(serviceObject))
 					return clazzes[i];
 			} catch (ClassNotFoundException e) {
-				if (invalidClassName(clazzes[i], serviceObject.getClass()))
+				//This check is rarely done
+				if (extensiveCheckServiceClass(clazzes[i], serviceObject.getClass()))
 					return clazzes[i];
 			}
 		}
 		return null;
 	}
 
-	private static boolean invalidClassName(String clazz, Class serviceClazz) {
+	private static boolean extensiveCheckServiceClass(String clazz, Class serviceClazz) {
 		if (clazz.equals(serviceClazz.getName()))
 			return false;
 		Class[] interfaces = serviceClazz.getInterfaces();
 		for (int i = 0; i < interfaces.length; i++)
-			if (!invalidClassName(clazz, interfaces[i]))
+			if (!extensiveCheckServiceClass(clazz, interfaces[i]))
 				return false;
 		Class superClazz = serviceClazz.getSuperclass();
 		if (superClazz != null)
-			if (!invalidClassName(clazz, superClazz))
+			if (!extensiveCheckServiceClass(clazz, superClazz))
 				return false;
 		return true;
 	}

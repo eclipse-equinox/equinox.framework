@@ -130,6 +130,7 @@ public abstract interface ServiceReference {
 	 */
 	public abstract Bundle[] getUsingBundles();
 
+	//TODO Javadoc
 	public abstract boolean isAssignableTo(Bundle bundle, String className); 
 }
 

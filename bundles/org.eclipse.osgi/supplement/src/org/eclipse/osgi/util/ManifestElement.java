@@ -165,7 +165,7 @@ public class ManifestElement {
 	 * has multiple values specified then the last value specified is returned.
 	 * For example the following manifest element: <p>
 	 * <pre>
-	 * elementvalue; myattr="value1"; myattr="value2"
+	 * elementvalue; myatt:r="value1"; myattr:="value2"
 	 * </pre>
 	 * <p>
 	 * specifies two values for the attribute key myattr.  In this case value2

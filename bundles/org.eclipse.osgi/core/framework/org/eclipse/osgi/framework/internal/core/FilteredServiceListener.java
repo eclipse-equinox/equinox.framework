@@ -49,6 +49,7 @@ public class FilteredServiceListener implements ServiceListener {
 		if (!context.hasListenServicePermission(event))
 			return;
 
+		//TODO Merge this condition and the one in the bottom
 		if (filter == null) {
 			if (allservices || context.isAssignableTo((ServiceReferenceImpl) event.getServiceReference()))
 				listener.serviceChanged(event);

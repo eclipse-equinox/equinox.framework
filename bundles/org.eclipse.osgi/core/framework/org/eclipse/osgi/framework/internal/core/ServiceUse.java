@@ -131,7 +131,7 @@ public class ServiceUse {
 			}
 
 			String[] clazzes = registration.clazzes;
-			String invalidService = BundleContextImpl.getInvalidServiceClass(clazzes, service);
+			String invalidService = BundleContextImpl.checkServiceClass(clazzes, service);
 			if (invalidService != null) {
 				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
 					Debug.println("Service object is not an instanceof " + invalidService); //$NON-NLS-1$

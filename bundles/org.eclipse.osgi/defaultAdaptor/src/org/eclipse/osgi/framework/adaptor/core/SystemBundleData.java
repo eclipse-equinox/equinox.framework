@@ -30,8 +30,8 @@ public class SystemBundleData extends AbstractBundleData {
 	public SystemBundleData(AbstractFrameworkAdaptor adaptor) throws BundleException {
 		super(adaptor, 0);
 		File osgiBase = getOsgiBase();
-		manifest = createManifest(osgiBase);
 		createBundleFile(osgiBase);
+		manifest = createManifest(osgiBase);
 		setMetaData();
 		setLastModified(System.currentTimeMillis()); // just set the lastModified to the current time
 	}
@@ -52,8 +52,8 @@ public class SystemBundleData extends AbstractBundleData {
 
 		if (osgiBase != null && osgiBase.exists()) {
 			try {
-				in = new FileInputStream(new File(osgiBase, Constants.OSGI_BUNDLE_MANIFEST));
-			} catch (FileNotFoundException e) {
+				in = baseBundleFile.getEntry(Constants.OSGI_BUNDLE_MANIFEST).getInputStream();
+			} catch (IOException e) {
 				// do nothing here.  in == null
 			}
 		}

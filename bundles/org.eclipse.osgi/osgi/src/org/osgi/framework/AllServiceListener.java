@@ -56,6 +56,7 @@ package org.osgi.framework;
 
 public abstract interface AllServiceListener extends ServiceListener
 {
+	//This is a marker interface
 }
 
 

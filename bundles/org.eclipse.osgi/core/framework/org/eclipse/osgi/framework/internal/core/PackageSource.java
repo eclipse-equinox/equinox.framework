@@ -47,6 +47,8 @@ public abstract class PackageSource implements KeyedElement {
 	public abstract URL getResource(String name, String pkgName);
 	public abstract Enumeration getResources(String name, String pkgName) throws IOException;
 
+	//TODO This does not handle properly the multiple source package properly
+	//TODO See how this relates with FilteredSourcePackage. Overwriting or doing a double dispatch might be good.
 	public boolean hasCommonSource(PackageSource other) {
 		if (other == null)
 			return false;
