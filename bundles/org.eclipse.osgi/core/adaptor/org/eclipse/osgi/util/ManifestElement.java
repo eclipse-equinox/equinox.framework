@@ -11,10 +11,7 @@
 
 package org.eclipse.osgi.util;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
-
+import java.util.*;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.internal.core.Msg;
 import org.eclipse.osgi.framework.util.Tokenizer;
@@ -83,75 +80,63 @@ public class ManifestElement {
 				throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value));
 			}
 
-		   if (Debug.DEBUG && Debug.DEBUG_MANIFEST)
-		   {
-			   Debug.println("Classpath entry: " + path);
-		   }
-		   ManifestElement classpath = new ManifestElement(path);
-		   char c = tokenizer.getChar();
-		   attributeloop: while(c == ';')
-		   {
-			   String key = tokenizer.getToken("=");
-			   c = tokenizer.getChar();
-			   if (c == '=')
-			   {
-				   String val = tokenizer.getString(";,");
-				   if (val == null)
-				   {
-					   throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_NATIVECODE, value));
-				   }
+			if (Debug.DEBUG && Debug.DEBUG_MANIFEST) {
+				Debug.println("Classpath entry: " + path);
+			}
+			ManifestElement classpath = new ManifestElement(path);
+			char c = tokenizer.getChar();
+			attributeloop : while (c == ';') {
+				String key = tokenizer.getToken("=");
+				c = tokenizer.getChar();
+				if (c == '=') {
+					String val = tokenizer.getString(";,");
+					if (val == null) {
+						throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_NATIVECODE, value));
+					}
 
-				   if (Debug.DEBUG && Debug.DEBUG_MANIFEST)
-				   {
-					   Debug.print(";"+key+"="+val);
-				   }
-				   try
-				   {
-					   classpath.addAttribute(key, val);
-				   }
-				   catch (Exception e)
-				   {
-					   throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value), e);
-				   }
+					if (Debug.DEBUG && Debug.DEBUG_MANIFEST) {
+						Debug.print(";" + key + "=" + val);
+					}
+					try {
+						classpath.addAttribute(key, val);
+					} catch (Exception e) {
+						throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value), e);
+					}
 
-				   c = tokenizer.getChar();
+					c = tokenizer.getChar();
 
-				   if (c == ';')   /* more */
-				   {
-					   break attributeloop;
-				   }
-							
-			   } else {
+					if (c == ';') /* more */ {
+						break attributeloop;
+					}
+
+				} else {
 					throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value));
-			   }
-		   }
-		   classpaths.addElement(classpath);
+				}
+			}
+			classpaths.addElement(classpath);
 
-		   if (c == ',') /* another path */
-		   {
-			   continue parseloop;
-		   }
+			if (c == ',') /* another path */ {
+				continue parseloop;
+			}
 
-		   if (c == '\0') /* end of value */
-		   {
-			   break parseloop;
-		   }
+			if (c == '\0') /* end of value */ {
+				break parseloop;
+			}
 
-		   throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value));
-	   }
+			throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value));
+		}
 
-	   int size = classpaths.size();
+		int size = classpaths.size();
 
-	   if (size == 0)
-	   {
-		   return (null);
-	   }
+		if (size == 0) {
+			return (null);
+		}
 
-	   ManifestElement[] result = new ManifestElement[size];
-	   classpaths.copyInto(result);
+		ManifestElement[] result = new ManifestElement[size];
+		classpaths.copyInto(result);
 
-	   return (result);
-   }
+		return (result);
+	}
 	/**
 	 * @param value The key to query the manifest for exported packages
 	 * @return The Array of all ManifestElements that describe import or export
