@@ -48,10 +48,14 @@ public class StatePerformanceTest extends AbstractStateTest {
 				Version packageVersion = Version.parseVersion("1.0.0");
 				exportPackages[j] = stateFactory.createExportPackageDescription(packageName, packageVersion, null, null, null, null, null, true);
 			}
-			int importPackageCount = random.nextInt(5);
+			int importPackageCount = Math.min(exportPackageCount, random.nextInt(5));
+			int importedPackageIndex = random.nextInt(exportPackageCount + 1);
 			ImportPackageSpecification[] importPackages = new ImportPackageSpecification[importPackageCount];
 			for (int j = 0; j < importPackages.length; j++) {
-				String packageName = "package." + (random.nextInt(exportedPackages) + 1);
+				int index = importedPackageIndex++;
+				if (importedPackageIndex > exportPackageCount)
+					importedPackageIndex = 1;
+				String packageName = "package." + index;
 				importPackages[j] = stateFactory.createImportPackageSpecification(packageName,new VersionRange("1.0.0"), null, null, null, ImportPackageSpecification.RESOLUTION_STATIC, null);
 			}
 			
