@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/Configurable.java,v 1.5 2004/12/15 19:01:03 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/Configurable.java,v 1.2.4.1 2005/01/12 16:48:22 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 
@@ -35,7 +35,7 @@ package org.osgi.framework;
  * Bundles that need to configure a service may test to determine
  * if the service object is an <tt>instanceof Configurable</tt>.
  *
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.2.4.1 $
  * @deprecated Please use the Configuration Admin
  */
 public abstract interface Configurable

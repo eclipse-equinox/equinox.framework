@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.service.url/src/org/osgi/service/url/URLStreamHandlerSetter.java,v 1.4 2004/12/15 19:00:55 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/service/url/URLStreamHandlerSetter.java,v 1.2.4.1 2005/01/12 16:48:23 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2002, 2004). All Rights Reserved.
  * 
@@ -40,7 +40,7 @@ import java.net.URL;
  * <tt>setURL</tt> method on the proxy <tt>URLStreamHandler</tt> object that
  * is actually registered with <tt>java.net.URL</tt> for the protocol.
  * 
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.2.4.1 $
  */
 public interface URLStreamHandlerSetter {
 	/**

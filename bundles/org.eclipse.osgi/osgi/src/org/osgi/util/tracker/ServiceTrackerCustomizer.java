@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.util.tracker/src/org/osgi/util/tracker/ServiceTrackerCustomizer.java,v 1.5 2004/12/15 19:45:07 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/util/tracker/ServiceTrackerCustomizer.java,v 1.2.4.1 2005/01/12 16:48:25 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 
@@ -49,7 +49,7 @@ import org.osgi.framework.ServiceReference;
  * <tt>ServiceRegistration.unregister</tt>) a service while being
  * synchronized on any object.
  * 
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.2.4.1 $
  */
 public interface ServiceTrackerCustomizer {
 	/**

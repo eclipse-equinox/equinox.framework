@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/ServiceEvent.java,v 1.7 2004/12/15 19:01:03 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/ServiceEvent.java,v 1.3.2.1 2005/01/12 16:48:22 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 
@@ -40,7 +40,7 @@ import java.util.EventObject;
  * <p>
  * OSGi Alliance reserves the right to extend the set of types.
  * 
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.3.2.1 $
  * @see ServiceListener
  */
 

@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/Constants.java,v 1.7 2004/12/15 19:01:03 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/Constants.java,v 1.17.4.1 2005/01/12 16:48:22 twatson Exp $
  *
  * Copyright (c) OSGi Alliance (2000, 2004).
  * All Rights Reserved.
@@ -38,7 +38,7 @@ import java.util.Dictionary;
  * The values associated with these keys are of type <tt>java.lang.String</tt>,
  * unless otherwise indicated.
  * 
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.17.4.1 $
  * @since 1.1
  * @see Bundle#getHeaders()
  * @see BundleContext#getProperty

@@ -1,5 +1,5 @@
 /*
- * $Header: $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/Attic/AllServiceListener.java,v 1.1.2.1 2005/01/12 16:48:22 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2004). All Rights Reserved.
  * 
@@ -49,7 +49,7 @@ package org.osgi.framework;
  * <tt>AllServiceListener</tt> s have all ServiceEvent objects delivered regardless of the
  * package scope of the listening bundle.
  * 
- * @version $Revision: $
+ * @version $Revision: 1.1.2.1 $
  * @see ServiceEvent
  * @see ServicePermission
  */

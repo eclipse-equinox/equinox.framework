@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/SynchronousBundleListener.java,v 1.4 2004/12/15 19:01:03 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/SynchronousBundleListener.java,v 1.2.4.1 2005/01/12 16:48:22 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2001, 2004). All Rights Reserved.
  * 
@@ -50,7 +50,7 @@ package org.osgi.framework;
  * <tt>AdminPermission</tt> is required to add or remove a
  * <tt>SynchronousBundleListener</tt> object.
  * 
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.2.4.1 $
  * @since 1.1
  * @see BundleEvent
  */

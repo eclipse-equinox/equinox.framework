@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.service.packageadmin/src/org/osgi/service/packageadmin/RequiredBundle.java,v 1.3 2004/12/15 19:00:57 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/service/packageadmin/Attic/RequiredBundle.java,v 1.1.2.1 2005/01/12 16:48:32 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2004). All Rights Reserved.
  * 

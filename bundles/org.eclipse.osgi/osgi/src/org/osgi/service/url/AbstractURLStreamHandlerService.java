@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.service.url/src/org/osgi/service/url/AbstractURLStreamHandlerService.java,v 1.4 2004/12/15 19:00:55 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/service/url/AbstractURLStreamHandlerService.java,v 1.2.4.1 2005/01/12 16:48:23 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2002, 2004). All Rights Reserved.
  * 
@@ -38,7 +38,7 @@ import java.net.*;
  * <tt>setURL</tt> and <tt>parseURL(URLStreamHandlerSetter,...)</tt>
  * methods.
  * 
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.2.4.1 $
  */
 public abstract class AbstractURLStreamHandlerService extends URLStreamHandler
 		implements URLStreamHandlerService {

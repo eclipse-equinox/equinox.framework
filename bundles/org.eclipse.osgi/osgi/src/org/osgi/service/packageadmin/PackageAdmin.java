@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.service.packageadmin/src/org/osgi/service/packageadmin/PackageAdmin.java,v 1.6 2004/12/15 19:00:10 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/service/packageadmin/PackageAdmin.java,v 1.12.4.1 2005/01/12 16:48:32 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2001, 2004). All Rights Reserved.
  * 
@@ -52,7 +52,7 @@ import org.osgi.framework.Bundle;
  * <tt>getExportingBundle()</tt> and <tt>getImportingBundles()</tt> return
  * <tt>null</tt>.
  * 
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.12.4.1 $
  */
 public interface PackageAdmin {
 	/**

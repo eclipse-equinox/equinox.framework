@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.service.permissionadmin/src/org/osgi/service/permissionadmin/PermissionAdmin.java,v 1.5 2004/12/15 19:01:08 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/service/permissionadmin/PermissionAdmin.java,v 1.2.4.1 2005/01/12 16:48:26 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2001, 2004). All Rights Reserved.
  * 
@@ -65,7 +65,7 @@ package org.osgi.service.permissionadmin;
  * not reflected in the permissions returned by <tt>getPermissions</tt> and
  * <tt>getDefaultPermissions</tt>.
  * 
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.2.4.1 $
  */
 public interface PermissionAdmin {
 	/**
