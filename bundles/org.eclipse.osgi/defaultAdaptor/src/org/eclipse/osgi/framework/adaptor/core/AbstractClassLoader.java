@@ -80,15 +80,16 @@ public abstract class AbstractClassLoader extends ClassLoader implements BundleC
 			Debug.println("BundleClassLoader[" + delegate + "].loadClass(" + name + ")");  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
 
 		try {
-			// First check the parent classloader for system classes.
-			ClassLoader parent = getParentPrivileged();
-			if (parent != null)
-				try {
-					return parent.loadClass(name);
-				} catch (ClassNotFoundException e) {
-					// Do nothing. continue to delegate.
-				}
-
+			if (name.startsWith("java.")) { //$NON-NLS-1$
+				// First check the parent classloader for system classes.
+				ClassLoader parent = getParentPrivileged();
+				if (parent != null)
+					try {
+						return parent.loadClass(name);
+					} catch (ClassNotFoundException e) {
+						// Do nothing. continue to delegate.
+					}
+			}
 			// Just ask the delegate.  This could result in findLocalClass(name) being called.
 			Class clazz = delegate.findClass(name);
 			// resolve the class if asked to.
@@ -217,7 +218,24 @@ public abstract class AbstractClassLoader extends ClassLoader implements BundleC
 	 * @throws ClassNotFoundException if the classname does not exist locally.
 	 */
 	public Class findLocalClass(String classname) throws ClassNotFoundException {
+		if (!classname.startsWith("java.")) { //$NON-NLS-1$
+			// First check the parent classloader for system classes.
+			ClassLoader parent = getParentPrivileged();
+			if (parent != null)
+				try {
+					return parent.loadClass(classname);
+				} catch (ClassNotFoundException e) {
+					// Do nothing. continue to delegate.
+				}
+		}
 		return findClass(classname);
+	}
+
+	abstract public Object findLocalObject(String path);
+	abstract public Enumeration findLocalObjects(String path);
+
+	public ClassLoaderDelegate getDelegate() {
+		return delegate;
 	}
 
 	/**
