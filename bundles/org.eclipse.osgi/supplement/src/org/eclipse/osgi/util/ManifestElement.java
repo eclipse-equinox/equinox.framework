@@ -78,69 +78,80 @@ public class ManifestElement {
 		Tokenizer tokenizer = new Tokenizer(value);
 
 		parseloop : while (true) {
-			String path = tokenizer.getToken(",");
+			String path = tokenizer.getToken(",;");
 			if (path == null) {
 				throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value));
 			}
 
-			if (Debug.DEBUG && Debug.DEBUG_MANIFEST) {
-				Debug.println("Classpath entry: " + path);
-			}
-			ManifestElement classpath = new ManifestElement(path);
+		   if (Debug.DEBUG && Debug.DEBUG_MANIFEST)
+		   {
+			   Debug.println("Classpath entry: " + path);
+		   }
+		   ManifestElement classpath = new ManifestElement(path);
+		   char c = tokenizer.getChar();
+		   attributeloop: while(c == ';')
+		   {
+			   String key = tokenizer.getToken("=");
+			   c = tokenizer.getChar();
+			   if (c == '=')
+			   {
+				   String val = tokenizer.getString(";,");
+				   if (val == null)
+				   {
+					   throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_NATIVECODE, value));
+				   }
 
-			int index = path.indexOf(";");
-			if (index != -1) {
-				if ((index + 1) >= path.length()) {
+				   if (Debug.DEBUG && Debug.DEBUG_MANIFEST)
+				   {
+					   Debug.print(";"+key+"="+val);
+				   }
+				   try
+				   {
+					   classpath.addAttribute(key, val);
+				   }
+				   catch (Exception e)
+				   {
+					   throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value), e);
+				   }
+
+				   c = tokenizer.getChar();
+
+				   if (c == ';')   /* more */
+				   {
+					   break attributeloop;
+				   }
+							
+			   } else {
 					throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value));
-				}
-				String filterString = path.substring(index + 1);
+			   }
+		   }
+		   classpaths.addElement(classpath);
 
-				if (!filterString.endsWith(")")) {
-					// we have a space in the filter or an invalid
-					// Bundle-ClassPath header
-					StringBuffer buf = new StringBuffer(filterString);
-					buf.append(' ');
-					while (true) {
-						char nextChar = tokenizer.getChar();
-						if (nextChar == -1) {
-							throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value));
-						}
-						buf.append(nextChar);
-						if (nextChar == ')') {
-							break;
-						}
-					}
-					filterString = buf.toString();
-				}
-				classpath.addAttribute("filter", filterString);
-			}
-			classpaths.addElement(classpath);
+		   if (c == ',') /* another path */
+		   {
+			   continue parseloop;
+		   }
 
-			char c = tokenizer.getChar();
+		   if (c == '\0') /* end of value */
+		   {
+			   break parseloop;
+		   }
 
-			if (c == ',') /* another path */ {
-				continue parseloop;
-			}
+		   throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value));
+	   }
 
-			if (c == '\0') /* end of value */ {
-				break parseloop;
-			}
+	   int size = classpaths.size();
 
-			throw new BundleException(Msg.formatter.getString("MANIFEST_INVALID_HEADER_EXCEPTION", Constants.BUNDLE_CLASSPATH, value));
-		}
+	   if (size == 0)
+	   {
+		   return (null);
+	   }
 
-		int size = classpaths.size();
+	   ManifestElement[] result = new ManifestElement[size];
+	   classpaths.copyInto(result);
 
-		if (size == 0) {
-			return (null);
-		}
-
-		ManifestElement[] result = new ManifestElement[size];
-		classpaths.copyInto(result);
-
-		return (result);
-	}
-
+	   return (result);
+   }
 	/**
 	 * @param value The key to query the manifest for exported packages
 	 * @return The Array of all ManifestElements that describe import or export
