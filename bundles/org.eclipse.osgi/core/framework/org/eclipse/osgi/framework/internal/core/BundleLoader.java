@@ -162,10 +162,10 @@ public class BundleLoader implements ClassLoaderDelegate
 						bound.add(loaderProxy);
 						if (spec.isExported())
 							reexported[reexportIndex++] = i;
-					}
-					else {
-						// TODO log error
-						System.out.println("Could not find loaderProxy: " + bundleKey);
+					} else {
+						if (!spec.isOptional())
+							// TODO log error
+							System.out.println("Could not find loaderProxy: " + bundleKey);
 					}
 				}
 			}
