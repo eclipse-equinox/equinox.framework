@@ -198,14 +198,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	public org.osgi.framework.Bundle installBundle(String location) throws BundleException {
 		checkValid();
 		//note AdminPermission is checked after bundle is loaded
-		try {
-			return framework.installBundle(location);
-		} catch (BundleException be) {
-			if (be.getCause() instanceof AccessControlException) {
-				throw (AccessControlException) be.getCause();
-			}
-			throw be;
-		}
+		return framework.installBundle(location);
 	}
 
 	/**
@@ -224,14 +217,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	public org.osgi.framework.Bundle installBundle(String location, InputStream in) throws BundleException {
 		checkValid();
 		//note AdminPermission is checked after bundle is loaded
-		try {
-			return framework.installBundle(location, in);
-		} catch (BundleException be) {
-			if (be.getCause() instanceof AccessControlException) {
-				throw (AccessControlException) be.getCause();
-			}
-			throw be;
-		}
+		return framework.installBundle(location, in);
 	}
 
 	/**

@@ -615,10 +615,6 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 					return null;
 				}
 			});
-		} catch (BundleException be) {
-			if (be.getCause() instanceof AccessControlException)
-				throw (AccessControlException) be.getCause();
-			throw be;
 		} finally {
 			completeStateChange();
 		}
@@ -656,10 +652,6 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 					return null;
 				}
 			});
-		} catch (BundleException be) {
-			if (be.getCause() instanceof AccessControlException)
-				throw (AccessControlException) be.getCause();
-			throw be;
 		} finally {
 			completeStateChange();
 		}
@@ -670,7 +662,6 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	 */
 	protected void updateWorker(PrivilegedExceptionAction action) throws BundleException {
 		boolean bundleActive = false;
-		AbstractBundle host = null;
 		if (!isFragment())
 			bundleActive = (state == ACTIVE);
 		if (bundleActive) {
@@ -687,6 +678,8 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 			AccessController.doPrivileged(action);
 			framework.publishBundleEvent(BundleEvent.UPDATED, this);
 		} catch (PrivilegedActionException pae) {
+			if (pae.getException() instanceof RuntimeException)
+				throw (RuntimeException) pae.getException();
 			throw (BundleException) pae.getException();
 		} finally {
 			if (bundleActive) {
@@ -725,11 +718,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 			reloaded = true;
 			if (System.getSecurityManager() != null && (bundledata.getType() & (BundleData.TYPE_BOOTCLASSPATH_EXTENSION | BundleData.TYPE_FRAMEWORK_EXTENSION)) != 0) {
 				// must check for AllPermission before allow a bundle extension to be installed
-				try {
-					hasPermission(new AllPermission());
-				} catch (SecurityException se) {
-					throw new BundleException(Msg.formatter.getString("BUNDLE_EXTENSION_PERMISSION"), se); //$NON-NLS-1$
-				}
+				hasPermission(new AllPermission());
 			}
 			try {
 				AccessController.doPrivileged(new PrivilegedExceptionAction() {
@@ -738,14 +727,14 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 						return null;
 					}
 				}, callerContext);
-			} catch (Exception e) {
-				throw new BundleException(e.getMessage(), e);
+			} catch (PrivilegedActionException e) {
+				throw e.getException();
 			}
 			// send out unresolved events outside synch block (defect #80610)
 			if (st == RESOLVED)
 				framework.publishBundleEvent(BundleEvent.UNRESOLVED, this);
 			storage.commit(exporting);
-		} catch (BundleException e) {
+		} catch (Throwable t) {
 			try {
 				storage.undo();
 				if (reloaded) /*
@@ -760,7 +749,11 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 				/* if we fail to revert then we are in big trouble */
 				framework.publishFrameworkEvent(FrameworkEvent.ERROR, this, ee);
 			}
-			throw e;
+			if (t instanceof RuntimeException)
+				throw (RuntimeException) t;
+			if (t instanceof BundleException)
+				throw (BundleException) t;
+			throw new BundleException(t.getMessage(), t);
 		}
 	}
 

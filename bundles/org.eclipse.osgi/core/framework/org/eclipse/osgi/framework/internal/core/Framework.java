@@ -680,6 +680,8 @@ public class Framework implements EventDispatcher, EventPublisher {
 			publishBundleEvent(BundleEvent.INSTALLED, bundle);
 			return bundle;
 		} catch (PrivilegedActionException e) {
+			if (e.getException() instanceof RuntimeException)
+				throw (RuntimeException) e.getException();
 			throw (BundleException) e.getException();
 		} finally {
 			synchronized (installLock) {
@@ -721,11 +723,7 @@ public class Framework implements EventDispatcher, EventPublisher {
 				bundle.load();
 				if (System.getSecurityManager() != null && (bundledata.getType() & (BundleData.TYPE_BOOTCLASSPATH_EXTENSION | BundleData.TYPE_FRAMEWORK_EXTENSION)) != 0) {
 					// must check for AllPermission before allow a bundle extension to be installed
-					try {
-						bundle.hasPermission(new AllPermission());
-					} catch (SecurityException se) {
-						throw new BundleException(Msg.formatter.getString("BUNDLE_EXTENSION_PERMISSION"), se); //$NON-NLS-1$
-					}
+					bundle.hasPermission(new AllPermission());
 				}
 				try {
 					AccessController.doPrivileged(new PrivilegedExceptionAction() {
@@ -734,26 +732,30 @@ public class Framework implements EventDispatcher, EventPublisher {
 							return null;
 						}
 					}, callerContext);
-				} catch (Exception e) {
-					throw new BundleException(e.getMessage(), e);
+				} catch (PrivilegedActionException e) {
+					throw e.getException();
 				}
 				storage.commit(false);
-			} catch (BundleException be) {
+			} catch (Throwable error) {
 				synchronized (bundles) {
 					bundle.unload();
 				}
 				bundle.close();
-				throw be;
+				throw error;
 			}
 			/* bundle has been successfully installed */
 			bundles.add(bundle);
-		} catch (BundleException e) {
+		} catch (Throwable t) {
 			try {
 				storage.undo();
 			} catch (BundleException ee) {
 				publishFrameworkEvent(FrameworkEvent.ERROR, systemBundle, ee);
 			}
-			throw e;
+			if (t instanceof RuntimeException)
+				throw (RuntimeException) t;
+			if (t instanceof BundleException)
+				throw (BundleException) t;
+			throw new BundleException(t.getMessage(), t);
 		}
 		return bundle;
 	}
