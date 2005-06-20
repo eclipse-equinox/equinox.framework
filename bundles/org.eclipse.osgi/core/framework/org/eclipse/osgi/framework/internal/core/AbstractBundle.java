@@ -715,8 +715,8 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 			if (System.getSecurityManager() != null) {
 				final boolean extension = (bundledata.getType() & (BundleData.TYPE_BOOTCLASSPATH_EXTENSION | BundleData.TYPE_FRAMEWORK_EXTENSION)) != 0;
 				// must check for AllPermission before allow a bundle extension to be updated
-				if (extension)
-					hasPermission(new AllPermission());
+				if (extension && !hasPermission(new AllPermission()))
+					throw new SecurityException(Msg.BUNDLE_EXTENSION_LIFECYCLE_SECURITY);
 				try {
 					AccessController.doPrivileged(new PrivilegedExceptionAction() {
 						public Object run() throws Exception {
