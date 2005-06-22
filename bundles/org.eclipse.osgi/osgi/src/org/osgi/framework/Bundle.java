@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/Bundle.java,v 1.24 2005/05/13 20:32:55 hargrave Exp $
+ * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/Bundle.java,v 1.27 2005/06/21 16:37:35 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2005). All Rights Reserved.
  * 
@@ -56,7 +56,7 @@ import java.util.Enumeration;
  * <code>Bundle</code> objects, and these objects are only valid within the
  * Framework that created them.
  * 
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.27 $
  */
 public abstract interface Bundle {
 	/**
@@ -110,7 +110,6 @@ public abstract interface Bundle {
 	 * Note that the bundle is not active yet. A bundle must be put in the
 	 * <code>RESOLVED</code> state before it can be started. The Framework may
 	 * attempt to resolve a bundle at any time. 
-	 * ### Does there need to be a caveat here for fragments, which can not be started?
 	 * <p>
 	 * The value of <code>RESOLVED</code> is 0x00000004.
 	 */
@@ -397,7 +396,8 @@ public abstract interface Bundle {
 	 * @exception java.lang.IllegalStateException If this bundle has been
 	 *            uninstalled or this bundle tries to change its own state.
 	 * @exception java.lang.SecurityException If the caller does not have the
-	 *            appropriate <code>AdminPermission[bundle, LIFECYCLE]</code>,
+	 *            appropriate <code>AdminPermission[bundle, LIFECYCLE]</code> for both
+	 *            the current bundle and the updated bundle,
 	 *            and the Java Runtime Environment supports permissions.
 	 * @see #stop()
 	 * @see #start()
@@ -422,7 +422,8 @@ public abstract interface Bundle {
 	 * @exception java.lang.IllegalStateException If this bundle has been
 	 *            uninstalled or this bundle tries to change its own state.
 	 * @exception java.lang.SecurityException If the caller does not have the
-	 *            appropriate <code>AdminPermission[bundle, LIFECYCLE]</code>,
+	 *            appropriate <code>AdminPermission[bundle, LIFECYCLE]</code> for both
+	 *            the current bundle and the updated bundle,
 	 *            and the Java Runtime Environment supports permissions.
 	 * @see #update()
 	 */
@@ -658,7 +659,7 @@ public abstract interface Bundle {
 	public abstract boolean hasPermission(Object permission);
 
 	/**
-	 * Find the specified resource in this bundle.
+	 * Find the specified resource from this bundle.
 	 * 
 	 * This bundle's class loader is called to search for the named resource. If
 	 * this bundle's state is <code>INSTALLED</code>, then only this bundle
@@ -778,17 +779,13 @@ public abstract interface Bundle {
 	public Class loadClass(String name) throws ClassNotFoundException;
 
 	/**
-	 * Find the specified resources in this bundle.
+	 * Find the specified resources from this bundle.
 	 * 
 	 * This bundle's class loader is called to search for the named resource. If
 	 * this bundle's state is <code>INSTALLED</code>, then only this bundle
 	 * must be searched for the specified resource. Imported packages cannot be
 	 * searched when a bundle has not been resolved. If this bundle is a
 	 * fragment bundle then <code>null</code> is returned.
-	 * 
-	 * ### How are split packages treated??? 
-	 * ### shouldn't we mention that this can create a classloader? 
-	 * ### How is the Bundle-Class path treated
 	 * 
 	 * @param name The name of the resource. See
 	 *        <code>java.lang.ClassLoader.getResources</code> for a
@@ -876,7 +873,7 @@ public abstract interface Bundle {
 	/**
 	 * Returns entries in this bundle and its attached fragments. The bundle's
 	 * classloader is not used to search for entries. Only the contents of the
-	 * bundle and its attatched fragments are searched for the specified
+	 * bundle and its attached fragments are searched for the specified
 	 * entries.
 	 * 
 	 * If this bundle's state is <code>INSTALLED</code>, this method must
