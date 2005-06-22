@@ -63,7 +63,6 @@ public class Msg extends NLS {
 	public static String BUNDLE_NATIVECODE_MATCH_EXCEPTION;
 	public static String BUNDLE_INSTALL_REQUIRED_EE_EXCEPTION;
 	public static String BUNDLE_INSTALL_SAME_UNIQUEID;
-	public static String BUNDLE_EXTENSION_LIFECYCLE_SECURITY;
 	
 	public static String ECLIPSE_OSGI_NAME;
 	public static String ECLIPSE_OSGI_VERSION;
