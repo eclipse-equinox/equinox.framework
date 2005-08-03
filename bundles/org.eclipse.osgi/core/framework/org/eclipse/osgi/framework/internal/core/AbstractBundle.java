@@ -40,8 +40,6 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	protected Object statechangeLock = new Object();
 	/** ProtectionDomain for the bundle */
 	protected BundleProtectionDomain domain;
-	/* Single object for permission checks */
-	BundleResourcePermission resourcePermission;
 
 	/**
 	 * This String captures the dependencies that could not be resolved
@@ -715,8 +713,8 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 			if (System.getSecurityManager() != null) {
 				final boolean extension = (bundledata.getType() & (BundleData.TYPE_BOOTCLASSPATH_EXTENSION | BundleData.TYPE_FRAMEWORK_EXTENSION)) != 0;
 				// must check for AllPermission before allow a bundle extension to be updated
-				if (extension)
-					hasPermission(new AllPermission());
+				if (extension && !hasPermission(new AllPermission()))
+					throw new BundleException(Msg.BUNDLE_EXTENSION_PERMISSION, new SecurityException(Msg.BUNDLE_EXTENSION_PERMISSION));
 				try {
 					AccessController.doPrivileged(new PrivilegedExceptionAction() {
 						public Object run() throws Exception {
@@ -1113,7 +1111,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 					return;
 				}
 				if (doubleFault || (stateChanging == Thread.currentThread())) {
-					throw new BundleException(NLS.bind(Msg.BUNDLE_STATE_CHANGE_EXCEPTION, getLocation(), stateChanging.getName()));
+					throw new BundleException(NLS.bind(Msg.BUNDLE_STATE_CHANGE_EXCEPTION, getBundleData().getLocation(), stateChanging.getName()));
 				}
 				try {
 					if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
@@ -1197,16 +1195,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	 */
 	protected void checkValid() {
 		if (state == UNINSTALLED) {
-			throw new IllegalStateException(NLS.bind(Msg.BUNDLE_UNINSTALLED_EXCEPTION, getLocation()));
-		}
-	}
-
-	protected void checkResourcePermission() {
-		SecurityManager sm = System.getSecurityManager();
-		if (sm != null) {
-			if (resourcePermission == null)
-				resourcePermission = new BundleResourcePermission(getBundleId());
-			sm.checkPermission(resourcePermission);
+			throw new IllegalStateException(NLS.bind(Msg.BUNDLE_UNINSTALLED_EXCEPTION, getBundleData().getLocation()));
 		}
 	}
 
