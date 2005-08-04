@@ -57,9 +57,15 @@ public class ConditionalPermissionSet extends PermissionCollection {
 	 *        immutable and satisfied may be added. </b>
 	 */
 	void addConditionalPermissionInfo(ConditionalPermissionInfoImpl cpi) {
-		if (neededConditions.length > 0) {
+		if (neededConditions.length > 0)
 			throw new RuntimeException("Cannot add ConditionalPermissionInfoImpl to a non satisfied set");
-		}
+		// first look for a null slot
+		for (int i = 0; i < cpis.length; i++)
+			if (cpis[i] == null) { // found an empty slot; use it
+				cpis[i] = cpi;
+				cachedPermissionCollections.clear();
+				return;
+			}
 		ConditionalPermissionInfoImpl newcpis[] = new ConditionalPermissionInfoImpl[cpis.length + 1];
 		System.arraycopy(cpis, 0, newcpis, 0, cpis.length);
 		newcpis[cpis.length] = cpi;
@@ -82,6 +88,8 @@ public class ConditionalPermissionSet extends PermissionCollection {
 			return;
 		}
 		out: for (int i = 0; i < cpis.length; i++) {
+			if (cpis[i] == null) // check for deletions
+				continue;
 			PermissionInfo perms[] = cpis[i].perms;
 			for (int j = 0; j < perms.length; j++) {
 				if (perms[j].getType().equals(AllPermission.class.getName())) {
@@ -100,10 +108,12 @@ public class ConditionalPermissionSet extends PermissionCollection {
 	 */
 	boolean isNonEmpty() {
 		boolean nonEmpty = false;
+		boolean forceAllPermCheck = false;
 		for (int i = 0; i < cpis.length; i++) {
 			if (cpis[i] != null) {
 				if (cpis[i].isDeleted()) {
 					cpis[i] = null;
+					forceAllPermCheck = true;
 					/*
 					 * We don't have a way to remove from a collection; we can
 					 * only add. Thus, we must clear out everything. TODO:
@@ -116,8 +126,11 @@ public class ConditionalPermissionSet extends PermissionCollection {
 				}
 			}
 		}
-		if (!nonEmpty) {
+		if (!nonEmpty)
 			cpis = new ConditionalPermissionInfoImpl[0];
+		if (forceAllPermCheck) {
+			hasAllPermission = false;
+			checkForAllPermission();
 		}
 		return nonEmpty;
 	}
@@ -223,5 +236,15 @@ public class ConditionalPermissionSet extends PermissionCollection {
 	void unresolvePermissions(AbstractBundle[] refreshedBundles) {
 		cachedPermissionCollections.clear();
 
+	}
+
+	boolean remove(ConditionalPermissionInfoImpl cpi) {
+		for (int i = 0; i < cpis.length; i++)
+			if (cpis[i] == cpi) {
+				cpis[i] = null;
+				cachedPermissionCollections.clear();
+				return true;
+			}
+		return false;
 	}
 }

@@ -61,6 +61,8 @@ public class ConditionalPermissions extends PermissionCollection {
 
 	void checkConditionalPermissionInfo(ConditionalPermissionInfoImpl cpi) {
 		try {
+			// first remove the cpi incase of an update
+			removeCPI(cpi);
 			Condition conds[] = cpi.getConditions(bundle);
 			if (conds == null) {
 				/* Couldn't process the conditions, so we can't use them */
@@ -91,6 +93,15 @@ public class ConditionalPermissions extends PermissionCollection {
 		}
 	}
 
+	private void removeCPI(ConditionalPermissionInfoImpl cpi) {
+		satisfiedCPIs.remove(cpi);
+		satisfiedCPS.remove(cpi);
+		ConditionalPermissionSet cpsArray[] = (ConditionalPermissionSet[]) satisfiableCPSs.toArray(new ConditionalPermissionSet[0]);
+		for (int i = 0; i < cpsArray.length; i++)
+			if (cpsArray[i].remove(cpi))
+				satisfiableCPSs.remove(cpsArray[i]);
+	}
+
 	/**
 	 * This method is not implemented since this PermissionCollection should
 	 * only be used by the ConditionalPolicy which never calls this method.
@@ -103,11 +114,11 @@ public class ConditionalPermissions extends PermissionCollection {
 
 	public boolean implies(Permission perm) {
 		processPending();
-		if (satisfiedCPS.implies(perm)) {
+		boolean newEmpty = !satisfiedCPS.isNonEmpty();
+		if (!newEmpty && satisfiedCPS.implies(perm)) {
 			this.empty = false;
 			return true;
 		}
-		boolean newEmpty = !satisfiedCPS.isNonEmpty();
 		boolean satisfied = false;
 		Vector unevalCondsSets = null;
 		SecurityManager sm = System.getSecurityManager();
@@ -119,31 +130,32 @@ public class ConditionalPermissions extends PermissionCollection {
 		cpsLoop: for (int i = 0; i < cpsArray.length; i++) {
 			if (cpsArray[i].isNonEmpty()) {
 				newEmpty = false;
+				Condition conds[] = cpsArray[i].getNeededConditions();
+				// check mutable !isPostponed conditions first; 
+				// note that !mutable conditions have already been evaluated
+				for (int j = 0; j < conds.length; j++)
+					if (conds[j] != null && !conds[j].isPostponed() && !conds[j].isSatisfied())
+						continue cpsLoop;
+				// check the implies now
 				if (cpsArray[i].implies(perm)) {
-					Condition conds[] = cpsArray[i].getNeededConditions();
+					// the permission is implied; the only unevaluated conditions left are mutable postponed conditions
+					// postpone their evaluation until the end
 					Vector unevaluatedConds = null;
 					for (int j = 0; j < conds.length; j++) {
-						if (conds[j] == null) {
-							continue;
-						}
-						if (!conds[j].isPostponed() && !conds[j].isSatisfied()) {
-							continue cpsLoop;
-						}
-						if (conds[j].isPostponed()) {
+						if (conds[j] != null && conds[j].isPostponed()) {
 							if (fsm == null) {
 								// If there is no FrameworkSecurityManager, we must evaluate now
-								if (!conds[j].isSatisfied()) {
+								if (!conds[j].isSatisfied())
 									continue cpsLoop;
-								}
 							} else {
-								if (unevaluatedConds == null) {
+								if (unevaluatedConds == null)
 									unevaluatedConds = new Vector();
-								}
 								unevaluatedConds.add(conds[j]);
 							}
 						}
 					}
 					if (unevaluatedConds == null) {
+						// no postponed conditions exist return true now
 						this.empty = false;
 						return true;
 					}
@@ -153,7 +165,7 @@ public class ConditionalPermissions extends PermissionCollection {
 					satisfied = true;
 				}
 			} else {
-				satisfiedCPIs.remove(cpsArray[i]);
+				satisfiableCPSs.remove(cpsArray[i]);
 			}
 		}
 		this.empty = newEmpty;
@@ -175,9 +187,10 @@ public class ConditionalPermissions extends PermissionCollection {
 			synchronized (satisfiedCPIs) {
 				for (int i = 0; i < satisfiedCPIs.size(); i++) {
 					ConditionalPermissionInfoImpl cpi = (ConditionalPermissionInfoImpl) satisfiedCPIs.get(i);
-					satisfiedCPS.addConditionalPermissionInfo(cpi);
+					if (!cpi.isDeleted())
+						satisfiedCPS.addConditionalPermissionInfo(cpi);
 				}
-				satisfiableCPSs.clear();
+				satisfiedCPIs.clear();
 			}
 		}
 	}
