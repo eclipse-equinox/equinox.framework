@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/ServiceEvent.java,v 1.9 2005/05/13 20:32:56 hargrave Exp $
+ * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/ServiceEvent.java,v 1.12 2005/08/05 14:50:04 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2005). All Rights Reserved.
  * 
@@ -10,20 +10,20 @@
 
 package org.osgi.framework;
 
-import java.util.Dictionary;
 import java.util.EventObject;
 
 /**
- * A service lifecycle change event.
+ * An event from the Framework describing a service lifecycle change.
  * <p>
- * <code>ServiceEvent</code> objects are delivered to a <code>ServiceListener</code>
- * objects when a change occurs in this service's lifecycle. A type code is used
- * to identify the event type for future extendability.
+ * <code>ServiceEvent</code> objects are delivered to a
+ * <code>ServiceListener</code> objects when a change occurs in this service's
+ * lifecycle. A type code is used to identify the event type for future
+ * extendability.
  * 
  * <p>
  * OSGi Alliance reserves the right to extend the set of types.
  * 
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.12 $
  * @see ServiceListener
  */
 
@@ -42,20 +42,20 @@ public class ServiceEvent extends EventObject {
 	/**
 	 * This service has been registered.
 	 * <p>
-	 * This event is synchronously delivered <strong>after </strong> the service
+	 * This event is synchronously delivered <strong>after</strong> the service
 	 * has been registered with the Framework.
 	 * 
 	 * <p>
 	 * The value of <code>REGISTERED</code> is 0x00000001.
 	 * 
-	 * @see BundleContext#registerService(String[],Object,Dictionary)
+	 * @see BundleContext#registerService(String[],Object,java.util.Dictionary)
 	 */
 	public final static int		REGISTERED			= 0x00000001;
 
 	/**
 	 * The properties of a registered service have been modified.
 	 * <p>
-	 * This event is synchronously delivered <strong>after </strong> the service
+	 * This event is synchronously delivered <strong>after</strong> the service
 	 * properties have been modified.
 	 * 
 	 * <p>
@@ -68,7 +68,7 @@ public class ServiceEvent extends EventObject {
 	/**
 	 * This service is in the process of being unregistered.
 	 * <p>
-	 * This event is synchronously delivered <strong>before </strong> the
+	 * This event is synchronously delivered <strong>before</strong> the
 	 * service has completed unregistering.
 	 * 
 	 * <p>
@@ -90,8 +90,8 @@ public class ServiceEvent extends EventObject {
 	 * Creates a new service event object.
 	 * 
 	 * @param type The event type.
-	 * @param reference A <code>ServiceReference</code> object to the service that
-	 *        had a lifecycle change.
+	 * @param reference A <code>ServiceReference</code> object to the service
+	 *        that had a lifecycle change.
 	 */
 	public ServiceEvent(int type, ServiceReference reference) {
 		super(reference);
@@ -108,7 +108,7 @@ public class ServiceEvent extends EventObject {
 	 * @return Reference to the service that had a lifecycle change.
 	 */
 	public ServiceReference getServiceReference() {
-		return (reference);
+		return reference;
 	}
 
 	/**
@@ -123,7 +123,6 @@ public class ServiceEvent extends EventObject {
 	 */
 
 	public int getType() {
-		return (type);
+		return type;
 	}
 }
-

@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/FrameworkListener.java,v 1.6 2005/05/13 20:32:55 hargrave Exp $
+ * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/FrameworkListener.java,v 1.8 2005/08/05 03:22:00 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2000, 2005). All Rights Reserved.
  * 
@@ -13,27 +13,28 @@ package org.osgi.framework;
 import java.util.EventListener;
 
 /**
- * A <code>FrameworkEvent</code> listener.
+ * A <code>FrameworkEvent</code> listener. When a <code>FrameworkEvent</code> is
+ * fired, it is asynchronously delivered to a <code>FrameworkListener</code>.
  * 
  * <p>
- * <code>FrameworkListener</code> is a listener interface that may be implemented
- * by a bundle developer. A <code>FrameworkListener</code> object is registered
- * with the Framework using the {@link BundleContext#addFrameworkListener}
- * method. <code>FrameworkListener</code> objects are called with a
+ * <code>FrameworkListener</code> is a listener interface that may be
+ * implemented by a bundle developer. A <code>FrameworkListener</code> object
+ * is registered with the Framework using the
+ * {@link BundleContext#addFrameworkListener} method.
+ * <code>FrameworkListener</code> objects are called with a
  * <code>FrameworkEvent</code> objects when the Framework starts and when
  * asynchronous errors occur.
  * 
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.8 $
  * @see FrameworkEvent
  */
 
-public abstract interface FrameworkListener extends EventListener {
+public interface FrameworkListener extends EventListener {
 
 	/**
 	 * Receives notification of a general <code>FrameworkEvent</code> object.
 	 * 
 	 * @param event The <code>FrameworkEvent</code> object.
 	 */
-	public abstract void frameworkEvent(FrameworkEvent event);
+	public void frameworkEvent(FrameworkEvent event);
 }
-

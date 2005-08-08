@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/SynchronousBundleListener.java,v 1.8 2005/05/13 20:32:54 hargrave Exp $
+ * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/SynchronousBundleListener.java,v 1.12 2005/08/05 03:22:00 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2001, 2005). All Rights Reserved.
  * 
@@ -11,7 +11,8 @@
 package org.osgi.framework;
 
 /**
- * A synchronous <code>BundleEvent</code> listener.
+ * A synchronous <code>BundleEvent</code> listener. When a <code>BundleEvent</code> is
+ * fired, it is synchronously delivered to a <code>BundleListener</code>.
  * 
  * <p>
  * <code>SynchronousBundleListener</code> is a listener interface that may be
@@ -20,24 +21,24 @@ package org.osgi.framework;
  * A <code>SynchronousBundleListener</code> object is registered with the
  * Framework using the {@link BundleContext#addBundleListener} method.
  * <code>SynchronousBundleListener</code> objects are called with a
- * <code>BundleEvent</code> object when a bundle has been installed,
- * resolved, started, stopped, updated, unresolved, or uninstalled.
+ * <code>BundleEvent</code> object when a bundle has been installed, resolved,
+ * starting, started, stopping, stopped, updated, unresolved, or uninstalled.
  * <p>
  * Unlike normal <code>BundleListener</code> objects,
- * <code>SynchronousBundleListener</code>s are synchronously called during bundle
- * lifecycle processing. The bundle lifecycle processing will not proceed
+ * <code>SynchronousBundleListener</code>s are synchronously called during
+ * bundle lifecycle processing. The bundle lifecycle processing will not proceed
  * until all <code>SynchronousBundleListener</code>s have completed.
  * <code>SynchronousBundleListener</code> objects will be called prior to
  * <code>BundleListener</code> objects.
  * <p>
- * <code>AdminPermission</code> is required to add or remove a
+ * <code>AdminPermission[bundle,LISTENER]</code> is required to add or remove a
  * <code>SynchronousBundleListener</code> object.
  * 
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.12 $
  * @since 1.1
  * @see BundleEvent
  */
 
-public abstract interface SynchronousBundleListener extends BundleListener {
+public interface SynchronousBundleListener extends BundleListener {
+	// This is a marker interface
 }
-

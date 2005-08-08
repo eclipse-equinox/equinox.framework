@@ -1,5 +1,5 @@
 /*
- * $Header: /cvshome/build/org.osgi.framework/src/org/osgi/framework/FrameworkUtil.java,v 1.1 2005/07/14 20:32:46 hargrave Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/FrameworkUtil.java,v 1.3 2005/08/04 15:15:04 twatson Exp $
  * 
  * Copyright (c) OSGi Alliance (2005). All Rights Reserved.
  * 
@@ -19,7 +19,7 @@ import org.eclipse.osgi.framework.internal.core.FilterImpl;
  * This class contains utility methods which access Framework functions that may
  * be useful to bundles.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.3 $
  * @since 1.3
  */
 public class FrameworkUtil {
@@ -36,7 +36,7 @@ public class FrameworkUtil {
 	 * @param filter The filter string.
 	 * @return A <code>Filter</code> object encapsulating the filter string.
 	 * @throws InvalidSyntaxException If <code>filter</code> contains an
-	 *            invalid filter string that cannot be parsed.
+	 *         invalid filter string that cannot be parsed.
 	 * @throws NullPointerException If <code>filter</code> is null.
 	 * 
 	 * @see Filter
