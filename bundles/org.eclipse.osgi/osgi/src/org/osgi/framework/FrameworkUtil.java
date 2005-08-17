@@ -1,7 +1,8 @@
 /*
- * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/FrameworkUtil.java,v 1.3 2005/08/04 15:15:04 twatson Exp $
+ * $Header: /home/eclipse/org.eclipse.osgi/osgi/src/org/osgi/framework/FrameworkUtil.java,v 1.5 2005/08/16 13:49:27 hargrave Exp $
  * 
  * Copyright (c) OSGi Alliance (2005). All Rights Reserved.
+ * Copyright (c) 2005 IBM Corporation and others.
  * 
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this 
@@ -19,11 +20,16 @@ import org.eclipse.osgi.framework.internal.core.FilterImpl;
  * This class contains utility methods which access Framework functions that may
  * be useful to bundles.
  * 
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.5 $
  * @since 1.3
  */
 public class FrameworkUtil {
 
+	/**
+	 * FrameworkUtil objects may not be constructed. 
+	 */
+	private FrameworkUtil() {}
+	
 	/**
 	 * Creates a <code>Filter</code> object. This <code>Filter</code> object
 	 * may be used to match a <code>ServiceReference</code> object or a
