@@ -126,6 +126,7 @@ class StateWriter {
 				// the data is written at least once in the non-lazy state data
 				writeBundleDescription(bundles[i], outState, true);
 			outState.writeBoolean(state.isResolved());
+			state.setDynamicCacheChanged(false);
 		} finally {
 			if (outLazy != null)
 				try {
@@ -257,6 +258,19 @@ class StateWriter {
 			for (int i = 0; i < resolvedRequires.length; i++)
 				writeBundleDescription(resolvedRequires[i], out, false);
 		}
+
+		HashMap dynamicStamps = ((BundleDescriptionImpl)bundle).getDynamicStamps();
+		if (dynamicStamps == null)
+			out.writeInt(0);
+		else {
+			out.writeInt(dynamicStamps.size());
+			for (Iterator pkgs = dynamicStamps.keySet().iterator(); pkgs.hasNext();) {
+				String pkg = (String) pkgs.next();
+				writeStringOrNull(pkg, out);
+				out.writeLong(((Long)dynamicStamps.get(pkg)).longValue());
+			}
+		}
+
 
 		// save the size of the lazy data
 		((BundleDescriptionImpl) bundle).setLazyDataSize(out.size() - dataStart);
@@ -395,6 +409,7 @@ class StateWriter {
 	public void saveStateDeprecated(StateImpl state, DataOutputStream output) throws IOException {
 		try {
 			writeStateDeprecated(state, output);
+			state.setDynamicCacheChanged(false);
 		} finally {
 			output.close();
 		}

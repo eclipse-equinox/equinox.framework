@@ -34,7 +34,7 @@ class StateReader {
 	private boolean lazyLoad = true;
 	private int numBundles;
 
-	public static final byte STATE_CACHE_VERSION = 21;
+	public static final byte STATE_CACHE_VERSION = 22;
 	public static final byte NULL = 0;
 	public static final byte OBJECT = 1;
 	public static final byte INDEX = 2;
@@ -282,6 +282,18 @@ class StateReader {
 				resolved[i] = readBundleDescription(in);
 			result.setResolvedRequires(resolved);
 		}
+
+		int dynamicPkgCnt = in.readInt();
+		if (dynamicPkgCnt > 0) {
+			HashMap dynamicStamps = new HashMap(dynamicPkgCnt);
+			for (int i = 0; i < dynamicPkgCnt; i++) {
+				String pkg = readString(in, false);
+				Long stamp = new Long(in.readLong());
+				dynamicStamps.put(pkg, stamp);
+			}
+			result.setDynamicStamps(dynamicStamps);
+		}
+
 		result.setFullyLoaded(true); // set fully loaded before setting the dependencies
 		// No need to add bundle dependencies for hosts, imports or requires;
 		// This is done by readBundleDescription

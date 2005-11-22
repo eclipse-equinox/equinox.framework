@@ -143,7 +143,7 @@ public class StateManager implements PlatformAdmin, Runnable {
 	private void writeState(File stateFile, File lazyFile) throws IOException {
 		if (systemState == null)
 			return;
-		if (cachedState && lastTimeStamp == systemState.getTimeStamp())
+		if (cachedState && !saveNeeded())
 			return;
 		systemState.fullyLoad(); // make sure we are fully loaded before saving
 		factory.writeState(systemState, stateFile, lazyFile);
@@ -200,6 +200,10 @@ public class StateManager implements PlatformAdmin, Runnable {
 	 */
 	public long getCachedTimeStamp() {
 		return lastTimeStamp;
+	}
+
+	public boolean saveNeeded() {
+		return systemState.getTimeStamp() != lastTimeStamp || systemState.dynamicCacheChanged();
 	}
 
 	/**
