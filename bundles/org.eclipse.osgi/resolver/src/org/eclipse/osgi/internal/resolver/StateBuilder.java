@@ -98,6 +98,8 @@ class StateBuilder {
 					checkImportExportSyntax(elements, false);
 				if (DEFINED_OSGI_VALIDATE_HEADERS[i] == Constants.EXPORT_PACKAGE)
 					checkImportExportSyntax(elements, true);
+				if (DEFINED_OSGI_VALIDATE_HEADERS[i] == Constants.FRAGMENT_HOST)
+					checkExtensionBundle(elements);
 			} else if (DEFINED_OSGI_VALIDATE_HEADERS[i] == Constants.BUNDLE_SYMBOLICNAME) {
 				throw new BundleException(NLS.bind(StateMsg.HEADER_REQUIRED, Constants.BUNDLE_SYMBOLICNAME));
 			}
@@ -345,5 +347,14 @@ class StateBuilder {
 		for (int i = 0; i < elements.length; i++)
 			if (elements[i].getDirective(Constants.USES_DIRECTIVE) != null)
 				throw new BundleException(NLS.bind(StateMsg.HEADER_REEXPORT_USES, Constants.USES_DIRECTIVE, Constants.REEXPORT_PACKAGE));
+	}
+
+
+	private static void checkExtensionBundle(ManifestElement[] elements) throws BundleException {
+		if (elements.length == 0 || elements[0].getDirective(Constants.EXTENSION_DIRECTIVE) == null)
+			return;
+		String hostName = elements[0].getValue();
+		if (!hostName.equals(Constants.SYSTEM_BUNDLE_SYMBOLICNAME) && !hostName.equals(Constants.getInternalSymbolicName()))
+			throw new BundleException(NLS.bind(StateMsg.HEADER_EXTENSION_ERROR, hostName));
 	}
 }
