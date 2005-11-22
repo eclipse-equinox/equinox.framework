@@ -425,7 +425,7 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 						ResolverImpl.log("** REQUIRE " + requires[i].getVersionConstraint().getName() + "[" + requires[i].getActualBundle() + "] failed to resolve"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					// If the require has failed to resolve and it is from a fragment, then remove the fragment from the host
 					if (requires[i].isFromFragment()) {
-						resolverExports.remove(bundle.detachFragment((ResolverBundle) bundleMapping.get(requires[i].getVersionConstraint().getBundle())));
+						resolverExports.remove(bundle.detachFragment((ResolverBundle) bundleMapping.get(requires[i].getVersionConstraint().getBundle()), requires[i]));
 						continue;
 					}
 					failed = true;
@@ -445,7 +445,7 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 							ResolverImpl.log("** IMPORT " + imports[i].getName() + "[" + imports[i].getActualBundle() + "] failed to resolve"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 						// If the import has failed to resolve and it is from a fragment, then remove the fragment from the host
 						if (imports[i].isFromFragment()) {
-							resolverExports.remove(bundle.detachFragment((ResolverBundle) bundleMapping.get(imports[i].getImportPackageSpecification().getBundle())));
+							resolverExports.remove(bundle.detachFragment((ResolverBundle) bundleMapping.get(imports[i].getImportPackageSpecification().getBundle()), imports[i]));
 							continue;
 						}
 						failed = true;
@@ -1151,5 +1151,9 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 
 	static void log(String message) {
 		Debug.println(message);
+	}
+
+	VersionHashMap getResolverExports() {
+		return resolverExports;
 	}
 }
