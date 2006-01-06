@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2005 IBM Corporation and others.
+ * Copyright (c) 2003, 2006 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,6 +33,7 @@ class StateReader {
 
 	private boolean lazyLoad = true;
 	private int numBundles;
+	private boolean accessedFlag = false;
 
 	public static final byte STATE_CACHE_VERSION = 22;
 	public static final byte NULL = 0;
@@ -468,7 +469,16 @@ class StateReader {
 		return lazyLoad;
 	}
 
+	boolean getAccessedFlag() {
+		return accessedFlag;
+	}
+
+	void setAccessedFlag(boolean accessedFlag) {
+		this.accessedFlag = accessedFlag;
+	}
+
 	synchronized void fullyLoad() {
+		setAccessedFlag(true);
 		DataInputStream in = null;
 		try {
 			in = openLazyFile();
@@ -487,6 +497,7 @@ class StateReader {
 	}
 
 	synchronized void fullyLoad(BundleDescriptionImpl target) throws IOException {
+		setAccessedFlag(true);
 		DataInputStream in = null;
 		try {
 			in = openLazyFile();

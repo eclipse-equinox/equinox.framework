@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2005 IBM Corporation and others.
+ * Copyright (c) 2003, 2006 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -42,7 +42,6 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 	private ArrayList dependents;
 
 	private LazyData lazyData;
-	private long lazyTimeStamp;
 
 	public BundleDescriptionImpl() {
 		// 
@@ -383,7 +382,6 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 	void setFullyLoaded(boolean fullyLoaded) {
 		if (fullyLoaded) {
 			stateBits |= FULLY_LOADED;
-			lazyTimeStamp = System.currentTimeMillis();
 		} else {
 			stateBits &= ~FULLY_LOADED;
 		}
@@ -412,8 +410,10 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 	private void fullyLoad() {
 		if ((stateBits & LAZY_LOADED) == 0)
 			return;
-		if (isFullyLoaded())
+		if (isFullyLoaded()) {
+			containingState.getReader().setAccessedFlag(true); // set reader accessed flag
 			return;
+		}
 		try {
 			containingState.getReader().fullyLoad(this);
 		} catch (IOException e) {
@@ -436,10 +436,10 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 		lazyData.resolvedImports = newImports;
 	}
 
-	void unload(long currentTime, long expireTime) {
+	void unload() {
 		if ((stateBits & LAZY_LOADED) == 0)
 			return;
-		if (!isFullyLoaded() || (currentTime - lazyTimeStamp - expireTime) <= 0)
+		if (!isFullyLoaded())
 			return;
 		setFullyLoaded(false);
 		LazyData tempData = lazyData;

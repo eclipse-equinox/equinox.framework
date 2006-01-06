@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2005 IBM Corporation and others.
+ * Copyright (c) 2003, 2006 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -568,12 +568,15 @@ public abstract class StateImpl implements State {
 	}
 
 	public void unloadLazyData(long expireTime) {
-		long currentTime = System.currentTimeMillis();
-		BundleDescription[] bundles = getBundles();
 		// make sure no other thread is trying to unload or load
 		synchronized (reader) {
+			if (reader.getAccessedFlag()) {
+				reader.setAccessedFlag(false); // reset accessed flag
+				return;
+			}
+			BundleDescription[] bundles = getBundles();
 			for (int i = 0; i < bundles.length; i++)
-				((BundleDescriptionImpl) bundles[i]).unload(currentTime, expireTime);
+				((BundleDescriptionImpl) bundles[i]).unload();
 		}
 	}
 
