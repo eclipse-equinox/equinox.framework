@@ -21,7 +21,6 @@ import org.eclipse.osgi.baseadaptor.hooks.ClasspathManagerHook;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.internal.baseadaptor.AdaptorMsg;
-import org.eclipse.osgi.internal.baseadaptor.DevClassPathHelper;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkEvent;
@@ -146,13 +145,10 @@ public class ClasspathManager {
 		ClasspathManagerHook[] loaderHooks = sourcedata.getAdaptor().getHookRegistry().getClasspathManagerHooks();
 		boolean hookAdded = false;
 		for (int i = 0; i < loaderHooks.length; i++)
-			hookAdded = loaderHooks[i].addClassPathEntry(result, cp, hostloader, sourcedata, sourcedomain) || hookAdded;
+			hookAdded |= loaderHooks[i].addClassPathEntry(result, cp, hostloader, sourcedata, sourcedomain);
 		if (!addClassPathEntry(result, cp, hostloader, sourcedata, sourcedomain) && !hookAdded) {
-			String[] devCP = !DevClassPathHelper.inDevelopmentMode() ? null : DevClassPathHelper.getDevClassPath(sourcedata.getSymbolicName());
-			if (devCP == null || devCP.length == 0) {
-				BundleException be = new BundleException(NLS.bind(AdaptorMsg.BUNDLE_CLASSPATH_ENTRY_NOT_FOUND_EXCEPTION, cp, sourcedata.getLocation()));
-				sourcedata.getAdaptor().getEventPublisher().publishFrameworkEvent(FrameworkEvent.INFO, sourcedata.getBundle(), be);
-			}
+			BundleException be = new BundleException(NLS.bind(AdaptorMsg.BUNDLE_CLASSPATH_ENTRY_NOT_FOUND_EXCEPTION, cp, sourcedata.getLocation()));
+			sourcedata.getAdaptor().getEventPublisher().publishFrameworkEvent(FrameworkEvent.INFO, sourcedata.getBundle(), be);
 		}
 	}
 
@@ -204,12 +200,10 @@ public class ClasspathManager {
 		// check for internal library jars
 		if ((file = sourcedata.getBundleFile().getFile(cp, false)) != null)
 			bundlefile = createBundleFile(file, sourcedata);
-		// check for intenral library directories in a bundle jar file
+		// check for internal library directories in a bundle jar file
 		if (bundlefile == null && sourcedata.getBundleFile().containsDir(cp))
 			bundlefile = new NestedDirBundleFile(sourcedata.getBundleFile(), cp);
 		// if in dev mode, try using the cp as an absolute path
-		if (bundlefile == null && DevClassPathHelper.inDevelopmentMode())
-			return getExternalClassPath(cp, sourcedata, sourcedomain);
 		if (bundlefile != null)
 			return createClassPathEntry(bundlefile, sourcedomain);
 		return null;
@@ -551,8 +545,16 @@ public class ClasspathManager {
 	 * Returns the fragment classpaths of this classpath manager
 	 * @return the fragment classpaths of this classpath manager
 	 */
-	public FragmentClasspath[] getFragments() {
+	public FragmentClasspath[] getFragmentClasspaths() {
 		return fragments;
+	}
+
+	/**
+	 * Returns the host classpath entries for this classpath manager
+	 * @return the host classpath entries for this classpath manager
+	 */
+	public ClasspathEntry[] getHostClasspathEntries() {
+		return entries;
 	}
 
 	/**

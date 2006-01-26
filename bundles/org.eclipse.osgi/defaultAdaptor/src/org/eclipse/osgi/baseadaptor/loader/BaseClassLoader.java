@@ -31,7 +31,7 @@ public interface BaseClassLoader extends BundleClassLoader {
 
 	/**
 	 * Creates a classpath entry with the given bundle file and domain
-	 * @param bundlefile the source file file for a classpath entry
+	 * @param bundlefile the source bundle file for a classpath entry
 	 * @param cpDomain the source domain for a classpath entry
 	 * @return a classpath entry with the given bundle file and domain
 	 */

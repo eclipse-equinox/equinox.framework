@@ -49,11 +49,21 @@ public class DevClasspathMgrHook implements ClasspathManagerHook {
 
 	public boolean addClassPathEntry(ArrayList cpEntries, String cp, ClasspathManager hostmanager, BaseData sourcedata, ProtectionDomain sourcedomain) {
 		String[] devClassPath = !DevClassPathHelper.inDevelopmentMode() ? null : DevClassPathHelper.getDevClassPath(sourcedata.getSymbolicName());
-		if (devClassPath == null)
+		if (devClassPath == null || devClassPath.length == 0)
 			return false; // not in dev mode return
 		boolean result = false;
-		for (int i = 0; i < devClassPath.length; i++)
-			result |= ClasspathManager.addClassPathEntry(cpEntries, devClassPath[i], hostmanager, sourcedata, sourcedomain);
+		for (int i = 0; i < devClassPath.length; i++) {
+			if (ClasspathManager.addClassPathEntry(cpEntries, devClassPath[i], hostmanager, sourcedata, sourcedomain))
+				result = true;
+			else {
+				// if in dev mode, try using the cp as an absolute path
+				ClasspathEntry entry = hostmanager.getExternalClassPath(devClassPath[i], sourcedata, sourcedomain);
+				if (entry != null){
+					cpEntries.add(entry);
+					result = true;
+				}
+			}
+		}
 
 		return result;
 	}

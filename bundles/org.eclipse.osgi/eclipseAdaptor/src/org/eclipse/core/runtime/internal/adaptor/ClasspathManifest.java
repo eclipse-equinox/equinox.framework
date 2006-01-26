@@ -71,7 +71,7 @@ public class ClasspathManifest implements KeyedElement {
 		if (cpEntry.getBundleFile() == loader.getBaseData().getBundleFile())
 			bundledata = loader.getBaseData();
 		if (bundledata == null) {
-			FragmentClasspath[] fragCPs = loader.getFragments();
+			FragmentClasspath[] fragCPs = loader.getFragmentClasspaths();
 			if (fragCPs != null)
 				for (int i = 0; i < fragCPs.length; i++)
 					if (cpEntry.getBundleFile() == fragCPs[i].getBundleData().getBundleFile()) {
