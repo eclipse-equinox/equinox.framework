@@ -29,7 +29,6 @@ import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
 import org.eclipse.osgi.framework.adaptor.FrameworkAdaptor;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
-import org.eclipse.osgi.internal.baseadaptor.DevClassPathHelper;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
 
@@ -279,12 +278,6 @@ public class EclipseClasspathMgrHook implements ClasspathManagerHook, HookConfig
 			for (int i = 0; i < NL_JAR_VARIANTS.length; i++)
 				if (ClasspathManager.addClassPathEntry(cpEntries, "nl/" + NL_JAR_VARIANTS[i] + cp, hostloader, sourcedata, sourcedomain)) //$NON-NLS-1$ 
 					return true;
-			// is we are not in development mode, post some framework errors.
-			if (!DevClassPathHelper.inDevelopmentMode()) {
-				//BundleException be = new BundleException(Msg.formatter.getString("BUNDLE_CLASSPATH_ENTRY_NOT_FOUND_EXCEPTION", entry, hostdata.getLocation())); //$NON-NLS-1$
-				BundleException be = new BundleException(NLS.bind(Msg.BUNDLE_CLASSPATH_ENTRY_NOT_FOUND_EXCEPTION, cp));
-				sourcedata.getAdaptor().getEventPublisher().publishFrameworkEvent(FrameworkEvent.ERROR, sourcedata.getBundle(), be);
-			}
 		}
 		return false;
 	}
