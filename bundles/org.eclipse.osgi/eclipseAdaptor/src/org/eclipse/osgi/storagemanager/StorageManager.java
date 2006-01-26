@@ -12,9 +12,7 @@ package org.eclipse.osgi.storagemanager;
 
 import java.io.*;
 import java.util.*;
-import org.eclipse.core.runtime.adaptor.EclipseAdaptorMsg;
-import org.eclipse.core.runtime.internal.adaptor.BasicLocation;
-import org.eclipse.core.runtime.internal.adaptor.Locker;
+import org.eclipse.core.runtime.internal.adaptor.*;
 import org.eclipse.osgi.framework.internal.reliablefile.*;
 import org.eclipse.osgi.framework.util.SecureAction;
 

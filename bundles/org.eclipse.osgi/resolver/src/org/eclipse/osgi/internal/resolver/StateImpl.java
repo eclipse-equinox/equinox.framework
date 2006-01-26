@@ -12,10 +12,12 @@ package org.eclipse.osgi.internal.resolver;
 
 import java.util.*;
 
-import org.eclipse.osgi.framework.adaptor.core.StateManager;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.debug.FrameworkDebugOptions;
 import org.eclipse.osgi.framework.internal.core.*;
+import org.eclipse.osgi.framework.util.KeyedElement;
+import org.eclipse.osgi.framework.util.KeyedHashSet;
+import org.eclipse.osgi.internal.baseadaptor.StateManager;
 import org.eclipse.osgi.service.resolver.*;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.BundleException;

@@ -13,7 +13,7 @@ package org.eclipse.osgi.internal.resolver;
 import java.io.IOException;
 import java.util.*;
 import org.eclipse.osgi.framework.internal.core.Constants;
-import org.eclipse.osgi.framework.internal.core.KeyedElement;
+import org.eclipse.osgi.framework.util.KeyedElement;
 import org.eclipse.osgi.service.resolver.*;
 
 public class BundleDescriptionImpl extends BaseDescriptionImpl implements BundleDescription, KeyedElement {
