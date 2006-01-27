@@ -19,9 +19,9 @@ import org.eclipse.osgi.internal.baseadaptor.*;
 public class BaseHookConfigurator implements HookConfigurator {
 
 	public void addHooks(HookRegistry registry) {
-		// always add the BaseStorageHook and BaseClasspathMgrHook; it is required for the storage implementation
+		// always add the BaseStorageHook and BaseClassLoadingHook; it is required for the storage implementation
 		registry.addStorageHook(new BaseStorageHook(registry.getAdaptor().getStorage()));
-		registry.addClasspathManagerHook(new BaseClasspathMgrHook());
+		registry.addClassLoadingHook(new BaseClassLoadingHook());
 	}
 
 }

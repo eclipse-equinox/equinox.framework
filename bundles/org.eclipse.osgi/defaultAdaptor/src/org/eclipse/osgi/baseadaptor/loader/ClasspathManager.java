@@ -17,7 +17,8 @@ import java.security.ProtectionDomain;
 import java.util.*;
 import org.eclipse.osgi.baseadaptor.BaseData;
 import org.eclipse.osgi.baseadaptor.bundlefile.*;
-import org.eclipse.osgi.baseadaptor.hooks.ClasspathManagerHook;
+import org.eclipse.osgi.baseadaptor.hooks.ClassLoadingHook;
+import org.eclipse.osgi.baseadaptor.hooks.ClassLoadingStatsHook;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.internal.baseadaptor.AdaptorMsg;
@@ -30,9 +31,10 @@ import org.osgi.framework.FrameworkEvent;
  * <code>ClasspathEntry</code> objects for the host bundle and any attached fragment bundles.  This 
  * class takes care of seaching the <code>ClasspathEntry</code> objects for a base class loader
  * implementation.  Additional behavior may be added to a classpath manager by configuring 
- * <code>ClasspathManagerHook</code>.
+ * <code>ClassLoadingHook</code> and <code>ClassLoadingStatsHook</code>.
  * @see BaseClassLoader
- * @see ClasspathManagerHook
+ * @see ClassLoadingHook
+ * @see ClassLoadingStatsHook
  */
 public class ClasspathManager {
 	private static final FragmentClasspath[] emptyFragments = new FragmentClasspath[0];
@@ -130,8 +132,8 @@ public class ClasspathManager {
 
 	/**
 	 * Finds all the ClasspathEntry objects for the requested classpath.  This method will first call all
-	 * the configured classpath manager hooks {@link ClasspathManagerHook#addClassPathEntry(ArrayList, String, ClasspathManager, BaseData, ProtectionDomain)}
-	 * methods.  This allows classpath manager hooks to add additional ClasspathEntry objects to the result for the 
+	 * the configured class loading hooks {@link ClassLoadingHook#addClassPathEntry(ArrayList, String, ClasspathManager, BaseData, ProtectionDomain)}
+	 * methods.  This allows class loading hooks to add additional ClasspathEntry objects to the result for the 
 	 * requested classpath.  Then the local host classpath entries and attached fragment classpath entries are
 	 * searched.
 	 * @param result a list of ClasspathEntry objects.  This list is used to add new ClasspathEntry objects to.
@@ -142,7 +144,7 @@ public class ClasspathManager {
 	 */
 	public static void findClassPathEntry(ArrayList result, String cp, ClasspathManager hostloader, BaseData sourcedata, ProtectionDomain sourcedomain) {
 		// look in classpath manager hooks first
-		ClasspathManagerHook[] loaderHooks = sourcedata.getAdaptor().getHookRegistry().getClasspathManagerHooks();
+		ClassLoadingHook[] loaderHooks = sourcedata.getAdaptor().getHookRegistry().getClassLoadingHooks();
 		boolean hookAdded = false;
 		for (int i = 0; i < loaderHooks.length; i++)
 			hookAdded |= loaderHooks[i].addClassPathEntry(result, cp, hostloader, sourcedata, sourcedomain);
@@ -243,15 +245,15 @@ public class ClasspathManager {
 
 	/**
 	 * Finds a local resource by searching the ClasspathEntry objects of the classpath manager.
-	 * This method will first call all the configured classpath manager hooks 
-	 * {@link ClasspathManagerHook#preFindLocalResource(String, ClasspathManager)} methods.  Then it 
-	 * will search for the resource.  Finally it will call all the configured classpath manager hooks
-	 * {@link ClasspathManagerHook#postFindLocalResource(String, URL, ClasspathManager)} methods.
+	 * This method will first call all the configured class loading stats hooks 
+	 * {@link ClassLoadingStatsHook#preFindLocalResource(String, ClasspathManager)} methods.  Then it 
+	 * will search for the resource.  Finally it will call all the configured class loading stats hooks
+	 * {@link ClassLoadingStatsHook#postFindLocalResource(String, URL, ClasspathManager)} methods.
 	 * @param resource the requested resource name.
 	 * @return the requested resource URL or null if the resource does not exist
 	 */
 	public URL findLocalResource(String resource) {
-		ClasspathManagerHook[] hooks = data.getAdaptor().getHookRegistry().getClasspathManagerHooks();
+		ClassLoadingStatsHook[] hooks = data.getAdaptor().getHookRegistry().getClassLoadingStatsHooks();
 		for (int i = 0; i < hooks.length; i++)
 			hooks[i].preFindLocalResource(resource, this);
 		URL result = null;
@@ -381,17 +383,19 @@ public class ClasspathManager {
 
 	/**
 	 * Finds a local class by searching the ClasspathEntry objects of the classpath manager.
-	 * This method will first call all the configured classpath manager hooks 
-	 * {@link ClasspathManagerHook#preFindLocalClass(String, ClasspathManager)} methods.  Then it 
-	 * will search for the resource.  Finally it will call all the configured classpath manager hooks
-	 * {@link ClasspathManagerHook#postFindLocalClass(String, Class, ClasspathManager)} methods.
+	 * This method will first call all the configured class loading stats hooks 
+	 * {@link ClassLoadingStatsHook#preFindLocalClass(String, ClasspathManager)} methods.  Then it 
+	 * will search for the class.  If a class is found then all configured class loading hooks
+	 * {@link ClassLoadingHook#processClass(String, byte[], ClasspathEntry, BundleEntry, ClasspathManager)}
+	 * methods will be called.  Finally all the configured class loading stats hooks
+	 * {@link ClassLoadingStatsHook#postFindLocalClass(String, Class, ClasspathManager)} methods are called.
 	 * @param classname the requested class name.
 	 * @return the requested class
 	 * @throws ClassNotFoundException if the class does not exist
 	 */
 	public Class findLocalClass(String classname) throws ClassNotFoundException {
 		Class result = null;
-		ClasspathManagerHook[] hooks = data.getAdaptor().getHookRegistry().getClasspathManagerHooks();
+		ClassLoadingStatsHook[] hooks = data.getAdaptor().getHookRegistry().getClassLoadingStatsHooks();
 		try {
 			for (int i = 0; i < hooks.length; i++)
 				hooks[i].preFindLocalClass(classname, this);
@@ -403,7 +407,7 @@ public class ClasspathManager {
 		}
 	}
 
-	private Class findLocalClassImpl(String classname, ClasspathManagerHook[] hooks) throws ClassNotFoundException {
+	private Class findLocalClassImpl(String classname, ClassLoadingStatsHook[] hooks) throws ClassNotFoundException {
 		// must call findLoadedClass here even if it was called earlier,
 		// the findLoadedClass and defineClass calls must be atomic
 		synchronized (classloader) {
@@ -430,7 +434,7 @@ public class ClasspathManager {
 		throw new ClassNotFoundException(classname);
 	}
 
-	private Class findClassImpl(String name, ClasspathEntry classpathEntry, ClasspathManagerHook[] hooks) {
+	private Class findClassImpl(String name, ClasspathEntry classpathEntry, ClassLoadingStatsHook[] hooks) {
 		if (Debug.DEBUG && Debug.DEBUG_LOADER)
 			Debug.println("BundleClassLoader[" + data + "].findClass(" + name + ")"); //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
 		String filename = name.replace('.', '/').concat(".class"); //$NON-NLS-1$
@@ -512,8 +516,8 @@ public class ClasspathManager {
 	}
 
 	/**
-	 * Defines the specified class.  This method will first call all the configured classpath manager hooks 
-	 * {@link ClasspathManagerHook#processClass(String, byte[], ClasspathEntry, BundleEntry, ClasspathManager)} 
+	 * Defines the specified class.  This method will first call all the configured class loading hooks 
+	 * {@link ClassLoadingHook#processClass(String, byte[], ClasspathEntry, BundleEntry, ClasspathManager)} 
 	 * methods.  Then it will call the {@link BaseClassLoader#defineClass(String, byte[], ClasspathEntry, BundleEntry)}
 	 * method to define the class.
 	 * @param name the name of the class to define
@@ -523,7 +527,7 @@ public class ClasspathManager {
 	 * @return the defined class
 	 */
 	private Class defineClass(String name, byte[] classbytes, ClasspathEntry classpathEntry, BundleEntry entry) {
-		ClasspathManagerHook[] hooks = data.getAdaptor().getHookRegistry().getClasspathManagerHooks();
+		ClassLoadingHook[] hooks = data.getAdaptor().getHookRegistry().getClassLoadingHooks();
 		byte[] modifiedBytes = classbytes;
 		for (int i = 0; i < hooks.length; i++) {
 			modifiedBytes = hooks[i].processClass(name, classbytes, classpathEntry, entry, this);

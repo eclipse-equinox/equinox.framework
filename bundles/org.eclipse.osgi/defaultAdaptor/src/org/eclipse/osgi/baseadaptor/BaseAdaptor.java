@@ -377,11 +377,11 @@ public class BaseAdaptor implements FrameworkAdaptor{
 	 * @see FrameworkAdaptor#getBundleWatcher()
 	 */
 	public BundleWatcher getBundleWatcher() {
+		if (bundleWatcher != null)
+			return bundleWatcher;
 		final BundleWatcher[] watchers = hookRegistry.getWatchers();
 		if (watchers.length == 0)
 			return null;
-		if (bundleWatcher == null)
-			return bundleWatcher;
 		bundleWatcher = new BundleWatcher() {
 			public void watchBundle(Bundle bundle, int type) {
 				for (int i = 0; i < watchers.length; i++)
@@ -406,14 +406,14 @@ public class BaseAdaptor implements FrameworkAdaptor{
 	}
 
 	/**
-	 * This method calls all the configured classpath manager hooks {@link ClasspathManagerHook#getBundleClassLoaderParent()} methods 
+	 * This method calls all the configured classloading hooks {@link ClassLoadingHook#getBundleClassLoaderParent()} methods 
 	 * until one returns a non-null value.
 	 * @see FrameworkAdaptor#getBundleClassLoaderParent()
 	 */
 	public ClassLoader getBundleClassLoaderParent() {
 		// ask the configured adaptor hooks first
 		ClassLoader result = null;
-		ClasspathManagerHook[] cpManagerHooks = getHookRegistry().getClasspathManagerHooks();
+		ClassLoadingHook[] cpManagerHooks = getHookRegistry().getClassLoadingHooks();
 		for (int i = 0; i < cpManagerHooks.length; i++) {
 			result = cpManagerHooks[i].getBundleClassLoaderParent();
 			if (result != null)

@@ -109,12 +109,12 @@ public class BaseData implements BundleData {
 	}
 
 	/**
-	 * This method calls each configured classpath manager hook {@link BaseData#findLibrary(String)} method 
+	 * This method calls each configured classloading hook {@link ClassLoadingHook#findLibrary(String)} method 
 	 * until the first one returns a non-null value.
 	 * @see BundleData#findLibrary(String)
 	 */
 	public String findLibrary(String libname) {
-		ClasspathManagerHook[] hooks = adaptor.getHookRegistry().getClasspathManagerHooks();
+		ClassLoadingHook[] hooks = adaptor.getHookRegistry().getClassLoadingHooks();
 		String result = null;
 		for (int i = 0; i < hooks.length; i++) {
 			result = hooks[i].findLibrary(this, libname);

@@ -59,7 +59,8 @@ public final class HookRegistry {
 	private boolean readonly = false;
 	private AdaptorHook[] adaptorHooks = new AdaptorHook[0];
 	private BundleWatcher[] watchers = new BundleWatcher[0];
-	private ClasspathManagerHook[] classpathManagerHooks = new ClasspathManagerHook[0];
+	private ClassLoadingHook[] classLoadingHooks = new ClassLoadingHook[0];
+	private ClassLoadingStatsHook[] classLoadingStatsHooks = new ClassLoadingStatsHook[0];
 	private StorageHook[] storageHooks = new StorageHook[0];
 	private DataHook[] dataHooks = new DataHook[0];
 	private BundleFileFactory[] bundleFileFactories = new BundleFileFactory[0];
@@ -164,11 +165,19 @@ public final class HookRegistry {
 	}
 
 	/**
-	 * Returns the list of configured classpath manager hooks.
-	 * @return the list of configured classpath manager hooks.
+	 * Returns the list of configured class loading hooks.
+	 * @return the list of configured class loading hooks.
 	 */
-	public ClasspathManagerHook[] getClasspathManagerHooks() {
-		return classpathManagerHooks;
+	public ClassLoadingHook[] getClassLoadingHooks() {
+		return classLoadingHooks;
+	}
+
+	/**
+	 * Returns the list of configured class loading stats hooks.
+	 * @return the list of configured class loading stats hooks.
+	 */
+	public ClassLoadingStatsHook[] getClassLoadingStatsHooks() {
+		return classLoadingStatsHooks;
 	}
 
 	/**
@@ -212,11 +221,19 @@ public final class HookRegistry {
 	}
 
 	/**
-	 * Adds a classpath manager hook to this hook registry.
-	 * @param classpathManagerHook a classpath manager hook object.
+	 * Adds a class loading hook to this hook registry.
+	 * @param classLoadingHook a class loading hook object.
 	 */
-	public void addClasspathManagerHook(ClasspathManagerHook classpathManagerHook) {
-		classpathManagerHooks = (ClasspathManagerHook[]) add(classpathManagerHook, classpathManagerHooks, new ClasspathManagerHook[classpathManagerHooks.length + 1]);
+	public void addClassLoadingHook(ClassLoadingHook classLoadingHook) {
+		classLoadingHooks = (ClassLoadingHook[]) add(classLoadingHook, classLoadingHooks, new ClassLoadingHook[classLoadingHooks.length + 1]);
+	}
+
+	/**
+	 * Adds a class loading stats hook to this hook registry.
+	 * @param classLoadingStatsHook a class loading hook object.
+	 */
+	public void addClassLoadingStatsHook(ClassLoadingStatsHook classLoadingStatsHook) {
+		classLoadingStatsHooks = (ClassLoadingStatsHook[]) add(classLoadingStatsHook, classLoadingStatsHooks, new ClassLoadingStatsHook[classLoadingStatsHooks.length + 1]);
 	}
 
 	/**

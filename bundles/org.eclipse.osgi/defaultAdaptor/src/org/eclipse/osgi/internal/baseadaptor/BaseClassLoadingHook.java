@@ -12,16 +12,15 @@
 package org.eclipse.osgi.internal.baseadaptor;
 
 import java.io.File;
-import java.net.URL;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import org.eclipse.osgi.baseadaptor.BaseData;
 import org.eclipse.osgi.baseadaptor.bundlefile.BundleEntry;
-import org.eclipse.osgi.baseadaptor.hooks.ClasspathManagerHook;
+import org.eclipse.osgi.baseadaptor.hooks.ClassLoadingHook;
 import org.eclipse.osgi.baseadaptor.loader.*;
 import org.eclipse.osgi.framework.debug.Debug;
 
-public class BaseClasspathMgrHook implements ClasspathManagerHook {
+public class BaseClassLoadingHook implements ClassLoadingHook {
 
 	public String findLibrary(BaseData data, String libName) {
 		String mappedName = System.mapLibraryName(libName);
@@ -73,32 +72,9 @@ public class BaseClasspathMgrHook implements ClasspathManagerHook {
 		return null;
 	}
 
-	public void postFindLocalClass(String name, Class clazz, ClasspathManager manager) {
-		// do nothing
-
-	}
-
-	public void postFindLocalResource(String name, URL resource, ClasspathManager manager) {
-		// do nothing
-
-	}
-
-	public void preFindLocalClass(String name, ClasspathManager manager) throws ClassNotFoundException {
-		// do nothing
-
-	}
-
-	public void preFindLocalResource(String name, ClasspathManager manager) {
-		// do nothing
-
-	}
-
 	public byte[] processClass(String name, byte[] classbytes, ClasspathEntry classpathEntry, BundleEntry entry, ClasspathManager manager) {
 		// do nothing
 		return null;
 	}
 
-	public void recordClassDefine(String name, Class clazz, byte[] classbytes, ClasspathEntry classpathEntry, BundleEntry entry, ClasspathManager manager) {
-		// do nothing
-	}
 }
