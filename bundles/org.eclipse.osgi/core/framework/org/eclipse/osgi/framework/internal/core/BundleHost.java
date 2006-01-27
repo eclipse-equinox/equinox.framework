@@ -284,7 +284,7 @@ public class BundleHost extends AbstractBundle {
 			if ((state & (STARTING | ACTIVE)) != 0) {
 				return;
 			}
-
+			boolean shouldStart = false;
 			try {
 				if (state == INSTALLED) {
 					if (!framework.packageAdmin.resolveBundles(new Bundle[] {this})) {
@@ -295,8 +295,8 @@ public class BundleHost extends AbstractBundle {
 				if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
 					Debug.println("Bundle: Active sl = " + framework.startLevelManager.getStartLevel() + "; Bundle " + getBundleId() + " sl = " + getStartLevel()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				}
-
-				if (getStartLevel() <= framework.startLevelManager.getStartLevel()) {
+				shouldStart = getStartLevel() <= framework.startLevelManager.getStartLevel();
+				if (shouldStart) {
 					//STARTUP TIMING Start here					
 					if (Debug.DEBUG) {
 						BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
@@ -339,7 +339,7 @@ public class BundleHost extends AbstractBundle {
 					}
 				}
 			} finally {
-				if (Debug.DEBUG) {
+				if (Debug.DEBUG && shouldStart) {
 					BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
 					if (bundleStats != null)
 						bundleStats.watchBundle(this, BundleWatcher.END_ACTIVATION);
