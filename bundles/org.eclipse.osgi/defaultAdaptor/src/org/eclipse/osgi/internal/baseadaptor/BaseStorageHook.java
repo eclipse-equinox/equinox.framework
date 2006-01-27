@@ -14,8 +14,8 @@ package org.eclipse.osgi.internal.baseadaptor;
 import java.io.*;
 import java.util.Dictionary;
 import org.eclipse.core.runtime.adaptor.LocationManager;
-import org.eclipse.core.runtime.internal.adaptor.EclipseStorageHook;
 import org.eclipse.osgi.baseadaptor.*;
+import org.eclipse.osgi.baseadaptor.hooks.DataHook;
 import org.eclipse.osgi.baseadaptor.hooks.StorageHook;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.debug.Debug;
@@ -147,12 +147,16 @@ public class BaseStorageHook implements StorageHook {
 		AdaptorUtil.writeStringOrNull(out, bundledata.getClassPathString());
 		AdaptorUtil.writeStringOrNull(out, bundledata.getExecutionEnvironment());
 		AdaptorUtil.writeStringOrNull(out, bundledata.getDynamicImports());
-		out.writeInt(bundledata.getStartLevel());
-		/* TODO this is an unfortunate reference to EclipseStorageHook; 
-		 * not sure how to get rid of it without adding very specific hook api 
-		 */
-		EclipseStorageHook extraHook = (EclipseStorageHook) bundledata.getStorageHook(EclipseStorageHook.KEY);
-		out.writeInt(extraHook == null || !extraHook.isAutoStartable() ? bundledata.getStatus() : (~Constants.BUNDLE_STARTED) & bundledata.getStatus());
+		DataHook[] hooks = bundledata.getAdaptor().getHookRegistry().getDataHooks();
+		boolean forgetStartLevel = false;
+		for (int i = 0; i < hooks.length && !forgetStartLevel; i++)
+			forgetStartLevel = hooks[i].forgetStartLevelChange(bundledata, bundledata.getStartLevel());
+		out.writeInt(!forgetStartLevel ? bundledata.getStartLevel() : 1);
+		boolean forgetStatus = false;
+		// see if we should forget the persistently started flag
+		for (int i = 0; i < hooks.length && !forgetStatus; i++)
+			forgetStatus = hooks[i].forgetStatusChange(bundledata, bundledata.getStatus());
+		out.writeInt(!forgetStatus ? bundledata.getStatus() : (~Constants.BUNDLE_STARTED) & bundledata.getStatus());
 		out.writeInt(bundledata.getType());
 		out.writeLong(bundledata.getLastModified());
 
