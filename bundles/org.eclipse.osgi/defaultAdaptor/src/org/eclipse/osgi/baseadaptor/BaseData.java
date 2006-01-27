@@ -196,39 +196,36 @@ public class BaseData implements BundleData {
 	}
 
 	/**
-	 * This method calls each configured data hook {@link DataHook#changedStartLevel(BaseData, int)} method.
-	 * If one returns false then this bundledata is not marked dirty.
+	 * This method calls each configured data hook {@link DataHook#forgetStartLevelChange(BaseData, int)} method.
+	 * If one returns true then this bundledata is not marked dirty.
 	 * @see BundleData#setStartLevel(int)
 	 */
 	public void setStartLevel(int value) {
-		if (value == startLevel)
-			return;
-		startLevel = value;
-		dirty = true;
-		DataHook[] hooks = adaptor.getHookRegistry().getDataHooks();
-		for (int i = 0; i < hooks.length; i++) {
-			dirty = hooks[i].changedStartLevel(this, startLevel);
-			if (!dirty)
-				return; // found a hook that says this should not cause a save
-		}
+		startLevel = setPersistentData(value, true, startLevel);
 	}
 
 	/**
-	 * This method calls each configured data hook {@link DataHook#changedStatus(BaseData, int)} method.
-	 * If one returns false then this bundledata is not marked dirty.
+	 * This method calls each configured data hook {@link DataHook#forgetStatusChange(BaseData, int)} method.
+	 * If one returns true then this bundledata is not marked dirty.
 	 * @see BundleData#setStartLevel(int)
 	 */
 	public void setStatus(int value) {
-		if (value == status)
-			return;
-		status = value;
-		dirty = true;
+		status = setPersistentData(value, false, status);
+	}
+
+	private int setPersistentData(int value, boolean isStartLevel, int orig) {
 		DataHook[] hooks = adaptor.getHookRegistry().getDataHooks();
-		for (int i = 0; i < hooks.length; i++) {
-			dirty = hooks[i].changedStatus(this, status);
-			if (!dirty)
-				return; // found a hook that says this should not cause a save
-		}
+		for (int i = 0; i < hooks.length; i++)
+			if (isStartLevel) {
+				if (hooks[i].forgetStartLevelChange(this, value))
+					return value;
+			} else {
+				if (hooks[i].forgetStatusChange(this, value))
+					return value;
+			}
+		if (value != orig)
+			dirty = true;
+		return value;
 	}
 
 	public void save() throws IOException {

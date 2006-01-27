@@ -26,26 +26,26 @@ public interface DataHook {
 	/**
 	 * Gets called by a base data during {@link BundleData#setStatus(int)}.
 	 * A base data will call this method for each configured data hook until one
-	 * data hook returns false.  If all configured data hooks return true then the
+	 * data hook returns true.  If all configured data hooks return false then the
 	 * BaseData will be marked dirty and will cause the status to be persistently
 	 * saved.
 	 * @param data the base data with a status change
 	 * @param status the new status of the base data
 	 * @return true if the status is to be persistently saved; otherwise false is returned
 	 */
-	boolean changedStatus(BaseData data, int status);
+	boolean forgetStatusChange(BaseData data, int status);
 
 	/**
 	 * Gets called by a base data during {@link BundleData#setStartLevel(int)}.
 	 * A base data will call this method for each configured data hook until one
-	 * data hook returns false.  If all configured data hooks return true then the
+	 * data hook returns true.  If all configured data hooks return false then the
 	 * BaseData will be marked dirty and will cause the startlevel to be persistently
 	 * saved.
 	 * @param data the base data with a startlevel change
 	 * @param startlevel the new startlevel of the base data
 	 * @return true if the startlevel is to be persistently saved; otherwise false is returned
 	 */
-	boolean changedStartLevel(BaseData data, int startlevel);
+	boolean forgetStartLevelChange(BaseData data, int startlevel);
 
 	/**
 	 * Gets called by a base data during {@link BundleData#matchDNChain(String)}.

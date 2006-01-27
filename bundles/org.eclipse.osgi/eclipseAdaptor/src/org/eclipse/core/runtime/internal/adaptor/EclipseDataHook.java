@@ -19,15 +19,15 @@ import org.eclipse.osgi.framework.adaptor.ClassLoaderDelegate;
 
 public class EclipseDataHook implements DataHook, HookConfigurator {
 
-	public boolean changedStatus(BaseData data, int status) {
+	public boolean forgetStatusChange(BaseData data, int status) {
 		EclipseStorageHook storageHook = (EclipseStorageHook) data.getStorageHook(EclipseStorageHook.KEY);
 		if (storageHook != null && storageHook.isAutoStartable())
-			return false;
-		return true;
+			return true;
+		return false;
 	}
 
-	public boolean changedStartLevel(BaseData data, int startlevel) {
-		return true;
+	public boolean forgetStartLevelChange(BaseData data, int startlevel) {
+		return false;
 	}
 
 	public boolean matchDNChain(BaseData data, String pattern) {
