@@ -75,10 +75,10 @@ public class EclipseClassLoadingHook implements ClassLoadingHook, HookConfigurat
 		String specTitle = null, specVersion = null, specVendor = null, implTitle = null, implVersion = null, implVendor = null;
 		ClasspathManifest cpm = (ClasspathManifest) classpathEntry.getUserObject(ClasspathManifest.KEY);
 		if (cpm == null) {
-			cpm = new ClasspathManifest(classpathEntry, manager);
+			cpm = new ClasspathManifest();
 			classpathEntry.addUserObject(cpm);
 		}
-		Manifest mf = cpm.getManifest();
+		Manifest mf = cpm.getManifest(classpathEntry, manager);
 		if (mf != null) {
 			Attributes mainAttributes = mf.getMainAttributes();
 			String dirName = packageName.replace('.', '/') + '/';

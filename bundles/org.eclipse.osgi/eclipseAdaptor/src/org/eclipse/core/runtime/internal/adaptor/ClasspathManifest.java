@@ -25,12 +25,8 @@ public class ClasspathManifest implements KeyedElement {
 
 	private Manifest mf;
 	private boolean initMF = false;
-	private ClasspathEntry cpEntry;
-	private ClasspathManager loader;
 
-	public ClasspathManifest(ClasspathEntry cpEntry, ClasspathManager loader) {
-		this.cpEntry = cpEntry;
-		this.loader = loader;
+	public ClasspathManifest() {
 	}
 
 	public int getKeyHashCode() {
@@ -45,10 +41,10 @@ public class ClasspathManifest implements KeyedElement {
 		return KEY;
 	}
 
-	public Manifest getManifest() {
+	public Manifest getManifest(ClasspathEntry cpEntry, ClasspathManager loader) {
 		if (initMF)
 			return mf;
-		if (!hasPackageInfo()) {
+		if (!hasPackageInfo(cpEntry, loader)) {
 			initMF = true;
 			mf = null;
 			return mf;
@@ -66,7 +62,7 @@ public class ClasspathManifest implements KeyedElement {
 		return mf;
 	}
 
-	private boolean hasPackageInfo() {
+	private boolean hasPackageInfo(ClasspathEntry cpEntry, ClasspathManager loader) {
 		BaseData bundledata = null;
 		if (cpEntry.getBundleFile() == loader.getBaseData().getBundleFile())
 			bundledata = loader.getBaseData();
