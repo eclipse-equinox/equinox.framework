@@ -31,7 +31,7 @@ public interface DataHook {
 	 * saved.
 	 * @param data the base data with a status change
 	 * @param status the new status of the base data
-	 * @return true if the status is to be persistently saved; otherwise false is returned
+	 * @return false if the status is not to be persistently saved; otherwise true is returned
 	 */
 	boolean forgetStatusChange(BaseData data, int status);
 
@@ -43,7 +43,7 @@ public interface DataHook {
 	 * saved.
 	 * @param data the base data with a startlevel change
 	 * @param startlevel the new startlevel of the base data
-	 * @return true if the startlevel is to be persistently saved; otherwise false is returned
+	 * @return false if the startlevel is not to be persistently saved; otherwise true is returned
 	 */
 	boolean forgetStartLevelChange(BaseData data, int startlevel);
 
