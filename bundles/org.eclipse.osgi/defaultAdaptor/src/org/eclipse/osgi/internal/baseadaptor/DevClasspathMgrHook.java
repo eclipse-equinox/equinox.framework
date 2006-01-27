@@ -14,13 +14,13 @@ package org.eclipse.osgi.internal.baseadaptor;
 import java.net.URL;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
-import org.eclipse.osgi.baseadaptor.BaseData;
+import org.eclipse.osgi.baseadaptor.*;
 import org.eclipse.osgi.baseadaptor.bundlefile.BundleEntry;
 import org.eclipse.osgi.baseadaptor.hooks.ClasspathManagerHook;
 import org.eclipse.osgi.baseadaptor.loader.ClasspathEntry;
 import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
 
-public class DevClasspathMgrHook implements ClasspathManagerHook {
+public class DevClasspathMgrHook implements ClasspathManagerHook, HookConfigurator {
 
 	public void preFindLocalClass(String name, ClasspathManager manager) throws ClassNotFoundException {
 		// Do nothing
@@ -76,6 +76,13 @@ public class DevClasspathMgrHook implements ClasspathManagerHook {
 	public ClassLoader getBundleClassLoaderParent() {
 		// Do nothing
 		return null;
+	}
+
+	public void addHooks(HookRegistry hookRegistry) {
+		if (DevClassPathHelper.inDevelopmentMode())
+			// only add dev classpath manager if in dev mode
+			hookRegistry.addClasspathManagerHook(new DevClasspathMgrHook());
+
 	}
 
 }

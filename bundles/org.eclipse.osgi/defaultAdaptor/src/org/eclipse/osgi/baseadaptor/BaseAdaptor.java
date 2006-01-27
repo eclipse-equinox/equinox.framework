@@ -16,7 +16,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Properties;
 import org.eclipse.core.runtime.adaptor.LocationManager;
-import org.eclipse.core.runtime.internal.stats.StatsManager;
 import org.eclipse.osgi.baseadaptor.bundlefile.BundleFile;
 import org.eclipse.osgi.baseadaptor.hooks.*;
 import org.eclipse.osgi.framework.adaptor.*;
@@ -40,7 +39,7 @@ import org.osgi.framework.*;
  * @see HookRegistry
  * @see AdaptorHook
  */
-public class BaseAdaptor implements FrameworkAdaptor, BundleWatcher, HookConfigurator {
+public class BaseAdaptor implements FrameworkAdaptor{
 	// System property used to set the parent classloader type (boot is the default)
 	private static final String PROP_PARENT_CLASSLOADER = "osgi.parentClassloader"; //$NON-NLS-1$
 	// A parent classloader type that specifies the application classloader
@@ -84,14 +83,7 @@ public class BaseAdaptor implements FrameworkAdaptor, BundleWatcher, HookConfigu
 	private FrameworkLog log;
 	private BundleContext context;
 	private BaseStorage storage;
-
-	/**
-	 * Constructs a BaseAdaptor when used as a hook configurator
-	 *
-	 */
-	public BaseAdaptor() {
-		//
-	}
+	private BundleWatcher bundleWatcher;
 
 	/**
 	 * Constructs a BaseAdaptor.
@@ -385,7 +377,18 @@ public class BaseAdaptor implements FrameworkAdaptor, BundleWatcher, HookConfigu
 	 * @see FrameworkAdaptor#getBundleWatcher()
 	 */
 	public BundleWatcher getBundleWatcher() {
-		return this;
+		final BundleWatcher[] watchers = hookRegistry.getWatchers();
+		if (watchers.length == 0)
+			return null;
+		if (bundleWatcher == null)
+			return bundleWatcher;
+		bundleWatcher = new BundleWatcher() {
+			public void watchBundle(Bundle bundle, int type) {
+				for (int i = 0; i < watchers.length; i++)
+					watchers[i].watchBundle(bundle, type);
+			}	
+		};
+		return bundleWatcher;
 	}
 
 	/**
@@ -460,26 +463,6 @@ public class BaseAdaptor implements FrameworkAdaptor, BundleWatcher, HookConfigu
 	}
 
 	/**
-	 * This method calls all the configured bundle watchers {@link BundleWatcher#startActivation(Bundle)} methods.
-	 * @see BundleWatcher#startActivation(Bundle)
-	 */
-	public void startActivation(Bundle bundle) {
-		BundleWatcher[] watchers = getHookRegistry().getWatchers();
-		for (int i = 0; i < watchers.length; i++)
-			watchers[i].startActivation(bundle);
-	}
-
-	/**
-	 * This method calls all the configured bundle watchers {@link BundleWatcher#endActivation(Bundle)} methods.
-	 * @see BundleWatcher#endActivation(Bundle)
-	 */
-	public void endActivation(Bundle bundle) {
-		BundleWatcher[] watchers = getHookRegistry().getWatchers();
-		for (int i = 0; i < watchers.length; i++)
-			watchers[i].endActivation(bundle);
-	}
-
-	/**
 	 * Returns the <code>HookRegistry</code> object for this adaptor.
 	 * @return the <code>HookRegistry</code> object for this adaptor.
 	 */
@@ -526,25 +509,5 @@ public class BaseAdaptor implements FrameworkAdaptor, BundleWatcher, HookConfigu
 		if (storage == null)
 			storage = new BaseStorage();
 		return storage;
-	}
-
-	public void addHooks(HookRegistry registry) {
-		// always add the BaseStorageHook and BaseClasspathMgrHook; it is required for this storage implementation
-		registry.addStorageHook(new BaseStorageHook(registry.getAdaptor().getStorage()));
-		if (DevClassPathHelper.inDevelopmentMode())
-			// only add dev classpath manager if in dev mode
-			// TODO should we consider moving this to another hook configurator?
-			registry.addClasspathManagerHook(new DevClasspathMgrHook());
-		registry.addClasspathManagerHook(new BaseClasspathMgrHook());
-		// add the StatsManager bundle watcher; this is not really required but it will only get used when needed
-		registry.addWatcher(new BundleWatcher() {
-			public void startActivation(Bundle bundle) {
-				StatsManager.getDefault().startActivation(bundle);
-			}
-
-			public void endActivation(Bundle bundle) {
-				StatsManager.getDefault().endActivation(bundle);
-			}
-		});
 	}
 }

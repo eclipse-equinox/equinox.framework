@@ -12,13 +12,16 @@ package org.eclipse.core.runtime.internal.stats;
 
 import java.io.*;
 import java.util.*;
+import org.eclipse.osgi.baseadaptor.HookConfigurator;
+import org.eclipse.osgi.baseadaptor.HookRegistry;
 import org.eclipse.osgi.framework.adaptor.BundleWatcher;
 import org.eclipse.osgi.framework.adaptor.FrameworkAdaptor;
+import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.debug.FrameworkDebugOptions;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.Bundle;
 
-public class StatsManager implements BundleWatcher {
+public class StatsManager implements BundleWatcher, HookConfigurator {
 	// This connect bundles and their info, and so allows to access the info without running through
 	// the bundle registry. This map only contains activated bundles. The key is the bundle Id
 	private Hashtable bundles = new Hashtable(20);
@@ -95,6 +98,17 @@ public class StatsManager implements BundleWatcher {
 		bundle.setTimestamp(System.currentTimeMillis());
 		bundle.setActivationOrder(bundles.size());
 		bundle.setDuringStartup(booting);
+	}
+
+	public void watchBundle(Bundle bundle, int type) {
+		switch (type) {
+			case BundleWatcher.START_ACTIVATION :
+				startActivation(bundle);
+				break;
+			case BundleWatcher.END_ACTIVATION :
+				endActivation(bundle);
+				break;
+		}
 	}
 
 	public void startActivation(Bundle bundle) {
@@ -175,6 +189,12 @@ public class StatsManager implements BundleWatcher {
 
 	public BundleStats getBundle(long id) {
 		return (BundleStats) bundles.get(new Long(id));
+	}
+
+	public void addHooks(HookRegistry hookRegistry) {
+		if (!Debug.MONITOR_ACTIVATION)
+			return;
+		hookRegistry.addWatcher(this);
 	}
 
 }
