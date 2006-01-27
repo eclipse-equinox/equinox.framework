@@ -18,8 +18,8 @@ import org.eclipse.osgi.framework.util.KeyedElement;
 import org.osgi.framework.BundleException;
 
 /**
- * A StorageHook hooks into an <code>Storage</code>.  EquinoxStorageHooks also get associated 
- * with each BaseData object installed in the adaptor.<p>
+ * A StorageHook hooks into the persistent storage loading and saving.  A StorageHook gets 
+ * associated with each BaseData object installed in the adaptor.<p>
  * A StorageHook extends {@link KeyedElement}, the key used for the element must be the 
  * fully qualified string name of the StorageHook implementation class.
  * @see BaseData#addStorageHook(StorageHook)
