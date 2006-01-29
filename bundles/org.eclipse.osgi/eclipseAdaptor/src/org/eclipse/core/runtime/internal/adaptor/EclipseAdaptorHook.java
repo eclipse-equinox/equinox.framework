@@ -68,13 +68,16 @@ public class EclipseAdaptorHook implements AdaptorHook, HookConfigurator {
 			context.registerService(Location.class.getName(), location, locationProperties);
 		}
 
+		Dictionary urlProperties = new Hashtable();
+		urlProperties.put("protocol", new String[] {"bundleentry", "bundleresource"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		context.registerService(URLConverter.class.getName(), new URLConverterImpl(), urlProperties);
+
 		AdaptorUtil.register(org.eclipse.osgi.service.environment.EnvironmentInfo.class.getName(), EclipseEnvironmentInfo.getDefault(), context);
 		AdaptorUtil.register(PlatformAdmin.class.getName(), adaptor.getPlatformAdmin(), context);
 		PluginConverter converter = PluginConverterImpl.getDefault();
 		if (converter == null)
 			converter = new PluginConverterImpl(adaptor, context);
 		AdaptorUtil.register(PluginConverter.class.getName(), converter, context);
-		AdaptorUtil.register(URLConverter.class.getName(), new URLConverterImpl(), context);
 		AdaptorUtil.register(CommandProvider.class.getName(), new EclipseCommandProvider(context), context);
 		AdaptorUtil.register(org.eclipse.osgi.service.localization.BundleLocalization.class.getName(), new BundleLocalizationImpl(), context);
 	}

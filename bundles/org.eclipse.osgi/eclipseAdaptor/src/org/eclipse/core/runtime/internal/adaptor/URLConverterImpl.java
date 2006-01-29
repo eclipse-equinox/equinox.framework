@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -24,16 +24,20 @@ import org.eclipse.osgi.service.urlconversion.URLConverter;
  */
 public class URLConverterImpl implements URLConverter {
 
-	public URL convertToFileURL(URL url) throws IOException {
-		//TODO should close connection at all times 
+	/* (non-Javadoc)
+	 * @see org.eclipse.osgi.service.urlconversion.URLConverter#toFileURL(java.net.URL)
+	 */
+	public URL toFileURL(URL url) throws IOException {
 		URLConnection connection = url.openConnection();
 		if (connection instanceof BundleURLConnection)
 			return ((BundleURLConnection) connection).getFileURL();
 		return url;
 	}
 
-	public URL convertToLocalURL(URL url) throws IOException {
-		//TODO should close connection at all times 		
+	/* (non-Javadoc)
+	 * @see org.eclipse.osgi.service.urlconversion.URLConverter#resolve(java.net.URL)
+	 */
+	public URL resolve(URL url) throws IOException {
 		URLConnection connection = url.openConnection();
 		if (connection instanceof BundleURLConnection)
 			return ((BundleURLConnection) connection).getLocalURL();
