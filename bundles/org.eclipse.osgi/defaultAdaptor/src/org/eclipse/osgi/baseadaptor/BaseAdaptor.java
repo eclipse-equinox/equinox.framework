@@ -93,7 +93,10 @@ public class BaseAdaptor implements FrameworkAdaptor{
 		if (LocationManager.getConfigurationLocation() == null)
 			LocationManager.initializeLocations();
 		hookRegistry = new HookRegistry(this);
-		hookRegistry.initialize();
+		FrameworkLogEntry[] errors = hookRegistry.initialize();
+		if (errors.length > 0)
+			for (int i = 0; i < errors.length; i++)
+				getFrameworkLog().log(errors[i]);
 		storage = getStorage();
 		// TODO consider passing args to BaseAdaptorHooks
 	}
@@ -325,44 +328,47 @@ public class BaseAdaptor implements FrameworkAdaptor{
 	 * @see FrameworkAdaptor#getFrameworkLog()
 	 */
 	public FrameworkLog getFrameworkLog() {
-		if (log == null) {
-			AdaptorHook[] adaptorHooks = getHookRegistry().getAdaptorHooks();
-			for (int i = 0; i < adaptorHooks.length; i++) {
-				log = adaptorHooks[i].createFrameworkLog();
-				if (log != null)
-					return log;
-			}
-			log = new FrameworkLog() {
-				public void log(FrameworkEvent frameworkEvent) {
-					// do nothing
-				}
-
-				public void log(FrameworkLogEntry logEntry) {
-					// do nothing
-				}
-
-				public void setWriter(Writer newWriter, boolean append) {
-					// do nothing
-				}
-
-				public void setFile(File newFile, boolean append) throws IOException {
-					// do nothing
-				}
-
-				public File getFile() {
-					// do nothing
-					return null;
-				}
-
-				public void setConsoleLog(boolean consoleLog) {
-					// do nothing
-				}
-
-				public void close() {
-					// do nothing
-				}
-			};
+		if (log != null)
+			return log;
+		AdaptorHook[] adaptorHooks = getHookRegistry().getAdaptorHooks();
+		for (int i = 0; i < adaptorHooks.length; i++) {
+			log = adaptorHooks[i].createFrameworkLog();
+			if (log != null)
+				return log;
 		}
+		log = new FrameworkLog() {
+			public void log(FrameworkEvent frameworkEvent) {
+				log(new FrameworkLogEntry(frameworkEvent.getBundle().getSymbolicName() == null ? frameworkEvent.getBundle().getLocation() : frameworkEvent.getBundle().getSymbolicName(), FrameworkLogEntry.ERROR, 0, "FrameworkEvent.ERROR", 0, frameworkEvent.getThrowable(), null)); //$NON-NLS-1$
+			}
+
+			public void log(FrameworkLogEntry logEntry) {
+				System.err.print(logEntry.getEntry() + " "); //$NON-NLS-1$
+				System.err.println(logEntry.getMessage());
+				if (logEntry.getThrowable() != null)
+					logEntry.getThrowable().printStackTrace(System.err);
+			}
+
+			public void setWriter(Writer newWriter, boolean append) {
+				// do nothing
+			}
+
+			public void setFile(File newFile, boolean append) throws IOException {
+				// do nothing
+			}
+
+			public File getFile() {
+				// do nothing
+				return null;
+			}
+
+			public void setConsoleLog(boolean consoleLog) {
+				// do nothing
+			}
+
+			public void close() {
+				// do nothing
+			}
+		};
 		return log;
 	}
 
@@ -505,7 +511,12 @@ public class BaseAdaptor implements FrameworkAdaptor{
 		return storage.isReadOnly();
 	}
 
-	BaseStorage getStorage() {
+	/*
+	 * This is an experimental method to allow adaptors to replace the storage implementation by 
+	 * extending BaseAdaptor and overriding this method.  This method is experimental.
+	 * @return a base storage object.
+	 */
+	protected BaseStorage getStorage() {
 		if (storage == null)
 			storage = new BaseStorage();
 		return storage;

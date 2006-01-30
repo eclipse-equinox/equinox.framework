@@ -79,24 +79,27 @@ public final class HookRegistry {
 	 *    and remove this list from the overall list of hook configurators. <p>
 	 * 4. Load each hook configurator class, create a new instance, then call the {@link HookConfigurator#addHooks(HookRegistry)} method <p>
 	 * 5. Set this HookRegistry object to read only to prevent any other hooks from being added. <p>
+	 * @return an array of error log entries that occurred while initializing the hooks
 	 */
-	public void initialize() {
+	public FrameworkLogEntry[] initialize() {
 		ArrayList configurators = new ArrayList(5);
-		mergeFileHookConfigurators(configurators);
+		ArrayList errors = new ArrayList(0); // optimistic that no errors will occur
+		mergeFileHookConfigurators(configurators, errors);
 		mergePropertyHookConfigurators(configurators);
-		loadConfigurators(configurators);
+		loadConfigurators(configurators, errors);
 		// set to read-only
 		readonly = true;
+		return (FrameworkLogEntry[]) errors.toArray(new FrameworkLogEntry[errors.size()]);
 	}
 
-	private void mergeFileHookConfigurators(ArrayList configuratorList) {
+	private void mergeFileHookConfigurators(ArrayList configuratorList, ArrayList errors) {
 		ClassLoader cl = getClass().getClassLoader();
 		// get all hook configurators files in your classloader delegation
 		Enumeration hookConfigurators;
 		try {
 			hookConfigurators = cl != null ? cl.getResources(HookRegistry.HOOK_CONFIGURATORS_FILE) : ClassLoader.getSystemResources(HookRegistry.HOOK_CONFIGURATORS_FILE);
-		} catch (IOException e1) {
-			// TODO should log this!!
+		} catch (IOException e) {
+			errors.add(new FrameworkLogEntry(FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME, FrameworkLogEntry.ERROR, 0, "getResources error on " + HookRegistry.HOOK_CONFIGURATORS_FILE, 0, e, null)); //$NON-NLS-1$
 			return;
 		}
 		while (hookConfigurators.hasMoreElements()) {
@@ -113,6 +116,7 @@ public final class HookRegistry {
 					if (!configuratorList.contains(configurators[i]))
 						configuratorList.add(configurators[i]);
 			} catch (IOException e) {
+				errors.add(new FrameworkLogEntry(FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME, FrameworkLogEntry.ERROR, 0, "error loading: " + url.toExternalForm(), 0, e, null)); //$NON-NLS-1$
 				// ignore and continue to next URL
 			}
 		}
@@ -130,7 +134,7 @@ public final class HookRegistry {
 			configuratorList.remove(excludeHooks[i]);
 	}
 
-	private void loadConfigurators(ArrayList configurators) {
+	private void loadConfigurators(ArrayList configurators, ArrayList errors) {
 		for (Iterator iHooks = configurators.iterator(); iHooks.hasNext();) {
 			String hookName = (String) iHooks.next();
 			try {
@@ -143,7 +147,7 @@ public final class HookRegistry {
 				// IllegalAccessException
 				// InstantiationException
 				// ClassCastException
-				adaptor.getFrameworkLog().log(new FrameworkLogEntry(FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME, FrameworkLogEntry.ERROR, 0, t.getMessage(), 0, t, null));
+				errors.add(new FrameworkLogEntry(FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME, FrameworkLogEntry.ERROR, 0, "error loading hook: " + hookName, 0, t, null)); //$NON-NLS-1$
 			}
 		}
 	}
