@@ -45,6 +45,7 @@ public class EclipseAdaptorHook implements AdaptorHook, HookConfigurator {
 	private boolean noXML = false;
 
 	public void frameworkStart(BundleContext context) throws BundleException {
+		stopper = null;
 		registerEndorsedXMLParser(context);
 		Location location = LocationManager.getUserLocation();
 		Hashtable locationProperties = new Hashtable(1);
