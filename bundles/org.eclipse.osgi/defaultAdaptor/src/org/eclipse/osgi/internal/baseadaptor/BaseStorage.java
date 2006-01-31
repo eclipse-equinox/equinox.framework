@@ -690,6 +690,7 @@ public class BaseStorage {
 				StorageManager newFileManager = initFileManager(stateLocationDir, "none", true); //$NON-NLS-1$);
 				for (int i = 0; i < storageFiles.length; i++)
 					storageFiles[i] = newFileManager.lookup(fileNames[i], false);
+				newFileManager.close();
 			} catch (IOException ex) {
 				if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
 					Debug.println("Error reading state file " + ex.getMessage()); //$NON-NLS-1$
