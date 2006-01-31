@@ -23,11 +23,8 @@ public class ClasspathManifest implements KeyedElement {
 	public static final Object KEY = new Object();
 	public static final int HASHCODE = KEY.hashCode();
 
-	private Manifest mf;
-	private boolean initMF = false;
-
-	public ClasspathManifest() {
-	}
+	private Manifest manifest;
+	private boolean initialized = false;
 
 	public int getKeyHashCode() {
 		return HASHCODE;
@@ -42,24 +39,24 @@ public class ClasspathManifest implements KeyedElement {
 	}
 
 	public Manifest getManifest(ClasspathEntry cpEntry, ClasspathManager loader) {
-		if (initMF)
-			return mf;
+		if (initialized)
+			return manifest;
 		if (!hasPackageInfo(cpEntry, loader)) {
-			initMF = true;
-			mf = null;
-			return mf;
+			initialized = true;
+			manifest = null;
+			return manifest;
 		}
 		BundleEntry mfEntry = cpEntry.getBundleFile().getEntry(org.eclipse.osgi.framework.internal.core.Constants.OSGI_BUNDLE_MANIFEST);
 		if (mfEntry != null)
 			try {
 				InputStream manIn = mfEntry.getInputStream();
-				mf = new Manifest(manIn);
+				manifest = new Manifest(manIn);
 				manIn.close();
 			} catch (IOException e) {
 				// do nothing
 			}
-		initMF = true;
-		return mf;
+		initialized = true;
+		return manifest;
 	}
 
 	private boolean hasPackageInfo(ClasspathEntry cpEntry, ClasspathManager loader) {
