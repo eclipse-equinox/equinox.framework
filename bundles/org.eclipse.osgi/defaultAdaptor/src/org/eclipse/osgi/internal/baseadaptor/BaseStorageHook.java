@@ -31,7 +31,7 @@ public class BaseStorageHook implements StorageHook {
 	public static final int HASHCODE = KEY.hashCode();
 	public static final int DEL_BUNDLE_STORE = 0x01;
 	public static final int DEL_GENERATION = 0x02;
-	private static final int STORAGE_VERION = 1;
+	private static final int STORAGE_VERSION = 1;
 
 	/** bundle's file name */
 	private String fileName;
@@ -42,7 +42,7 @@ public class BaseStorageHook implements StorageHook {
 	/** Is bundle a reference */
 	private boolean reference;
 
-	private BaseData bundledata;
+	private BaseData bundleData;
 	private BaseStorage storage;
 	private File bundleStore;
 	private File dataStore;
@@ -52,37 +52,37 @@ public class BaseStorageHook implements StorageHook {
 	}
 
 	public int getStorageVersion() {
-		return STORAGE_VERION;
+		return STORAGE_VERSION;
 	}
 
 	public StorageHook create(BaseData bundledata) throws BundleException {
 		BaseStorageHook storageHook = new BaseStorageHook(storage);
-		storageHook.bundledata = bundledata;
+		storageHook.bundleData = bundledata;
 		return storageHook;
 	}
 
 	public void initialize(Dictionary manifest) throws BundleException {
-		BaseStorageHook.loadManifest(bundledata, manifest);
+		BaseStorageHook.loadManifest(bundleData, manifest);
 	}
 
-	static void loadManifest(BaseData bundledata, Dictionary manifest) throws BundleException {
+	static void loadManifest(BaseData target, Dictionary manifest) throws BundleException {
 		try {
-			bundledata.setVersion(Version.parseVersion((String) manifest.get(Constants.BUNDLE_VERSION)));
+			target.setVersion(Version.parseVersion((String) manifest.get(Constants.BUNDLE_VERSION)));
 		} catch (IllegalArgumentException e) {
-			bundledata.setVersion(new InvalidVersion((String) manifest.get(Constants.BUNDLE_VERSION)));
+			target.setVersion(new InvalidVersion((String) manifest.get(Constants.BUNDLE_VERSION)));
 		}
 		ManifestElement[] bsnHeader = ManifestElement.parseHeader(Constants.BUNDLE_SYMBOLICNAME, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME));
 		int bundleType = 0;
 		if (bsnHeader != null) {
-			bundledata.setSymbolicName(bsnHeader[0].getValue());
+			target.setSymbolicName(bsnHeader[0].getValue());
 			String singleton = bsnHeader[0].getDirective(Constants.SINGLETON_DIRECTIVE);
 			if (singleton == null)
 				singleton = bsnHeader[0].getAttribute(Constants.SINGLETON_DIRECTIVE);
 			if ("true".equals(singleton)) //$NON-NLS-1$
 				bundleType |= BundleData.TYPE_SINGLETON;
 		}
-		bundledata.setClassPathString((String) manifest.get(Constants.BUNDLE_CLASSPATH));
-		bundledata.setActivator((String) manifest.get(Constants.BUNDLE_ACTIVATOR));
+		target.setClassPathString((String) manifest.get(Constants.BUNDLE_CLASSPATH));
+		target.setActivator((String) manifest.get(Constants.BUNDLE_ACTIVATOR));
 		String host = (String) manifest.get(Constants.FRAGMENT_HOST);
 		if (host != null) {
 			bundleType |= BundleData.TYPE_FRAGMENT;
@@ -95,27 +95,27 @@ public class BaseStorageHook implements StorageHook {
 					bundleType |= BundleData.TYPE_BOOTCLASSPATH_EXTENSION;
 			}
 		}
-		bundledata.setType(bundleType);
-		bundledata.setExecutionEnvironment((String) manifest.get(Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT));
-		bundledata.setDynamicImports((String) manifest.get(Constants.DYNAMICIMPORT_PACKAGE));
+		target.setType(bundleType);
+		target.setExecutionEnvironment((String) manifest.get(Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT));
+		target.setDynamicImports((String) manifest.get(Constants.DYNAMICIMPORT_PACKAGE));
 	}
 
-	public StorageHook load(BaseData bundledata, DataInputStream in) throws IOException {
-		BaseStorageHook storageHook = new BaseStorageHook(storage);
-		storageHook.bundledata = bundledata;
-		storageHook.bundledata.setLocation(AdaptorUtil.readString(in, false));
-		storageHook.bundledata.setSymbolicName(AdaptorUtil.readString(in, false));
-		storageHook.bundledata.setVersion(AdaptorUtil.loadVersion(in));
-		storageHook.bundledata.setActivator(AdaptorUtil.readString(in, false));
-		storageHook.bundledata.setClassPathString(AdaptorUtil.readString(in, false));
-		storageHook.bundledata.setExecutionEnvironment(AdaptorUtil.readString(in, false));
-		storageHook.bundledata.setDynamicImports(AdaptorUtil.readString(in, false));
-		storageHook.bundledata.setStartLevel(in.readInt());
-		storageHook.bundledata.setStatus(in.readInt());
-		storageHook.bundledata.setType(in.readInt());
-		storageHook.bundledata.setLastModified(in.readLong());
-		storageHook.bundledata.setDirty(false); // make sure to reset the dirty bit;
+	public StorageHook load(BaseData target, DataInputStream in) throws IOException {
+		target.setLocation(AdaptorUtil.readString(in, false));
+		target.setSymbolicName(AdaptorUtil.readString(in, false));
+		target.setVersion(AdaptorUtil.loadVersion(in));
+		target.setActivator(AdaptorUtil.readString(in, false));
+		target.setClassPathString(AdaptorUtil.readString(in, false));
+		target.setExecutionEnvironment(AdaptorUtil.readString(in, false));
+		target.setDynamicImports(AdaptorUtil.readString(in, false));
+		target.setStartLevel(in.readInt());
+		target.setStatus(in.readInt());
+		target.setType(in.readInt());
+		target.setLastModified(in.readLong());
+		target.setDirty(false); // make sure to reset the dirty bit;
 
+		BaseStorageHook storageHook = new BaseStorageHook(storage);
+		storageHook.bundleData = target;
 		storageHook.generation = in.readInt();
 		storageHook.reference = in.readBoolean();
 		storageHook.fileName = getAbsolute(storageHook.reference, AdaptorUtil.readString(in, false));
@@ -138,27 +138,27 @@ public class BaseStorageHook implements StorageHook {
 	}
 
 	public void save(DataOutputStream out) throws IOException {
-		if (bundledata == null)
+		if (bundleData == null)
 			throw new IllegalStateException();
-		AdaptorUtil.writeStringOrNull(out, bundledata.getLocation());
-		AdaptorUtil.writeStringOrNull(out, bundledata.getSymbolicName());
-		AdaptorUtil.writeStringOrNull(out, bundledata.getVersion().toString());
-		AdaptorUtil.writeStringOrNull(out, bundledata.getActivator());
-		AdaptorUtil.writeStringOrNull(out, bundledata.getClassPathString());
-		AdaptorUtil.writeStringOrNull(out, bundledata.getExecutionEnvironment());
-		AdaptorUtil.writeStringOrNull(out, bundledata.getDynamicImports());
-		DataHook[] hooks = bundledata.getAdaptor().getHookRegistry().getDataHooks();
+		AdaptorUtil.writeStringOrNull(out, bundleData.getLocation());
+		AdaptorUtil.writeStringOrNull(out, bundleData.getSymbolicName());
+		AdaptorUtil.writeStringOrNull(out, bundleData.getVersion().toString());
+		AdaptorUtil.writeStringOrNull(out, bundleData.getActivator());
+		AdaptorUtil.writeStringOrNull(out, bundleData.getClassPathString());
+		AdaptorUtil.writeStringOrNull(out, bundleData.getExecutionEnvironment());
+		AdaptorUtil.writeStringOrNull(out, bundleData.getDynamicImports());
+		DataHook[] hooks = bundleData.getAdaptor().getHookRegistry().getDataHooks();
 		boolean forgetStartLevel = false;
 		for (int i = 0; i < hooks.length && !forgetStartLevel; i++)
-			forgetStartLevel = hooks[i].forgetStartLevelChange(bundledata, bundledata.getStartLevel());
-		out.writeInt(!forgetStartLevel ? bundledata.getStartLevel() : 1);
+			forgetStartLevel = hooks[i].forgetStartLevelChange(bundleData, bundleData.getStartLevel());
+		out.writeInt(!forgetStartLevel ? bundleData.getStartLevel() : 1);
 		boolean forgetStatus = false;
 		// see if we should forget the persistently started flag
 		for (int i = 0; i < hooks.length && !forgetStatus; i++)
-			forgetStatus = hooks[i].forgetStatusChange(bundledata, bundledata.getStatus());
-		out.writeInt(!forgetStatus ? bundledata.getStatus() : (~Constants.BUNDLE_STARTED) & bundledata.getStatus());
-		out.writeInt(bundledata.getType());
-		out.writeLong(bundledata.getLastModified());
+			forgetStatus = hooks[i].forgetStatusChange(bundleData, bundleData.getStatus());
+		out.writeInt(!forgetStatus ? bundleData.getStatus() : (~Constants.BUNDLE_STARTED) & bundleData.getStatus());
+		out.writeInt(bundleData.getType());
+		out.writeLong(bundleData.getLastModified());
 
 		out.writeInt(getGeneration());
 		out.writeBoolean(isReference());
@@ -208,7 +208,7 @@ public class BaseStorageHook implements StorageHook {
 
 	public File getBundleStore() {
 		if (bundleStore == null)
-			bundleStore = new File(storage.getBundleStoreRoot(), String.valueOf(bundledata.getBundleID()));
+			bundleStore = new File(storage.getBundleStoreRoot(), String.valueOf(bundleData.getBundleID()));
 		return bundleStore;
 	}
 
@@ -247,7 +247,7 @@ public class BaseStorageHook implements StorageHook {
 		Location parentConfiguration = null;
 		Location currentConfiguration = LocationManager.getConfigurationLocation();
 		if (currentConfiguration != null && (parentConfiguration = currentConfiguration.getParentLocation()) != null)
-			return new File(parentConfiguration.getURL().getFile(), FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME + '/' + LocationManager.BUNDLES_DIR + '/' + bundledata.getBundleID() + '/' + getGeneration());
+			return new File(parentConfiguration.getURL().getFile(), FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME + '/' + LocationManager.BUNDLES_DIR + '/' + bundleData.getBundleID() + '/' + getGeneration());
 		return null;
 	}
 
