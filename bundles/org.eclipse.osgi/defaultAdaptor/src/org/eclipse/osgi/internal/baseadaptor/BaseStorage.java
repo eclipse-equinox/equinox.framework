@@ -18,15 +18,17 @@ import java.net.*;
 import java.util.*;
 import org.eclipse.core.runtime.adaptor.EclipseStarter;
 import org.eclipse.core.runtime.adaptor.LocationManager;
-import org.eclipse.core.runtime.internal.adaptor.*;
-import org.eclipse.osgi.baseadaptor.*;
+import org.eclipse.core.runtime.internal.adaptor.EclipseAdaptorMsg;
+import org.eclipse.osgi.baseadaptor.BaseAdaptor;
+import org.eclipse.osgi.baseadaptor.BaseData;
 import org.eclipse.osgi.baseadaptor.bundlefile.*;
-import org.eclipse.osgi.baseadaptor.hooks.*;
+import org.eclipse.osgi.baseadaptor.hooks.BundleFileFactory;
+import org.eclipse.osgi.baseadaptor.hooks.StorageHook;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.debug.FrameworkDebugOptions;
+import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Constants;
-import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
 import org.eclipse.osgi.framework.util.KeyedHashSet;
 import org.eclipse.osgi.service.datalocation.Location;
@@ -42,9 +44,7 @@ public class BaseStorage {
 	private static final String OPTION_PLATFORM_ADMIN = RUNTIME_ADAPTOR + "/debug/platformadmin"; //$NON-NLS-1$
 	private static final String OPTION_PLATFORM_ADMIN_RESOLVER = RUNTIME_ADAPTOR + "/debug/platformadmin/resolver"; //$NON-NLS-1$
 	private static final String OPTION_MONITOR_PLATFORM_ADMIN = RUNTIME_ADAPTOR + "/resolver/timing"; //$NON-NLS-1$
-	private static final String OPTION_RESOLVER_READER = RUNTIME_ADAPTOR + "/resolver/reader/timing"; //$NON-NLS-1$
-	private static final String OPTION_CONVERTER = RUNTIME_ADAPTOR + "/converter/debug"; //$NON-NLS-1$
-	private static final String OPTION_LOCATION = RUNTIME_ADAPTOR + "/debug/location"; //$NON-NLS-1$	
+	private static final String OPTION_RESOLVER_READER = RUNTIME_ADAPTOR + "/resolver/reader/timing"; //$NON-NLS-1$	
 	private static final String PROP_FRAMEWORK_EXTENSIONS = "osgi.framework.extensions"; //$NON-NLS-1$
 	private static final String PROP_BUNDLE_STORE = "osgi.bundlestore"; //$NON-NLS-1$
 	// The name of the bundle data directory
@@ -140,8 +140,6 @@ public class BaseStorage {
 		StateManager.MONITOR_PLATFORM_ADMIN = options.getBooleanOption(OPTION_MONITOR_PLATFORM_ADMIN, false);
 		StateManager.DEBUG_PLATFORM_ADMIN = options.getBooleanOption(OPTION_PLATFORM_ADMIN, false);
 		StateManager.DEBUG_PLATFORM_ADMIN_RESOLVER = options.getBooleanOption(OPTION_PLATFORM_ADMIN_RESOLVER, false);
-		PluginConverterImpl.DEBUG = options.getBooleanOption(OPTION_CONVERTER, false);
-		BasicLocation.DEBUG = options.getBooleanOption(OPTION_LOCATION, false);
 	}
 
 	protected StorageManager initFileManager(File baseDir, String lockMode, boolean readOnly) {
@@ -647,12 +645,10 @@ public class BaseStorage {
 			return stateManager;
 		StateObjectFactory factory = stateManager.getFactory();
 		for (int i = 0; i < installedBundles.length; i++) {
-			Bundle toAdd = installedBundles[i];
+			AbstractBundle toAdd = (AbstractBundle) installedBundles[i];
 			try {
-				Dictionary toAddManifest = toAdd.getHeaders(""); //$NON-NLS-1$
-				// if this is a cached manifest need to get the real one
-				if (toAddManifest instanceof CachedManifest)
-					toAddManifest = ((CachedManifest) toAddManifest).getManifest();
+				// make sure we get the real manifest as if this is the first time.
+				Dictionary toAddManifest = loadManifest((BaseData) toAdd.getBundleData(), true);
 				BundleDescription newDescription = factory.createBundleDescription(systemState, toAddManifest, toAdd.getLocation(), toAdd.getBundleId());
 				systemState.addBundle(newDescription);
 			} catch (BundleException be) {
@@ -719,8 +715,6 @@ public class BaseStorage {
 
 	public void frameworkStart(BundleContext fwContext) throws BundleException {
 		this.context = fwContext;
-		// EnvironmentInfo has to be initialized first to compute defaults for system context (see bug 88925)
-		EclipseEnvironmentInfo.getDefault();
 		// System property can be set to enable state saver or not.
 		if (Boolean.valueOf(FrameworkProperties.getProperty(BaseStorage.PROP_ENABLE_STATE_SAVER, "true")).booleanValue()) //$NON-NLS-1$
 			stateSaver = new StateSaver();

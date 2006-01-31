@@ -39,6 +39,9 @@ public class EclipseAdaptorHook implements AdaptorHook, HookConfigurator {
 	public static final String SAXFACTORYNAME = "javax.xml.parsers.SAXParserFactory"; //$NON-NLS-1$
 	/** The DOM factory name */
 	public static final String DOMFACTORYNAME = "javax.xml.parsers.DocumentBuilderFactory"; //$NON-NLS-1$
+	private static final String RUNTIME_ADAPTOR = FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME + "/eclipseadaptor"; //$NON-NLS-1$
+	private static final String OPTION_CONVERTER = RUNTIME_ADAPTOR + "/converter/debug"; //$NON-NLS-1$
+	private static final String OPTION_LOCATION = RUNTIME_ADAPTOR + "/debug/location"; //$NON-NLS-1$
 
 	private BaseAdaptor adaptor;
 	private BundleStopper stopper;
@@ -182,6 +185,18 @@ public class EclipseAdaptorHook implements AdaptorHook, HookConfigurator {
 
 	public void initialize(BaseAdaptor adaptor) {
 		this.adaptor = adaptor;
+		// EnvironmentInfo has to be initialized first to compute defaults for system context (see bug 88925)
+		EclipseEnvironmentInfo.getDefault();
+		setDebugOptions();
+	}
+
+	private void setDebugOptions() {
+		FrameworkDebugOptions options = FrameworkDebugOptions.getDefault();
+		// may be null if debugging is not enabled
+		if (options == null)
+			return;
+		PluginConverterImpl.DEBUG = options.getBooleanOption(OPTION_CONVERTER, false);
+		BasicLocation.DEBUG = options.getBooleanOption(OPTION_LOCATION, false);
 	}
 
 	public BundleStopper getBundleStopper() {
