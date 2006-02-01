@@ -32,7 +32,7 @@ public class EclipseClassLoadingHook implements ClassLoadingHook, HookConfigurat
 	private static final String VARIABLE_DELIM_STRING = "$"; //$NON-NLS-1$
 	private static final char VARIABLE_DELIM_CHAR = '$';
 	private static final String EXTERNAL_LIB_PREFIX = "external:"; //$NON-NLS-1$
-	private static String[] LIB_VARIENTS = buildLibraryVariants();
+	private static String[] LIB_VARIANTS = buildLibraryVariants();
 
 	static {
 		try {
@@ -222,11 +222,11 @@ public class EclipseClassLoadingHook implements ClassLoadingHook, HookConfigurat
 	}
 
 	private String searchVariants(BaseData bundledata, String path) {
-		for (int i = 0; i < LIB_VARIENTS.length; i++) {
+		for (int i = 0; i < LIB_VARIANTS.length; i++) {
 			BundleFile baseBundleFile = bundledata.getBundleFile();
-			BundleEntry libEntry = baseBundleFile.getEntry(LIB_VARIENTS[i] + path);
+			BundleEntry libEntry = baseBundleFile.getEntry(LIB_VARIANTS[i] + path);
 			if (libEntry != null) {
-				File libFile = baseBundleFile.getFile(LIB_VARIENTS[i] + path, true);
+				File libFile = baseBundleFile.getFile(LIB_VARIANTS[i] + path, true);
 				if (libFile == null)
 					return null;
 				// see bug 88697 - HP requires libraries to have executable permissions
