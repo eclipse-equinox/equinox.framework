@@ -60,7 +60,6 @@ public class StateManager implements PlatformAdmin, Runnable {
 	private StateImpl systemState;
 	private StateObjectFactoryImpl factory;
 	private long lastTimeStamp;
-	private BundleInstaller installer;
 	private boolean cachedState = false;
 	private File stateFile;
 	private File lazyFile;
@@ -270,25 +269,7 @@ public class StateManager implements PlatformAdmin, Runnable {
 	 * @see PlatformAdmin#commit(State)
 	 */
 	public synchronized void commit(State state) throws BundleException {
-		// no installer have been provided - commit not supported
-		if (installer == null)
-			throw new IllegalArgumentException("PlatformAdmin.commit() not supported"); //$NON-NLS-1$
-		if (!(state instanceof UserState))
-			throw new IllegalArgumentException("Wrong state implementation"); //$NON-NLS-1$		
-		if (state.getTimeStamp() != systemState.getTimeStamp())
-			throw new BundleException(StateMsg.COMMIT_INVALID_TIMESTAMP); 		
-		StateDelta delta = state.compare(systemState);
-		BundleDelta[] changes = delta.getChanges();
-		for (int i = 0; i < changes.length; i++)
-			if ((changes[i].getType() & BundleDelta.ADDED) > 0)
-				installer.installBundle(changes[i].getBundle());
-			else if ((changes[i].getType() & BundleDelta.REMOVED) > 0)
-				installer.uninstallBundle(changes[i].getBundle());
-			else if ((changes[i].getType() & BundleDelta.UPDATED) > 0)
-				installer.updateBundle(changes[i].getBundle());
-			else {
-				// bug in StateDelta#getChanges
-			}
+		throw new IllegalArgumentException("PlatformAdmin.commit() not supported"); //$NON-NLS-1$
 	}
 
 	/**
@@ -307,23 +288,6 @@ public class StateManager implements PlatformAdmin, Runnable {
 	 */
 	public StateHelper getStateHelper() {
 		return StateHelperImpl.getInstance();
-	}
-
-	/**
-	 * Returns the bundle installer.
-	 * @return the bundle installer
-	 */
-	public BundleInstaller getInstaller() {
-		return installer;
-	}
-
-	/**
-	 * Sets the bundle installer.  The bundle installer will be used when a state is commited
-	 * using the commit(State) method.
-	 * @param installer the bundle installer
-	 */
-	public void setInstaller(BundleInstaller installer) {
-		this.installer = installer;
 	}
 
 	public void run() {
