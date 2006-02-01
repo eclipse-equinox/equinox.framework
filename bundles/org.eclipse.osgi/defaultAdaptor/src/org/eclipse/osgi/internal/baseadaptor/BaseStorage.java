@@ -76,6 +76,8 @@ public class BaseStorage {
 	private static final String PERM_DATA_FILE = ".permdata"; //$NON-NLS-1$
 	private static final byte PERMDATA_VERSION = 1;
 
+	private static final BaseStorage INSTANCE = new BaseStorage();
+
 	private BaseAdaptor adaptor;
 	// assume a file: installURL
 	private String installPath;
@@ -104,6 +106,10 @@ public class BaseStorage {
 	private BasePermissionStorage permissionStorage;
 	private StateSaver stateSaver;
 	private boolean invalidState;
+
+	private BaseStorage() {
+		// make constructor private
+	}
 
 	public void initialize(BaseAdaptor adaptor) throws IOException {
 		this.adaptor = adaptor;
@@ -1097,5 +1103,9 @@ public class BaseStorage {
 
 	public long getNextBundleId() {
 		return nextId++;
+	}
+
+	public static BaseStorage getInstance() {
+		return INSTANCE;
 	}
 }

@@ -497,7 +497,7 @@ public class BaseAdaptor implements FrameworkAdaptor{
 	 */
 	protected BaseStorage getStorage() {
 		if (storage == null)
-			storage = new BaseStorage();
+			storage = BaseStorage.getInstance();
 		return storage;
 	}
 }

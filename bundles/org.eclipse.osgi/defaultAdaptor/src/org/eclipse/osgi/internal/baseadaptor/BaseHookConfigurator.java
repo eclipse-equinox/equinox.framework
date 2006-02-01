@@ -9,9 +9,10 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.osgi.baseadaptor;
+package org.eclipse.osgi.internal.baseadaptor;
 
-import org.eclipse.osgi.internal.baseadaptor.*;
+import org.eclipse.osgi.baseadaptor.HookConfigurator;
+import org.eclipse.osgi.baseadaptor.HookRegistry;
 
 /**
  * Add the hooks necessary to support the OSGi Framework specification.  
@@ -20,7 +21,7 @@ public class BaseHookConfigurator implements HookConfigurator {
 
 	public void addHooks(HookRegistry registry) {
 		// always add the BaseStorageHook and BaseClassLoadingHook; it is required for the storage implementation
-		registry.addStorageHook(new BaseStorageHook(registry.getAdaptor().getStorage()));
+		registry.addStorageHook(new BaseStorageHook(BaseStorage.getInstance()));
 		registry.addClassLoadingHook(new BaseClassLoadingHook());
 	}
 
