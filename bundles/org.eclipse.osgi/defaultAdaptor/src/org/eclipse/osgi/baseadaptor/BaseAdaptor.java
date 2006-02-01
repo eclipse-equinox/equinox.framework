@@ -287,27 +287,6 @@ public class BaseAdaptor implements FrameworkAdaptor{
 	}
 
 	/**
-	 * @deprecated
-	 */
-	public String getExportPackages() {
-		return null;
-	}
-
-	/**
-	 * @deprecated
-	 */
-	public String getProvidePackages() {
-		return null;
-	}
-
-	/**
-	 * @deprecated
-	 */
-	public String getExportServices() {
-		return null;
-	}
-
-	/**
 	 * @see FrameworkAdaptor#getInitialBundleStartLevel()
 	 */
 	public int getInitialBundleStartLevel() {
