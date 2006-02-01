@@ -16,8 +16,9 @@ import java.util.ArrayList;
 import org.eclipse.osgi.baseadaptor.*;
 import org.eclipse.osgi.baseadaptor.bundlefile.BundleEntry;
 import org.eclipse.osgi.baseadaptor.hooks.ClassLoadingHook;
-import org.eclipse.osgi.baseadaptor.loader.ClasspathEntry;
-import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
+import org.eclipse.osgi.baseadaptor.loader.*;
+import org.eclipse.osgi.framework.adaptor.BundleProtectionDomain;
+import org.eclipse.osgi.framework.adaptor.ClassLoaderDelegate;
 
 public class DevClassLoadingHook implements ClassLoadingHook, HookConfigurator {
 
@@ -57,11 +58,19 @@ public class DevClassLoadingHook implements ClassLoadingHook, HookConfigurator {
 		return null;
 	}
 
+	public BaseClassLoader createClassLoader(ClassLoader parent, ClassLoaderDelegate delegate, BundleProtectionDomain domain, BaseData data, String[] bundleclasspath) {
+		// do nothing
+		return null;
+	}
+
+	public void initializedClassLoader(BaseClassLoader baseClassLoader, BaseData data) {
+		// do nothing
+	}
+
 	public void addHooks(HookRegistry hookRegistry) {
 		if (DevClassPathHelper.inDevelopmentMode())
 			// only add dev classpath manager if in dev mode
 			hookRegistry.addClassLoadingHook(new DevClassLoadingHook());
 
 	}
-
 }

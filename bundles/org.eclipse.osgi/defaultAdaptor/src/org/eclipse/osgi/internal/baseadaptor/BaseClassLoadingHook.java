@@ -18,6 +18,8 @@ import org.eclipse.osgi.baseadaptor.BaseData;
 import org.eclipse.osgi.baseadaptor.bundlefile.BundleEntry;
 import org.eclipse.osgi.baseadaptor.hooks.ClassLoadingHook;
 import org.eclipse.osgi.baseadaptor.loader.*;
+import org.eclipse.osgi.framework.adaptor.BundleProtectionDomain;
+import org.eclipse.osgi.framework.adaptor.ClassLoaderDelegate;
 import org.eclipse.osgi.framework.debug.Debug;
 
 public class BaseClassLoadingHook implements ClassLoadingHook {
@@ -75,6 +77,15 @@ public class BaseClassLoadingHook implements ClassLoadingHook {
 	public byte[] processClass(String name, byte[] classbytes, ClasspathEntry classpathEntry, BundleEntry entry, ClasspathManager manager) {
 		// do nothing
 		return null;
+	}
+
+	public BaseClassLoader createClassLoader(ClassLoader parent, ClassLoaderDelegate delegate, BundleProtectionDomain domain, BaseData data, String[] bundleclasspath) {
+		// do nothing
+		return null;
+	}
+
+	public void initializedClassLoader(BaseClassLoader baseClassLoader, BaseData data) {
+		// do nothing
 	}
 
 }

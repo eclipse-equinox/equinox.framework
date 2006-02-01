@@ -14,6 +14,7 @@ package org.eclipse.osgi.baseadaptor.hooks;
 import java.io.*;
 import java.util.Dictionary;
 import org.eclipse.osgi.baseadaptor.BaseData;
+import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.util.KeyedElement;
 import org.osgi.framework.BundleException;
 
@@ -22,7 +23,6 @@ import org.osgi.framework.BundleException;
  * associated with each BaseData object installed in the adaptor.<p>
  * A StorageHook extends {@link KeyedElement}, the key used for the element must be the 
  * fully qualified string name of the StorageHook implementation class.
- * @see BaseData#addStorageHook(StorageHook)
  * @see BaseData#getStorageHook(String)
  */
 public interface StorageHook extends KeyedElement {
@@ -112,4 +112,38 @@ public interface StorageHook extends KeyedElement {
 	 * @throws BundleException 
 	 */
 	Dictionary getManifest(boolean firstLoad) throws BundleException;
+
+	/**
+	 * Gets called by a base data during {@link BundleData#setStatus(int)}.
+	 * A base data will call this method for each configured storage hook it
+	 * is associated with until one storage hook returns true.  If all configured storage 
+	 * hooks return false then the BaseData will be marked dirty and will cause the 
+	 * status to be persistently saved.
+	 * @param status the new status of the base data
+	 * @return false if the status is not to be persistently saved; otherwise true is returned
+	 */
+	boolean forgetStatusChange(int status);
+
+	/**
+	 * Gets called by a base data during {@link BundleData#setStartLevel(int)}.
+	 * A base data will call this method for each configured storage hook it
+	 * is associated with until one storage hook returns true.  If all configured storage 
+	 * hooks return false then the BaseData will be marked dirty and will cause the 
+	 * start level to be persistently saved.
+	 * @param data the base data with a startlevel change
+	 * @param startlevel the new startlevel of the base data
+	 * @return false if the startlevel is not to be persistently saved; otherwise true is returned
+	 */
+	boolean forgetStartLevelChange(int startlevel);
+
+	/**
+	 * Gets called by a base data during {@link BundleData#matchDNChain(String)}.
+	 * A base data will call this method for each configured storage hook it
+	 * is associated with until one storage hook returns true.  If all configured storage 
+	 * hooks return false value then the BaseAdaptor will return false.
+	 * @param pattern the pattern of distinguished name (DN) chains to match
+	 * @return true if the pattern matches. A value of false is returned
+	 * if bundle signing is not supported.
+	 */
+	boolean matchDNChain(String pattern);
 }

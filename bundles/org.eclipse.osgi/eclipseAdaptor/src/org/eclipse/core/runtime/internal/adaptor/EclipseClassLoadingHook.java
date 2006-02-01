@@ -21,8 +21,9 @@ import org.eclipse.osgi.baseadaptor.*;
 import org.eclipse.osgi.baseadaptor.bundlefile.BundleEntry;
 import org.eclipse.osgi.baseadaptor.bundlefile.BundleFile;
 import org.eclipse.osgi.baseadaptor.hooks.ClassLoadingHook;
-import org.eclipse.osgi.baseadaptor.loader.ClasspathEntry;
-import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
+import org.eclipse.osgi.baseadaptor.loader.*;
+import org.eclipse.osgi.framework.adaptor.BundleProtectionDomain;
+import org.eclipse.osgi.framework.adaptor.ClassLoaderDelegate;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 
 public class EclipseClassLoadingHook implements ClassLoadingHook, HookConfigurator {
@@ -249,5 +250,15 @@ public class EclipseClassLoadingHook implements ClassLoadingHook, HookConfigurat
 
 	public void addHooks(HookRegistry hookRegistry) {
 		hookRegistry.addClassLoadingHook(this);
+	}
+
+	public BaseClassLoader createClassLoader(ClassLoader parent, ClassLoaderDelegate delegate, BundleProtectionDomain domain, BaseData data, String[] bundleclasspath) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void initializedClassLoader(BaseClassLoader baseClassLoader, BaseData data) {
+		// TODO Auto-generated method stub
+		
 	}
 }

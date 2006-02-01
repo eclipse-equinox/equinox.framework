@@ -22,7 +22,7 @@ import org.eclipse.core.runtime.internal.adaptor.EclipseAdaptorMsg;
 import org.eclipse.osgi.baseadaptor.BaseAdaptor;
 import org.eclipse.osgi.baseadaptor.BaseData;
 import org.eclipse.osgi.baseadaptor.bundlefile.*;
-import org.eclipse.osgi.baseadaptor.hooks.BundleFileFactory;
+import org.eclipse.osgi.baseadaptor.hooks.BundleFileFactoryHook;
 import org.eclipse.osgi.baseadaptor.hooks.StorageHook;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.debug.Debug;
@@ -583,7 +583,7 @@ public class BaseStorage {
 			content = getBundleContent(data);
 		}
 		// Ask factories before doing the default behavior
-		BundleFileFactory[] factories = adaptor.getHookRegistry().getBundleFileFactories();
+		BundleFileFactoryHook[] factories = adaptor.getHookRegistry().getBundleFileFactoryHooks();
 		for (int i = 0; i < factories.length; i++) {
 			BundleFile result = factories[i].createBundleFile(content, data, base);
 			if (result != null)
@@ -783,13 +783,15 @@ public class BaseStorage {
 	protected BaseData loadBaseData(long id, DataInputStream in) throws IOException {
 		BaseData result = new BaseData(id, adaptor);
 		int numHooks = in.readInt();
+		StorageHook[] hooks = new StorageHook[numHooks];
 		for (int i = 0; i < numHooks; i++) {
 			String hookKey = in.readUTF();
 			StorageHook storageHook = (StorageHook) storageHooks.getByKey(hookKey);
 			if (storageHook == null)
 				throw new IOException();
-			result.addStorageHook(storageHook.load(result, in));
+			hooks[i] = storageHook.load(result, in);
 		}
+		result.setStorageHooks(hooks);
 		return result;
 	}
 

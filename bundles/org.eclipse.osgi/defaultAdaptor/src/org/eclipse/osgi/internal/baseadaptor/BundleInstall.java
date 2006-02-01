@@ -49,10 +49,9 @@ public class BundleInstall implements BundleOperation {
 				data.setStartLevel(storage.getInitialBundleStartLevel());
 				StorageHook[] storageHooks = data.getAdaptor().getHookRegistry().getStorageHooks();
 				StorageHook[] instanceHooks = new StorageHook[storageHooks.length];
-				for (int i = 0; i < storageHooks.length; i++) {
+				for (int i = 0; i < storageHooks.length; i++)
 					instanceHooks[i] = storageHooks[i].create(data);
-					data.addStorageHook(instanceHooks[i]);
-				}
+				data.setStorageHooks(instanceHooks);
 				BaseStorageHook storageHook = (BaseStorageHook) data.getStorageHook(BaseStorageHook.KEY);
 				in = source.getInputStream();
 				URL sourceURL = source.getURL();

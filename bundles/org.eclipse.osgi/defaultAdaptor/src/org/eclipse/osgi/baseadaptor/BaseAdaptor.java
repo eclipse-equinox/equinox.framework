@@ -487,7 +487,7 @@ public class BaseAdaptor implements FrameworkAdaptor{
 	/**
 	 * Creates a bundle file object for the given content and base data. 
 	 * This method must delegate to each configured bundle file factory 
-	 * {@link BundleFileFactory#createBundleFile(Object, BaseData, boolean)} method until one 
+	 * {@link BundleFileFactoryHook#createBundleFile(Object, BaseData, boolean)} method until one 
 	 * factory returns a non-null value.  If no bundle file factory returns a non-null value 
 	 * then the the default behavior will be performed. <p>
 	 * If the specified content is <code>null</code> then the base content of the specified 

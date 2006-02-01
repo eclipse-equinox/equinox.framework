@@ -15,7 +15,6 @@ import java.io.*;
 import java.util.Dictionary;
 import org.eclipse.core.runtime.adaptor.LocationManager;
 import org.eclipse.osgi.baseadaptor.*;
-import org.eclipse.osgi.baseadaptor.hooks.DataHook;
 import org.eclipse.osgi.baseadaptor.hooks.StorageHook;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.debug.Debug;
@@ -147,15 +146,15 @@ public class BaseStorageHook implements StorageHook {
 		AdaptorUtil.writeStringOrNull(out, bundleData.getClassPathString());
 		AdaptorUtil.writeStringOrNull(out, bundleData.getExecutionEnvironment());
 		AdaptorUtil.writeStringOrNull(out, bundleData.getDynamicImports());
-		DataHook[] hooks = bundleData.getAdaptor().getHookRegistry().getDataHooks();
+		StorageHook[] hooks = bundleData.getStorageHooks();
 		boolean forgetStartLevel = false;
 		for (int i = 0; i < hooks.length && !forgetStartLevel; i++)
-			forgetStartLevel = hooks[i].forgetStartLevelChange(bundleData, bundleData.getStartLevel());
+			forgetStartLevel = hooks[i].forgetStartLevelChange(bundleData.getStartLevel());
 		out.writeInt(!forgetStartLevel ? bundleData.getStartLevel() : 1);
 		boolean forgetStatus = false;
 		// see if we should forget the persistently started flag
 		for (int i = 0; i < hooks.length && !forgetStatus; i++)
-			forgetStatus = hooks[i].forgetStatusChange(bundleData, bundleData.getStatus());
+			forgetStatus = hooks[i].forgetStatusChange(bundleData.getStatus());
 		out.writeInt(!forgetStatus ? bundleData.getStatus() : (~Constants.BUNDLE_STARTED) & bundleData.getStatus());
 		out.writeInt(bundleData.getType());
 		out.writeLong(bundleData.getLastModified());
@@ -284,5 +283,20 @@ public class BaseStorageHook implements StorageHook {
 	public Dictionary getManifest(boolean firstLoad) throws BundleException {
 		// do nothing
 		return null;
+	}
+
+	public boolean forgetStatusChange(int status) {
+		// do nothing
+		return false;
+	}
+
+	public boolean forgetStartLevelChange(int startlevel) {
+		// do nothing
+		return false;
+	}
+
+	public boolean matchDNChain(String pattern) {
+		// do nothing
+		return false;
 	}
 }

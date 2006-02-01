@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import org.eclipse.osgi.baseadaptor.BaseData;
 import org.eclipse.osgi.baseadaptor.HookRegistry;
 import org.eclipse.osgi.baseadaptor.bundlefile.BundleEntry;
-import org.eclipse.osgi.baseadaptor.loader.ClasspathEntry;
-import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
+import org.eclipse.osgi.baseadaptor.loader.*;
+import org.eclipse.osgi.framework.adaptor.*;
 
 /**
  * A ClassLoadingHook hooks into the <code>ClasspathManager</code> class.
@@ -69,4 +69,29 @@ public interface ClassLoadingHook {
 	 * @return the parent classloader to be used by all bundle classloaders or null.
 	 */
 	public ClassLoader getBundleClassLoaderParent();
+
+	/**
+	 * Gets called by a base data during 
+	 * {@link BundleData#createClassLoader(ClassLoaderDelegate, BundleProtectionDomain, String[])}.
+	 * The BaseData will call this method for each configured class loading hook until one data
+	 * hook returns a non-null value.  If no class loading hook returns a non-null value then a 
+	 * default implemenation of BundleClassLoader will be created.
+	 * @param parent the parent classloader for the BundleClassLoader
+	 * @param delegate the delegate for the bundle classloader
+	 * @param domain the domian for the bundle classloader
+	 * @param data the BundleData for the BundleClassLoader
+	 * @param bundleclasspath the classpath for the bundle classloader
+	 * @return a newly created bundle classloader
+	 */
+	BaseClassLoader createClassLoader(ClassLoader parent, ClassLoaderDelegate delegate, BundleProtectionDomain domain, BaseData data, String[] bundleclasspath);
+
+	/**
+	 * Gets called by a base data during
+	 * {@link BundleData#createClassLoader(ClassLoaderDelegate, BundleProtectionDomain, String[])}.
+	 * The BaseData will call this method for each configured class loading hook after a 
+	 * BundleClassLoader has been created.
+	 * @param baseClassLoader the newly created bundle classloader
+	 * @param data the BundleData associated with the bundle classloader
+	 */
+	void initializedClassLoader(BaseClassLoader baseClassLoader, BaseData data);
 }

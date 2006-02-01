@@ -24,7 +24,6 @@ import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.internal.core.Constants;
 import org.eclipse.osgi.framework.internal.protocol.bundleentry.Handler;
-import org.eclipse.osgi.framework.util.KeyedHashSet;
 import org.eclipse.osgi.internal.baseadaptor.DefaultClassLoader;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
@@ -33,7 +32,8 @@ import org.osgi.framework.*;
  * The BundleData implementation used by the BaseAdaptor.
  * @see BaseAdaptor
  * @see BundleData
- * @see DataHook
+ * @see StorageHook
+ * @see ClassLoadingHook
  */
 public class BaseData implements BundleData {
 	private long id;
@@ -41,7 +41,7 @@ public class BaseData implements BundleData {
 	private Bundle bundle;
 	private int startLevel = -1;
 	private int status = 0;
-	private KeyedHashSet storageHooks = new KeyedHashSet(5, false);
+	private StorageHook[] storageHooks;
 	private String location;
 	private long lastModified;
 	protected BundleFile bundleFile;
@@ -70,15 +70,15 @@ public class BaseData implements BundleData {
 	}
 
 	/**
-	 * This method calls all the configured data hooks {@link DataHook#createClassLoader(ClassLoader, ClassLoaderDelegate, BundleProtectionDomain, BaseData, String[])} 
-	 * methods until on returns a non-null value.  If none of the data hooks returns a non-null value 
+	 * This method calls all the configured class loading hooks {@link StorageHook#createClassLoader(ClassLoader, ClassLoaderDelegate, BundleProtectionDomain, BaseData, String[])} 
+	 * methods until on returns a non-null value.  If none of the class loading hooks returns a non-null value 
 	 * then the default classloader implementation is used. <p>
-	 * After the classloader is created all configured data hooks 
-	 * {@link DataHook#initializedClassLoader(BaseClassLoader, BaseData)} methods are called.
+	 * After the classloader is created all configured class loading hooks 
+	 * {@link StorageHook#initializedClassLoader(BaseClassLoader, BaseData)} methods are called.
 	 * @see BundleData#createClassLoader(ClassLoaderDelegate, BundleProtectionDomain, String[])
 	 */
 	public BundleClassLoader createClassLoader(ClassLoaderDelegate delegate, BundleProtectionDomain domain, String[] bundleclasspath) {
-		DataHook[] hooks = adaptor.getHookRegistry().getDataHooks();
+		ClassLoadingHook[] hooks = adaptor.getHookRegistry().getClassLoadingHooks();
 		ClassLoader parent = adaptor.getBundleClassLoaderParent();
 		BaseClassLoader cl = null;
 		for (int i = 0; i < hooks.length && cl == null; i++)
@@ -196,7 +196,7 @@ public class BaseData implements BundleData {
 	}
 
 	/**
-	 * This method calls each configured data hook {@link DataHook#forgetStartLevelChange(BaseData, int)} method.
+	 * This method calls each configured storage hook {@link StorageHook#forgetStartLevelChange(int)} method.
 	 * If one returns true then this bundledata is not marked dirty.
 	 * @see BundleData#setStartLevel(int)
 	 */
@@ -205,7 +205,7 @@ public class BaseData implements BundleData {
 	}
 
 	/**
-	 * This method calls each configured data hook {@link DataHook#forgetStatusChange(BaseData, int)} method.
+	 * This method calls each configured storage hook {@link StorageHook#forgetStatusChange(int)} method.
 	 * If one returns true then this bundledata is not marked dirty.
 	 * @see BundleData#setStartLevel(int)
 	 */
@@ -214,13 +214,13 @@ public class BaseData implements BundleData {
 	}
 
 	private int setPersistentData(int value, boolean isStartLevel, int orig) {
-		DataHook[] hooks = adaptor.getHookRegistry().getDataHooks();
+		StorageHook[] hooks = getStorageHooks();
 		for (int i = 0; i < hooks.length; i++)
 			if (isStartLevel) {
-				if (hooks[i].forgetStartLevelChange(this, value))
+				if (hooks[i].forgetStartLevelChange(value))
 					return value;
 			} else {
-				if (hooks[i].forgetStatusChange(this, value))
+				if (hooks[i].forgetStatusChange(value))
 					return value;
 			}
 		if (value != orig)
@@ -335,10 +335,14 @@ public class BaseData implements BundleData {
 		this.dynamicImports = dynamicImports;
 	}
 
+	/**
+	 * This method calls each configured storage hook {@link StorageHook#matchDNChain(String)} method 
+	 * until one returns true.  If no configured storage hook returns true then false is returned.
+	 */
 	public final boolean matchDNChain(String pattern) {
-		DataHook[] hooks = adaptor.getHookRegistry().getDataHooks();
+		StorageHook[] hooks = getStorageHooks();
 		for (int i = 0; i < hooks.length; i++)
-			if (hooks[i].matchDNChain(this, pattern))
+			if (hooks[i].matchDNChain(pattern))
 				return true;
 		return false;
 	}
@@ -394,19 +398,24 @@ public class BaseData implements BundleData {
 	 * @return the storage hook which is keyed by the specified key
 	 */
 	public StorageHook getStorageHook(String key) {
-		synchronized (storageHooks) {
-			return (StorageHook) storageHooks.getByKey(key);
-		}
+		if (storageHooks == null)
+			return null;
+		for (int i = 0; i < storageHooks.length; i++)
+			if (storageHooks[i].getKey().equals(key))
+				return storageHooks[i];
+		return null;
 	}
 
 	/**
-	 * Adds a storage hook
-	 * @param userObject the storage hook to add
+	 * Sets the instance storage hooks for this base data.  This is method
+	 * may only be called once for the lifetime of the base data.  Once set,
+	 * the list of storage hooks remains constant.
+	 * @param storageHooks the storage hook to add
 	 */
-	public void addStorageHook(StorageHook storageHook) {
-		synchronized (storageHooks) {
-			storageHooks.add(storageHook);
-		}
+	public void setStorageHooks(StorageHook[] storageHooks) {
+		if (this.storageHooks != null)
+			return; // only allow this to be set once.
+		this.storageHooks = storageHooks;
 	}
 
 	/**
@@ -414,9 +423,7 @@ public class BaseData implements BundleData {
 	 * @return all the storage hooks associated with this BaseData
 	 */
 	public StorageHook[] getStorageHooks() {
-		synchronized (storageHooks) {
-			return (StorageHook[]) storageHooks.elements(new StorageHook[storageHooks.size()]);
-		}
+		return storageHooks == null ? new StorageHook[0] : storageHooks;
 	}
 
 	/**

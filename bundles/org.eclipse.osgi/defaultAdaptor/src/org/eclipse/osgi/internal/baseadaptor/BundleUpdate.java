@@ -51,9 +51,9 @@ public class BundleUpdate implements BundleOperation {
 			StorageHook[] instanceHooks = new StorageHook[storageHooks.length];
 			for (int i = 0; i < storageHooks.length; i++) {
 				instanceHooks[i] = storageHooks[i].create(newData);
-				newData.addStorageHook(instanceHooks[i]);
 				instanceHooks[i].copy(data.getStorageHook((String) instanceHooks[i].getKey()));
 			}
+			newData.setStorageHooks(instanceHooks);
 			// get the old and new eclipse storage hooks
 			BaseStorageHook oldStorageHook = (BaseStorageHook) data.getStorageHook(BaseStorageHook.KEY);
 			BaseStorageHook newStorageHook = (BaseStorageHook) newData.getStorageHook(BaseStorageHook.KEY);

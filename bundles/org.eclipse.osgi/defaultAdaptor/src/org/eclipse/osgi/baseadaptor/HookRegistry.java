@@ -62,8 +62,7 @@ public final class HookRegistry {
 	private ClassLoadingHook[] classLoadingHooks = new ClassLoadingHook[0];
 	private ClassLoadingStatsHook[] classLoadingStatsHooks = new ClassLoadingStatsHook[0];
 	private StorageHook[] storageHooks = new StorageHook[0];
-	private DataHook[] dataHooks = new DataHook[0];
-	private BundleFileFactory[] bundleFileFactories = new BundleFileFactory[0];
+	private BundleFileFactoryHook[] bundleFileFactoryHooks = new BundleFileFactoryHook[0];
 
 	public HookRegistry(BaseAdaptor adaptor) {
 		this.adaptor = adaptor;
@@ -193,19 +192,11 @@ public final class HookRegistry {
 	}
 
 	/**
-	 * Returns the list of configured data hooks.
-	 * @return the list of configured data hooks.
-	 */
-	public DataHook[] getDataHooks() {
-		return dataHooks;
-	}
-
-	/**
 	 * Returns the list of configured bundle file factories.
 	 * @return the list of configured bundle file factories.
 	 */
-	public BundleFileFactory[] getBundleFileFactories() {
-		return bundleFileFactories;
+	public BundleFileFactoryHook[] getBundleFileFactoryHooks() {
+		return bundleFileFactoryHooks;
 	}
 
 	/**
@@ -249,19 +240,11 @@ public final class HookRegistry {
 	}
 
 	/**
-	 * Adds a data hook to this hook registry.
-	 * @param dataHook a data hook object.
-	 */
-	public void addDataHook(DataHook dataHook) {
-		dataHooks = (DataHook[]) add(dataHook, dataHooks, new DataHook[dataHooks.length + 1]);
-	}
-
-	/**
 	 * Adds a bundle file factory to this hook registry.
 	 * @param factory an bundle file factory object.
 	 */
-	public void addBundleFileFactory(BundleFileFactory factory) {
-		bundleFileFactories = (BundleFileFactory[]) add(factory, bundleFileFactories, new BundleFileFactory[bundleFileFactories.length + 1]);
+	public void addBundleFileFactoryHook(BundleFileFactoryHook factory) {
+		bundleFileFactoryHooks = (BundleFileFactoryHook[]) add(factory, bundleFileFactoryHooks, new BundleFileFactoryHook[bundleFileFactoryHooks.length + 1]);
 	}
 
 	private Object[] add(Object newValue, Object[] oldValues, Object[] newValues) {

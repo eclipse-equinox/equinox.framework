@@ -86,9 +86,9 @@ public final class EclipseStorageHook implements StorageHook, HookConfigurator {
 		}
 	}
 
-	public StorageHook load(BaseData bundledata, DataInputStream in) throws IOException {
+	public StorageHook load(BaseData target, DataInputStream in) throws IOException {
 		EclipseStorageHook storageHook = new EclipseStorageHook();
-		storageHook.bundledata = bundledata;
+		storageHook.bundledata = target;
 		storageHook.autoStart = in.readBoolean();
 		int exceptionsCount = in.readInt();
 		storageHook.autoStartExceptions = exceptionsCount > 0 ? new String[exceptionsCount] : null;
@@ -390,5 +390,17 @@ public final class EclipseStorageHook implements StorageHook, HookConfigurator {
 
 	public Dictionary getManifest(boolean firstLoad) throws BundleException {
 		return createCachedManifest(firstLoad);
+	}
+
+	public boolean forgetStatusChange(int status) {
+		return isAutoStartable();
+	}
+
+	public boolean forgetStartLevelChange(int startlevel) {
+		return false;
+	}
+
+	public boolean matchDNChain(String pattern) {
+		return false;
 	}
 }
