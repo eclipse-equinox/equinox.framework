@@ -55,6 +55,13 @@ public final class HookRegistry {
 	 */
 	public static final String PROP_HOOK_CONFIGURATORS_EXCLUDE = "osgi.hook.configurators.exclude"; //$NON-NLS-1$
 
+	/**
+	 * A system property (&quot;osgi.hook.configurators&quot;) used to specify the list
+	 * of hook configurators.  If this property is set then the list of configurators 
+	 * specified will be the only configurators used.
+	 */
+	public static final String PROP_HOOK_CONFIGURATORS = "osgi.hook.configurators"; //$NON-NLS-1$
+
 	private BaseAdaptor adaptor;
 	private boolean readonly = false;
 	private AdaptorHook[] adaptorHooks = new AdaptorHook[0];
@@ -122,6 +129,15 @@ public final class HookRegistry {
 	}
 
 	private void mergePropertyHookConfigurators(ArrayList configuratorList) {
+		// see if there is a configurators list
+		String[] configurators = ManifestElement.getArrayFromList(FrameworkProperties.getProperty(HookRegistry.PROP_HOOK_CONFIGURATORS), ","); //$NON-NLS-1$
+		if (configurators.length > 0) {
+			configuratorList.clear(); // clear the list, we are only going to use the configurators from the list
+			for (int i = 0; i < configurators.length; i++)
+				if (!configuratorList.contains(configurators[i]))
+					configuratorList.add(configurators[i]);
+			return; // don't do anything else
+		}
 		// Make sure the configurators from the include property are in the list
 		String[] includeConfigurators = ManifestElement.getArrayFromList(FrameworkProperties.getProperty(HookRegistry.PROP_HOOK_CONFIGURATORS_INCLUDE), ","); //$NON-NLS-1$
 		for (int i = 0; i < includeConfigurators.length; i++)
