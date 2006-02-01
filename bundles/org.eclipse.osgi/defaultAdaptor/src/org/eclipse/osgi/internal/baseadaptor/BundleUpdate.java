@@ -39,6 +39,7 @@ public class BundleUpdate implements BundleOperation {
 	 * Perform the change to persistent storage.
 	 *
 	 * @return Bundle object for the target bundle.
+	 * @throws BundleException if an error occurs
 	 */
 	public BundleData begin() throws BundleException {
 		try {

@@ -22,7 +22,7 @@ import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
  * a hook to record statistics about classloading.
  * @see ClasspathManager
  * @see HookRegistry#getClassLoadingStatsHooks()
- * @see HookRegistry#addClassLoadingStatsHook(ClassLoadingHook)
+ * @see HookRegistry#addClassLoadingStatsHook(ClassLoadingStatsHook)
  */
 public interface ClassLoadingStatsHook {
 	/**

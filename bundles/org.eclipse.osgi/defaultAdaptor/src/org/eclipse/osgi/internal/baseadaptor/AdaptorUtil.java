@@ -173,7 +173,7 @@ public class AdaptorUtil {
 	 * Register a service object.
 	 * @param name the service class name
 	 * @param service the service object
-	 * @param bundle the registering bundle
+	 * @param context the registering bundle context
 	 * @return the service registration object
 	 */
 	public static ServiceRegistration register(String name, Object service, BundleContext context) {

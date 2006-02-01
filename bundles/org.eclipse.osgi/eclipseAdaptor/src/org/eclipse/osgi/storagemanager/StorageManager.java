@@ -457,6 +457,7 @@ public final class StorageManager {
 	 * Removes the given managed file from management by this storage manager.
 	 * 
 	 * @param managedFile the managed file to remove
+	 * @throws IOException if an error occured removing the managed file
 	 */
 	public void remove(String managedFile) throws IOException {
 		if (!open)
@@ -684,6 +685,7 @@ public final class StorageManager {
 	 * This methods opens the storage manager. 
 	 * This method must be called before any operation on the storage manager.
 	 * @param wait indicates if the open operation must wait in case of contention on the lock file.
+	 * @throws IOException if an error occured opening the storage manager
 	 */
 	public void open(boolean wait) throws IOException {
 		if (openCleanup)

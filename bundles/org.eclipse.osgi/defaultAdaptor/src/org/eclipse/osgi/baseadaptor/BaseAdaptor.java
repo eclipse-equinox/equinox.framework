@@ -245,7 +245,7 @@ public class BaseAdaptor implements FrameworkAdaptor{
 
 	/**
 	 * This method calls all the configured adaptor hook {@link AdaptorHook#frameworkStart(BundleContext)} methods.
-	 * @see FrameworkAdaptor#getInstalledBundles()
+	 * @see FrameworkAdaptor#frameworkStart(BundleContext)
 	 */
 	public void frameworkStart(BundleContext fwContext) throws BundleException {
 		this.context = fwContext;
@@ -260,7 +260,7 @@ public class BaseAdaptor implements FrameworkAdaptor{
 
 	/**
 	 * This method calls all the configured adaptor hook {@link AdaptorHook#frameworkStop(BundleContext)} methods.
-	 * @see FrameworkAdaptor#getInstalledBundles()
+	 * @see FrameworkAdaptor#frameworkStop(BundleContext)
 	 */
 	public void frameworkStop(BundleContext fwContext) throws BundleException {
 		// first inform all configured adaptor hooks
@@ -274,7 +274,7 @@ public class BaseAdaptor implements FrameworkAdaptor{
 
 	/**
 	 * This method calls all the configured adaptor hook {@link AdaptorHook#frameworkStopping(BundleContext)} methods.
-	 * @see FrameworkAdaptor#getInstalledBundles()
+	 * @see FrameworkAdaptor#frameworkStopping(BundleContext)
 	 */
 	public void frameworkStopping(BundleContext fwContext) {
 		stopping = true;
@@ -315,7 +315,7 @@ public class BaseAdaptor implements FrameworkAdaptor{
 	}
 
 	/**
-	 * @see FrameworkAdaptor#getInitialBundleStartLevel()
+	 * @see FrameworkAdaptor#setInitialBundleStartLevel(int)
 	 */
 	public void setInitialBundleStartLevel(int value) {
 		storage.setInitialBundleStartLevel(value);
@@ -442,7 +442,7 @@ public class BaseAdaptor implements FrameworkAdaptor{
 	/**
 	 * This method calls all the configured adaptor hooks {@link AdaptorHook#matchDNChain(String, String[])} methods 
 	 * until one returns a true value.
-	 * @see FrameworkAdaptor#getBundleClassLoaderParent()
+	 * @see FrameworkAdaptor#matchDNChain(String, String[])
 	 */
 	public boolean matchDNChain(String pattern, String[] dnChain) {
 		AdaptorHook[] adaptorHooks = getHookRegistry().getAdaptorHooks();

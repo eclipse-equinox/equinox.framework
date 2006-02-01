@@ -70,11 +70,11 @@ public class BaseData implements BundleData {
 	}
 
 	/**
-	 * This method calls all the configured class loading hooks {@link StorageHook#createClassLoader(ClassLoader, ClassLoaderDelegate, BundleProtectionDomain, BaseData, String[])} 
+	 * This method calls all the configured class loading hooks {@link ClassLoadingHook#createClassLoader(ClassLoader, ClassLoaderDelegate, BundleProtectionDomain, BaseData, String[])} 
 	 * methods until on returns a non-null value.  If none of the class loading hooks returns a non-null value 
 	 * then the default classloader implementation is used. <p>
 	 * After the classloader is created all configured class loading hooks 
-	 * {@link StorageHook#initializedClassLoader(BaseClassLoader, BaseData)} methods are called.
+	 * {@link ClassLoadingHook#initializedClassLoader(BaseClassLoader, BaseData)} methods are called.
 	 * @see BundleData#createClassLoader(ClassLoaderDelegate, BundleProtectionDomain, String[])
 	 */
 	public BundleClassLoader createClassLoader(ClassLoaderDelegate delegate, BundleProtectionDomain domain, String[] bundleclasspath) {
@@ -109,7 +109,7 @@ public class BaseData implements BundleData {
 	}
 
 	/**
-	 * This method calls each configured classloading hook {@link ClassLoadingHook#findLibrary(String)} method 
+	 * This method calls each configured classloading hook {@link ClassLoadingHook#findLibrary(BaseData, String)} method 
 	 * until the first one returns a non-null value.
 	 * @see BundleData#findLibrary(String)
 	 */
@@ -207,7 +207,7 @@ public class BaseData implements BundleData {
 	/**
 	 * This method calls each configured storage hook {@link StorageHook#forgetStatusChange(int)} method.
 	 * If one returns true then this bundledata is not marked dirty.
-	 * @see BundleData#setStartLevel(int)
+	 * @see BundleData#setStatus(int)
 	 */
 	public void setStatus(int value) {
 		status = setPersistentData(value, false, status);
@@ -338,6 +338,7 @@ public class BaseData implements BundleData {
 	/**
 	 * This method calls each configured storage hook {@link StorageHook#matchDNChain(String)} method 
 	 * until one returns true.  If no configured storage hook returns true then false is returned.
+	 * @see BundleData#matchDNChain(String)
 	 */
 	public final boolean matchDNChain(String pattern) {
 		StorageHook[] hooks = getStorageHooks();
@@ -427,11 +428,10 @@ public class BaseData implements BundleData {
 	}
 
 	/**
-	 * Gets called by BundleFile during {@link BundleFile#getFile(String)}.  This method 
+	 * Gets called by BundleFile during {@link BundleFile#getFile(String, boolean)}.  This method 
 	 * will allocate a File object where content of the specified path may be 
 	 * stored for the current generation of the base data.  The returned File object may 
 	 * not exist if the content has not previously be stored.
-	 * @param data the base data object to store content for
 	 * @param path the path to the content to extract from the base data
 	 * @return a file object where content of the specified path may be stored.
 	 */

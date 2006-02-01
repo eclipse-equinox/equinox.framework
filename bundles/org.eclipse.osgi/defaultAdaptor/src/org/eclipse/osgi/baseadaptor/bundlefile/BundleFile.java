@@ -114,6 +114,7 @@ abstract public class BundleFile {
 	 * Returns a URL to access the contents of the entry specified by the path
 	 * @param path the path to the resource
 	 * @param hostBundleID the host bundle ID
+	 * @return a URL to access the contents of the entry specified by the path
 	 */
 	public URL getResourceURL(String path, long hostBundleID) {
 		return getResourceURL(path, hostBundleID, 0);
@@ -124,6 +125,7 @@ abstract public class BundleFile {
 	 * @param path the path to the resource
 	 * @param hostBundleID the host bundle ID
 	 * @param index the resource index
+	 * @return a URL to access the contents of the entry specified by the path
 	 */
 	public URL getResourceURL(String path, long hostBundleID, int index) {
 		BundleEntry bundleEntry = getEntry(path);

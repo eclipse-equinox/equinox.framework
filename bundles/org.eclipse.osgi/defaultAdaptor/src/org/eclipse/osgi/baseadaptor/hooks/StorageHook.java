@@ -130,7 +130,6 @@ public interface StorageHook extends KeyedElement {
 	 * is associated with until one storage hook returns true.  If all configured storage 
 	 * hooks return false then the BaseData will be marked dirty and will cause the 
 	 * start level to be persistently saved.
-	 * @param data the base data with a startlevel change
 	 * @param startlevel the new startlevel of the base data
 	 * @return false if the startlevel is not to be persistently saved; otherwise true is returned
 	 */
