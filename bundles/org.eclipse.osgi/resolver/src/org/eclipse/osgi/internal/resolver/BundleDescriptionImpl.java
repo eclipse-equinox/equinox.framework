@@ -323,6 +323,8 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 	}
 
 	protected synchronized void addDependency(BaseDescriptionImpl dependency) {
+		if (dependency == this)
+			return;
 		if (dependencies == null)
 			dependencies = new ArrayList(10);
 		BundleDescriptionImpl bundle;
