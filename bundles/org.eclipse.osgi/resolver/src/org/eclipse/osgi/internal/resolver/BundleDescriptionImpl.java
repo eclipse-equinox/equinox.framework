@@ -323,15 +323,15 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 	}
 
 	protected synchronized void addDependency(BaseDescriptionImpl dependency) {
-		if (dependency == this)
-			return;
-		if (dependencies == null)
-			dependencies = new ArrayList(10);
 		BundleDescriptionImpl bundle;
 		if (dependency instanceof ExportPackageDescription)
 			bundle = (BundleDescriptionImpl) ((ExportPackageDescription) dependency).getExporter();
 		else
 			bundle = (BundleDescriptionImpl) dependency;
+		if (bundle == this)
+			return;
+		if (dependencies == null)
+			dependencies = new ArrayList(10);
 		if (!dependencies.contains(bundle)) {
 			bundle.addDependent(this);
 			dependencies.add(bundle);
