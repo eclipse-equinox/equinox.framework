@@ -589,7 +589,7 @@ public class Framework implements EventDispatcher, EventPublisher {
 	 *             Environment.
 	 */
 	protected boolean verifyExecutionEnvironment(Dictionary manifest) throws BundleException {
-		if (!Boolean.valueOf(FrameworkProperties.getProperty(Constants.ECLIPSE_EE_INSTALL_VERIFY)).booleanValue())
+		if (!Boolean.valueOf(FrameworkProperties.getProperty(Constants.ECLIPSE_EE_INSTALL_VERIFY, Boolean.TRUE.toString())).booleanValue()) //$NON-NLS-1$
 			return true;
 		String headerValue = (String) manifest.get(Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT);
 		/* If no required EE is in the manifest return true */
