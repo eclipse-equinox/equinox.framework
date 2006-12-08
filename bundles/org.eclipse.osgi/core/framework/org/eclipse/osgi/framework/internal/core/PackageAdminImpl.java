@@ -228,15 +228,19 @@ public class PackageAdminImpl implements PackageAdmin {
 		}
 	}
 
-	private void suspendBundle(AbstractBundle bundle) throws BundleException {
+	private void suspendBundle(AbstractBundle bundle) {
+		// attempt to suspend the bundle or obtain the state change lock
+		// Note that this may fail but we cannot quit the
+		// refreshPackages operation because of it. (bug 84169)
 		if (bundle.isActive() && !bundle.isFragment()) {
-			boolean suspended = framework.suspendBundle(bundle, true);
-			if (!suspended) {
-				throw new BundleException(Msg.BUNDLE_STATE_CHANGE_EXCEPTION); 
-			}
+			framework.suspendBundle(bundle, true);
 		} else {
 			if (bundle.getStateChanging() != Thread.currentThread())
-				bundle.beginStateChange();
+				try {
+					bundle.beginStateChange();
+				} catch (BundleException e) {
+					framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundle, e);
+				}
 		}
 
 		if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
@@ -256,7 +260,7 @@ public class PackageAdminImpl implements PackageAdmin {
 					Debug.println("Bundles still depend on removed bundle! " + bundle); //$NON-NLS-1$
 					Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
 				}
-				throw new BundleException(Msg.OSGI_INTERNAL_ERROR); 
+				throw new BundleException(Msg.OSGI_INTERNAL_ERROR);
 			}
 			BundleLoaderProxy proxy = (BundleLoaderProxy) bundle.getUserObject();
 			if (proxy != null) {
@@ -275,7 +279,7 @@ public class PackageAdminImpl implements PackageAdmin {
 			return null;
 		AbstractBundle bundle = framework.getBundle(bundleDescription.getBundleId());
 		if (bundle == null) {
-			BundleException be = new BundleException(NLS.bind(Msg.BUNDLE_NOT_IN_FRAMEWORK, bundleDescription)); 
+			BundleException be = new BundleException(NLS.bind(Msg.BUNDLE_NOT_IN_FRAMEWORK, bundleDescription));
 			framework.publishFrameworkEvent(FrameworkEvent.ERROR, framework.systemBundle, be);
 			return null;
 		}
@@ -404,7 +408,7 @@ public class PackageAdminImpl implements PackageAdmin {
 						Debug.println("refreshPackages exception: " + e.getMessage()); //$NON-NLS-1$
 						Debug.printStackTrace(e);
 					}
-					framework.publishFrameworkEvent(FrameworkEvent.ERROR, framework.systemBundle, new BundleException(Msg.BUNDLE_REFRESH_FAILURE, e)); 
+					framework.publishFrameworkEvent(FrameworkEvent.ERROR, framework.systemBundle, new BundleException(Msg.BUNDLE_REFRESH_FAILURE, e));
 				}
 			}
 		} catch (BundleException e) {
@@ -412,7 +416,7 @@ public class PackageAdminImpl implements PackageAdmin {
 				Debug.println("refreshPackages exception: " + e.getMessage()); //$NON-NLS-1$
 				Debug.printStackTrace(e.getNestedException());
 			}
-			framework.publishFrameworkEvent(FrameworkEvent.ERROR, framework.systemBundle, new BundleException(Msg.BUNDLE_REFRESH_FAILURE, e)); 
+			framework.publishFrameworkEvent(FrameworkEvent.ERROR, framework.systemBundle, new BundleException(Msg.BUNDLE_REFRESH_FAILURE, e));
 		}
 
 		// send out any resolved.  This must be done after the state change locks have been release.
