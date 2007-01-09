@@ -446,14 +446,17 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 	private void fullyLoad() {
 		if ((stateBits & LAZY_LOADED) == 0)
 			return;
-		if (isFullyLoaded()) {
-			containingState.getReader().setAccessedFlag(true); // set reader accessed flag
+		StateReader reader = containingState.getReader();
+		synchronized (reader) {
+			if (isFullyLoaded()) {
+				reader.setAccessedFlag(true); // set reader accessed flag
 			return;
-		}
-		try {
-			containingState.getReader().fullyLoad(this);
-		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage()); // TODO not sure what to do here!!
+			}
+			try {
+				reader.fullyLoad(this);
+			} catch (IOException e) {
+				throw new RuntimeException(e.getMessage()); // TODO not sure what to do here!!
+			}
 		}
 	}
 
@@ -473,6 +476,9 @@ public class BundleDescriptionImpl extends BaseDescriptionImpl implements Bundle
 		setLazyLoaded(false);
 	}
 
+	/*
+	 * This method must be called while the state reader for the containing state is locked.
+	 */
 	void unload() {
 		if ((stateBits & LAZY_LOADED) == 0)
 			return;
