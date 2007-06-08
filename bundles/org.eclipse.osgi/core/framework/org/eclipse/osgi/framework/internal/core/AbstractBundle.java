@@ -700,7 +700,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 			final AbstractBundle newBundle = framework.createAndVerifyBundle(newBundleData);
 			String[] nativepaths = framework.selectNativeCode(newBundle);
 			if (nativepaths != null) {
-				bundledata.installNativeCode(nativepaths);
+				newBundleData.installNativeCode(nativepaths);
 			}
 			boolean exporting;
 			int st = getState();
