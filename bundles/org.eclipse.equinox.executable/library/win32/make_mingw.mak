@@ -57,7 +57,7 @@ DLL_OBJS	= eclipse.o  eclipseWin.o  eclipseUtil.o  eclipseJNI.o eclipseShm.o\
 LIBS	= -lkernel32 -luser32 -lgdi32 -lcomctl32 -lmsvcrt -lversion
 LDFLAGS = -mwindows -mno-cygwin
 CONSOLEFLAGS = -mconsole -mno-cygwin
-DLL_LDFLAGS = -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--kill-at
+DLL_LDFLAGS = -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--kill-at,--image-base=0x72000000
 RES	= eclipse.res
 CONSOLE = eclipsec.exe
 EXEC	= $(PROGRAM_OUTPUT)
