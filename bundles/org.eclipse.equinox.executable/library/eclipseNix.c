@@ -148,6 +148,10 @@ static void adjustLibraryPath( char * vmLibrary ) {
 		buffer = strdup(vmLibrary);	
 		for (i = 0; i < numPaths; i++) {
 			c = strrchr(buffer, dirSeparator);
+			if (c == NULL){
+				numPaths = i + 1;
+				break;
+			}
 			*c = 0;
 			paths[i] = resolveSymlinks(buffer);
 			length = strlen(paths[i]);
@@ -165,7 +169,7 @@ static void adjustLibraryPath( char * vmLibrary ) {
 	} else {
 		buffer = malloc((strlen(ldPath) + 2) * sizeof(char));
 		sprintf(buffer, "%s%c", ldPath, pathSeparator);
-		for (i = 0; i < numPaths; i++) {
+		for (i = 0; i < numPaths && paths[i] != NULL; i++) {
 			c = strstr(buffer, paths[i]);
 			if ( c == NULL || !(c == buffer || *(c - 1) == pathSeparator))
 			{
