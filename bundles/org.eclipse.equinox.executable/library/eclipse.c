@@ -504,7 +504,7 @@ JNIEXPORT int run(int argc, _TCHAR* argv[], _TCHAR* vmArgs[])
 		        	}
 		            if (exitData != 0) {
 		            	errorMsg = exitData;
-			            exitData = NULL; // keep exit data from being free'd twice
+			            exitData = NULL; /* keep exit data from being free'd twice */
 		                if (_tcslen( errorMsg ) == 0) {
 		            	    free( errorMsg );
 		            	    errorMsg = NULL;
