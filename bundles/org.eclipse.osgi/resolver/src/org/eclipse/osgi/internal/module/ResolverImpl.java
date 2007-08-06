@@ -554,15 +554,23 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 				ResolverImpl.log("  - " + bundle + " is unresolvable"); //$NON-NLS-1$ //$NON-NLS-2$
 			return false;
 		}
-		if (bundle.getState() == ResolverBundle.RESOLVED) {
-			// 'bundle' is already resolved so just return
-			if (DEBUG)
-				ResolverImpl.log("  - " + bundle + " already resolved"); //$NON-NLS-1$ //$NON-NLS-2$
-			return true;
-		} else if (bundle.getState() == ResolverBundle.UNRESOLVED) {
-			// 'bundle' is UNRESOLVED so move to RESOLVING
-			bundle.clearWires(true);
-			setBundleResolving(bundle);
+		switch (bundle.getState()) {
+			case ResolverBundle.RESOLVED :
+				// 'bundle' is already resolved so just return
+				if (DEBUG)
+					ResolverImpl.log("  - " + bundle + " already resolved"); //$NON-NLS-1$ //$NON-NLS-2$
+				return true;
+			case ResolverBundle.UNRESOLVED :
+				// 'bundle' is UNRESOLVED so move to RESOLVING
+				bundle.clearWires(true);
+				setBundleResolving(bundle);
+				break;
+			case ResolverBundle.RESOLVING :
+				if (cycle.contains(bundle))
+					return true;
+				break;
+			default :
+				break;
 		}
 
 		boolean failed = false;
@@ -814,6 +822,8 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 				// If the importer has become unresolvable then stop here
 				if (!imp.getBundle().isResolvable())
 					return false;
+				if (imp.getMatchingExport() == null)
+					return imp.isOptional();
 				// Check grouping dependencies
 				if (checkImportConstraints(imp, imp.getMatchingExport(), cycle, importerExps) && imp.getMatchingExport() != null) {
 					// Record any cyclic dependencies
@@ -935,9 +945,12 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 					resolverExports.put(importerExps);
 			}
 		}
+		boolean inCycle = cycle.remove(importer);
 		// Try to re-resolve the bundle
 		if (resolveBundle(importer, cycle))
 			return true;
+		if (inCycle && !cycle.contains(importer))
+			cycle.add(importer);
 		state.addResolverError(imp.getVersionConstraint().getBundle(), ResolverError.IMPORT_PACKAGE_USES_CONFLICT, imp.getVersionConstraint().toString(), imp.getVersionConstraint());
 		return false;
 	}

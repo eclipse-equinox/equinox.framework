@@ -21,11 +21,13 @@ import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
 import org.eclipse.osgi.framework.adaptor.FrameworkAdaptor;
 import org.eclipse.osgi.framework.internal.core.AbstractBundle;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
+import org.eclipse.osgi.framework.util.SecureAction;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
 public class EclipseLazyStarter implements ClassLoadingStatsHook, HookConfigurator {
+	private static SecureAction secureAction = new SecureAction();
 
 	public void preFindLocalClass(String name, ClasspathManager manager) throws ClassNotFoundException {
 		AbstractBundle bundle = (AbstractBundle) manager.getBaseData().getBundle();
@@ -83,7 +85,7 @@ public class EclipseLazyStarter implements ClassLoadingStatsHook, HookConfigurat
 			// mark this bundle as lazy activated by class load
 			if (storageHook != null)
 				storageHook.setActivatedOnClassLoad(true);
-			bundle.start();
+			secureAction.start(bundle);
 		} catch (BundleException e) {
 			String message = NLS.bind(EclipseAdaptorMsg.ECLIPSE_CLASSLOADER_ACTIVATION, bundle.getSymbolicName(), Long.toString(bundle.getBundleId()));
 			manager.getBaseData().getAdaptor().getFrameworkLog().log(new FrameworkLogEntry(FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME, FrameworkLogEntry.ERROR, 0, message, 0, e, null));
