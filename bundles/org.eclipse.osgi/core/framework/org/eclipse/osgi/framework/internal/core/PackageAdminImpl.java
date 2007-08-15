@@ -138,6 +138,10 @@ public class PackageAdminImpl implements PackageAdmin {
 		Thread refresh = framework.secureAction.createThread(new Runnable() {
 			public void run() {
 				doResolveBundles(bundles, true);
+				if ("true".equals(FrameworkProperties.getProperty("osgi.forcedRestart"))) { //$NON-NLS-1$ //$NON-NLS-2$
+					framework.shutdown();
+					System.exit(23);
+				}
 			}
 		}, "Refresh Packages"); //$NON-NLS-1$
 
@@ -340,10 +344,8 @@ public class PackageAdminImpl implements PackageAdmin {
 				}
 				if (restart) {
 					FrameworkProperties.setProperty("osgi.forcedRestart", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-					// must publish PACKAGE_REFRESHED event here because we are done.
-					if (refreshPackages)
-						framework.publishFrameworkEvent(FrameworkEvent.PACKAGES_REFRESHED, framework.systemBundle, null);
-					restartFramework();
+					// do not shutdown the framework while holding the PackageAdmin lock (bug 194149)
+					return null;
 				}
 				// now suspend each bundle and grab its state change lock.
 				if (refreshPackages)
@@ -423,11 +425,6 @@ public class PackageAdminImpl implements PackageAdmin {
 				framework.publishBundleEvent(BundleEvent.RESOLVED, resolved[i]);
 
 		return refresh;
-	}
-
-	private void restartFramework() {
-		framework.shutdown();
-		System.exit(23);
 	}
 
 	public RequiredBundle[] getRequiredBundles(String symbolicName) {
