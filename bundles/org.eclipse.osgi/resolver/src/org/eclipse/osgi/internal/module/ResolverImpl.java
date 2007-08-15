@@ -896,7 +896,12 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 						continue; // Ignore the bundle we are selecting, non-singletons, and non-resolved
 					result = true;
 					boolean rejectedPolicy = selectionPolicy != null ? selectionPolicy.compare(sameNameDesc, bundleDesc) < 0 : sameNameDesc.getVersion().compareTo(bundleDesc.getVersion()) > 0;
-					if (rejectedPolicy && sameNameBundle.getRefs() >= bundles[i].getRefs()) {
+					int sameNameRefs = sameNameBundle.getRefs();
+					int curRefs = bundles[i].getRefs();
+					// TODO if the selection policy is set then number of references can override the selection policy; is that what we want?
+					// a bundle is always rejected if another bundle has more references to it;
+					// otherwise a bundle is rejected based on the selection policy (version) only if the number of references are equal
+					if ((sameNameRefs == curRefs && rejectedPolicy) || sameNameRefs > curRefs) {
 						// this bundle is not selected; add it to the rejected list
 						if (!rejectedSingletons.contains(bundles[i].getBundle()))
 							rejectedSingletons.add(bundles[i].getBundle());
