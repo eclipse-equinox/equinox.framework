@@ -287,7 +287,22 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 	}
 
 	// Attach fragment to its host
-	private void attachFragment(ResolverBundle bundle, ArrayList rejectedSingletons) {
+	private void attachFragment(ResolverBundle bundle, ArrayList rejectedSingletons, ArrayList processedFragments) {
+		if (processedFragments.contains(bundle.getName()))
+			return;
+		processedFragments.add(bundle.getName());
+		// we want to attach multiple versions of the same fragment
+		// from highest version to lowest to give the higher versions first pick
+		// of the available host bundles.
+		Object[] fragments = resolverBundles.get(bundle.getName());
+		for (int i = 0; i < fragments.length; i++) {
+			ResolverBundle fragment = (ResolverBundle) fragments[i];
+			if (!fragment.isResolved())
+				attachFragment0(fragment, rejectedSingletons);
+		}
+	}
+
+	private void attachFragment0(ResolverBundle bundle, ArrayList rejectedSingletons) {
 		if (!bundle.isFragment() || !bundle.isResolvable() || rejectedSingletons.contains(bundle.getBundle()))
 			return;
 		// no need to select singletons now; it will be done when we select the rest of the singleton bundles (bug 152042)
@@ -403,8 +418,9 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 		}
 
 		// First attach all fragments to the matching hosts
+		ArrayList processedFragments = new ArrayList(bundles.length);
 		for (int i = 0; i < bundles.length; i++)
-			attachFragment(bundles[i], rejectedSingletons);
+			attachFragment(bundles[i], rejectedSingletons, processedFragments);
 
 		// add initial grouping constraints after fragments have been attached
 		for (int i = 0; i < bundles.length; i++)
