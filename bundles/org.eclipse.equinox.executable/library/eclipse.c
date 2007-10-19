@@ -1321,7 +1321,7 @@ static int determineVM(_TCHAR** msg) {
 	/* resolve symlinks for finding the library */
 	ch = resolveSymlinks(javaVM);
     jniLib = findVMLibrary(ch);
-    if (ch != jniLib)
+    if (ch != jniLib && ch != javaVM)
 		free(ch);
     if (jniLib != NULL) 
     	return LAUNCH_JNI;
