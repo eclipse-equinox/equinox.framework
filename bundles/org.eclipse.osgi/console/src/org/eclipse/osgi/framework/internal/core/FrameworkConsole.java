@@ -272,7 +272,9 @@ public class FrameworkConsole implements Runnable {
 			} else
 				cmdline = br.readLine();
 
-			if (cmdline != null && !shutdown)
+			if (cmdline == null)
+				break;
+			if (!shutdown)
 				docommand(cmdline);
 		}
 	}
