@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2006 IBM Corporation and others.
+ * Copyright (c) 2003, 2008 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -305,7 +305,7 @@ public class BundleHost extends AbstractBundle {
 				throw new BundleException(getResolutionFailureMessage());
 		}
 
-		if (getStartLevel() > framework.startLevelManager.getStartLevel()){
+		if (getStartLevel() > framework.startLevelManager.getStartLevel()) {
 			if ((options & START_TRANSIENT) != 0) {
 				// throw exception if this is a transient start
 				String msg = NLS.bind(Msg.BUNDLE_TRANSIENT_START_ERROR, this);
@@ -314,14 +314,14 @@ public class BundleHost extends AbstractBundle {
 			}
 			return;
 		}
-		if ((options & START_ACTIVATION_POLICY) != 0 && (state & STARTING) == 0) {
+		if ((options & START_ACTIVATION_POLICY) != 0 && (bundledata.getStatus() & Constants.BUNDLE_LAZY_START) != 0) {
 			// the bundle must use the activation policy here.
-			if ((bundledata.getStatus() & Constants.BUNDLE_LAZY_START) != 0) {
+			if ((state & RESOLVED) != 0) {
 				// now we must publish the LAZY_ACTIVATION event and return
 				state = STARTING;
 				framework.publishBundleEvent(BundleEvent.LAZY_ACTIVATION, this);
-				return;
 			}
+			return;
 		}
 
 		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
