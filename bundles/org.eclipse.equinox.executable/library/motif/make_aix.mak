@@ -1,5 +1,5 @@
 #*******************************************************************************
-# Copyright (c) 2000, 2005 IBM Corporation and others.
+# Copyright (c) 2000, 2008 IBM Corporation and others.
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at 
@@ -26,7 +26,7 @@ include ../make_version.mak
 PROGRAM_OUTPUT=eclipse
 PROGRAM_LIBRARY=eclipse_$(LIB_VERSION).so
 
-CC = cc_r
+CC = gcc
 # Define the object modules to be compiled and flags.
 MAIN_OBJS = eclipseMain.o
 COMMON_OBJS = eclipseConfig.o eclipseCommon.o eclipseMotifCommon.o eclipseMotifInit.o
@@ -49,7 +49,7 @@ CFLAGS = -O -s \
 	-I./ \
 	-I../ \
 	-I$(MOTIF_HOME)/include \
-	-I/usr/java150/include
+	-I/usr/java5/include
 
 all: $(EXEC) $(DLL)
 
@@ -74,7 +74,7 @@ eclipseJNI.o: ../eclipseJNI.c ../eclipseCommon.h ../eclipseOS.h ../eclipseJNI.h
 eclipseConfig.o: ../eclipseConfig.c ../eclipseConfig.h ../eclipseOS.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-eclipseShm.o: ../eclipseShm.h ../eclipseUnicode.h ../eclipseShm.c
+eclipseShm.o: ../eclipseShm.c ../eclipseShm.h ../eclipseUnicode.h 
 	$(CC) $(CFLAGS) -c $< -o $@
 
 eclipseNix.o: ../eclipseNix.c
@@ -87,7 +87,8 @@ $(DLL): $(DLL_OBJS) $(COMMON_OBJS)
 	ld $(LFLAGS) -o $(DLL) $(DLL_OBJS) $(COMMON_OBJS) $(LIBS)
 	
 install: all
-	cp $(EXEC) $(DLL) $(OUTPUT_DIR)
+	cp $(EXEC) $(OUTPUT_DIR)
+	cp  $(DLL) $(LIBRARY_DIR)
 	rm -f $(EXEC) $(MAIN_OBJS) $(COMMON_OBJS) $(DLL_OBJS)
 
 clean:
