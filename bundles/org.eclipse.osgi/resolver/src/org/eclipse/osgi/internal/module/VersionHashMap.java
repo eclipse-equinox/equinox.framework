@@ -25,6 +25,28 @@ public class VersionHashMap extends MappedList implements Comparator {
 		Arrays.sort(values, this);
 	}
 
+	public void put(Object key, Object value) {
+		Object[] existing = (Object[]) internal.get(key);
+		if (existing == null) {
+			existing = new Object[1]; // be optimistic; start small
+			existing[0] = value;
+			internal.put(key, existing);
+		} else {
+			// insert the new value maintaining sort order.
+			Object[] newValues = new Object[existing.length + 1];
+			int index = existing.length;
+			if (compare(existing[existing.length - 1], value) > 0) {
+				index = Arrays.binarySearch(existing, value, this);
+				if (index < 0)
+					index = -index - 1;
+			}
+			System.arraycopy(existing, 0, newValues, 0, index);
+			newValues[index] = value;
+			System.arraycopy(existing, index, newValues, index + 1, existing.length - index);
+			internal.put(key, newValues); // overwrite the old values in the map
+		}
+	}
+
 	public void put(VersionSupplier[] versionSuppliers) {
 		for (int i = 0; i < versionSuppliers.length; i++)
 			put(versionSuppliers[i].getName(), versionSuppliers[i]);
