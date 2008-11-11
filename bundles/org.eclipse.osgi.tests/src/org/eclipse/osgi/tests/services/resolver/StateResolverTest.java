@@ -1795,6 +1795,56 @@ public class StateResolverTest extends AbstractStateTest {
 		assertTrue("3.4", aExports[1] == bImports[1]);
 	}
 
+	public void testFragmentsMultipleVersion() throws BundleException {
+		State state = buildEmptyState();
+		int bundleID = 0;
+		// test the selection algorithm of the resolver to pick the bundles which
+		// resolve the largest set of bundles; with fragments using Import-Package
+		Hashtable manifest = new Hashtable();
+
+		manifest.put(Constants.BUNDLE_MANIFESTVERSION, "2");
+		manifest.put(Constants.BUNDLE_SYMBOLICNAME, "A");
+		manifest.put(Constants.BUNDLE_VERSION, "1.0");
+		BundleDescription a1 = state.getFactory().createBundleDescription(state, manifest, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME) + '_' + (String) manifest.get(Constants.BUNDLE_VERSION), bundleID++);
+
+		manifest.clear();
+		manifest.put(Constants.BUNDLE_MANIFESTVERSION, "2");
+		manifest.put(Constants.BUNDLE_SYMBOLICNAME, "AFrag");
+		manifest.put(Constants.BUNDLE_VERSION, "1.0");
+		manifest.put(Constants.FRAGMENT_HOST, "A");
+		BundleDescription aFrag1 = state.getFactory().createBundleDescription(state, manifest, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME) + '_' + (String) manifest.get(Constants.BUNDLE_VERSION), bundleID++);
+
+		manifest.clear();
+		manifest.put(Constants.BUNDLE_MANIFESTVERSION, "2");
+		manifest.put(Constants.BUNDLE_SYMBOLICNAME, "A");
+		manifest.put(Constants.BUNDLE_VERSION, "2.0");
+		BundleDescription a2 = state.getFactory().createBundleDescription(state, manifest, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME) + '_' + (String) manifest.get(Constants.BUNDLE_VERSION), bundleID++);
+
+		manifest.clear();
+		manifest.put(Constants.BUNDLE_MANIFESTVERSION, "2");
+		manifest.put(Constants.BUNDLE_SYMBOLICNAME, "AFrag");
+		manifest.put(Constants.BUNDLE_VERSION, "2.0");
+		manifest.put(Constants.FRAGMENT_HOST, "A");
+		BundleDescription aFrag2 = state.getFactory().createBundleDescription(state, manifest, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME) + '_' + (String) manifest.get(Constants.BUNDLE_VERSION), bundleID++);
+
+		state.addBundle(a1);
+		state.addBundle(aFrag1);
+		state.addBundle(a2);
+		state.addBundle(aFrag2);
+		state.resolve();
+		assertTrue("0.1", a1.isResolved());
+		assertTrue("0.2", aFrag1.isResolved());
+		assertTrue("0.3", a2.isResolved());
+		assertTrue("0.4", aFrag2.isResolved());
+
+		state.removeBundle(a2);
+		state.resolve(false);
+		assertTrue("1.1", a1.isResolved());
+		assertTrue("1.2", aFrag2.isResolved());
+		assertFalse("1.3", aFrag1.isResolved());
+		assertEquals("1.4", a1, aFrag2.getHost().getSupplier());
+	}
+
 	public void testReexportPackage() throws BundleException {
 		State state = buildEmptyState();
 		Hashtable manifest = new Hashtable();
