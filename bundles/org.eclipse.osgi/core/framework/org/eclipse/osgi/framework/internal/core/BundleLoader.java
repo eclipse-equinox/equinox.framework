@@ -222,7 +222,9 @@ public class BundleLoader implements ClassLoaderDelegate {
 		} catch (BundleException e) {
 			// do nothing; buddyList == null
 		}
-		policy = buddyList != null ? new PolicyHandler(this, buddyList) : null;
+		policy = buddyList != null ? new PolicyHandler(this, buddyList, bundle.framework.packageAdmin) : null;
+		if (policy != null)
+			policy.open(bundle.framework.systemBundle.context);
 	}
 
 	private synchronized KeyedHashSet getImportedSources(KeyedHashSet visited) {
@@ -296,7 +298,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 		if (classloader != null)
 			classloader.close();
 		if (policy != null)
-			policy.close();
+			policy.close(bundle.framework.systemBundle.context);
 		loaderFlags |= FLAG_CLOSED; /* This indicates the BundleLoader is destroyed */
 	}
 
