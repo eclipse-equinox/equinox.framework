@@ -93,8 +93,9 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 		SecurityManager sm = System.getSecurityManager();
 		if (sm != null)
 			sm.checkPermission(new AllPermission());
-		CompositeHelper.validateCompositeManifest(compositeManifest);
+		// make a local copy of the manifest first
 		compositeManifest = new HashMap(compositeManifest);
+		CompositeHelper.validateCompositeManifest(compositeManifest);
 		URL content = getBundleInput(frameworkConfig, compositeManifest);
 		try {
 			CompositeBundle result = (CompositeBundle) systemContext.installBundle(location, content.openStream());
@@ -152,7 +153,9 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 	}
 
 	public CompositeResolveHelper getCompositeResolveHelper(BundleDescription bundle) {
+		// EquinoxComposite bundles implement the resolver helper
 		Bundle composite = systemContext.getBundle(bundle.getBundleId());
+		// If we found a composite bundle just return it
 		return (CompositeResolveHelper) ((!(composite instanceof CompositeBundle)) ? null : composite);
 	}
 
@@ -164,6 +167,7 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 	public BaseClassLoader createClassLoader(ClassLoader parent, ClassLoaderDelegate delegate, BundleProtectionDomain domain, BaseData data, String[] bundleclasspath) {
 		if ((data.getType() & (BundleData.TYPE_COMPOSITEBUNDLE_CHILD | BundleData.TYPE_COMPOSITEBUNDLE_PARENT)) == 0)
 			return null;
+		// only create composite class loaders for bundles that are of type composite
 		return new CompositeClassLoader(parent, delegate, data);
 	}
 

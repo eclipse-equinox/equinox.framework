@@ -27,14 +27,15 @@ public class CompositeHelper {
 	private static String HEADER_SEPARATOR = ": "; //$NON-NLS-1$
 	private static String ELEMENT_SEPARATOR = "; "; //$NON-NLS-1$
 	private static final Object EQUALS_QUOTE = "=\""; //$NON-NLS-1$
+	private static final String[] INVALID_COMPOSITE_HEADERS = new String[] {Constants.DYNAMICIMPORT_PACKAGE, Constants.FRAGMENT_HOST, Constants.REQUIRE_BUNDLE, Constants.BUNDLE_NATIVECODE, Constants.BUNDLE_CLASSPATH, Constants.BUNDLE_ACTIVATOR, Constants.BUNDLE_LOCALIZATION, Constants.BUNDLE_ACTIVATIONPOLICY};
 
 	static String getChildCompositeManifest(Map childManifest) {
 		// get the common headers Bundle-ManifestVersion, Bundle-SymbolicName and Bundle-Version
 		StringBuffer manifest = new StringBuffer();
-		// Ignore the manifest version from the map
-		childManifest.remove(Constants.BUNDLE_MANIFESTVERSION);
-		// always use bundle manifest version 2
-		manifest.append(Constants.BUNDLE_MANIFESTVERSION).append(": 2\n"); //$NON-NLS-1$
+		// get the manifest version from the map
+		String manifestVersion = (String) childManifest.remove(Constants.BUNDLE_MANIFESTVERSION);
+		// here we assume the validation got the correct version for us
+		manifest.append(Constants.BUNDLE_MANIFESTVERSION).append(HEADER_SEPARATOR).append(manifestVersion).append('\n');
 		// Ignore the Equinox composite bundle header
 		childManifest.remove(BaseStorageHook.COMPOSITE_HEADER);
 		manifest.append(BaseStorageHook.COMPOSITE_HEADER).append(HEADER_SEPARATOR).append(BaseStorageHook.COMPOSITE_BUNDLE_CHILD).append('\n');
@@ -218,7 +219,25 @@ public class CompositeHelper {
 	static void validateCompositeManifest(Map compositeManifest) throws BundleException {
 		if (compositeManifest == null)
 			throw new BundleException("The composite manifest cannot be null.", BundleException.MANIFEST_ERROR);
+		// check for symbolic name
 		if (compositeManifest.get(Constants.BUNDLE_SYMBOLICNAME) == null)
 			throw new BundleException("The composite manifest must contain a Bundle-SymbolicName header.", BundleException.MANIFEST_ERROR);
+		// check for invalid manifests headers
+		for (int i = 0; i < INVALID_COMPOSITE_HEADERS.length; i++)
+			if (compositeManifest.get(INVALID_COMPOSITE_HEADERS[i]) != null)
+				throw new BundleException("The composite manifest must not contain the header " + INVALID_COMPOSITE_HEADERS[i], BundleException.MANIFEST_ERROR);
+		// validate manifest version
+		String manifestVersion = (String) compositeManifest.get(Constants.BUNDLE_MANIFESTVERSION);
+		if (manifestVersion == null) {
+			compositeManifest.put(Constants.BUNDLE_MANIFESTVERSION, "2"); //$NON-NLS-1$
+		} else {
+			try {
+				Integer parsed = Integer.valueOf(manifestVersion);
+				if (parsed.intValue() > 2 || parsed.intValue() < 2)
+					throw new BundleException("Invalid Bundle-ManifestVersion: " + manifestVersion);
+			} catch (NumberFormatException e) {
+				throw new BundleException("Invalid Bundle-ManifestVersion: " + manifestVersion);
+			}
+		}
 	}
 }
