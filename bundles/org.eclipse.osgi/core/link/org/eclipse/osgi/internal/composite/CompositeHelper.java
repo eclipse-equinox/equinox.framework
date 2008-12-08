@@ -18,9 +18,12 @@ import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.internal.baseadaptor.BaseStorageHook;
 import org.eclipse.osgi.service.resolver.*;
 import org.osgi.framework.*;
+import org.osgi.service.permissionadmin.PermissionAdmin;
+import org.osgi.service.permissionadmin.PermissionInfo;
 
 public class CompositeHelper {
-	static final String COMPOSITE_POLICY = "org.eclipse.osgi.composite"; //$NON-NLS-1$
+	private static final PermissionInfo[] COMPOSITE_PERMISSIONS = new PermissionInfo[] {new PermissionInfo(PackagePermission.class.getName(), "*", PackagePermission.EXPORT), new PermissionInfo(ServicePermission.class.getName(), "*", ServicePermission.REGISTER + ',' + ServicePermission.GET)}; //$NON-NLS-1$ //$NON-NLS-2$
+	private static final String COMPOSITE_POLICY = "org.eclipse.osgi.composite"; //$NON-NLS-1$
 	private static String HEADER_SEPARATOR = ": "; //$NON-NLS-1$
 	private static String ELEMENT_SEPARATOR = "; "; //$NON-NLS-1$
 	private static final Object EQUALS_QUOTE = "=\""; //$NON-NLS-1$
@@ -152,6 +155,18 @@ public class CompositeHelper {
 				manifest.append(value);
 			}
 			manifest.append('\"');
+		}
+	}
+
+	static void setCompositePermissions(Bundle bundle, BundleContext systemContext) {
+		ServiceReference ref = systemContext.getServiceReference(PermissionAdmin.class.getName());
+		PermissionAdmin permAdmin = (PermissionAdmin) (ref == null ? null : systemContext.getService(ref));
+		if (permAdmin == null)
+			throw new RuntimeException("No Permission Admin service is available");
+		try {
+			permAdmin.setPermissions(bundle.getLocation(), COMPOSITE_PERMISSIONS);
+		} finally {
+			systemContext.ungetService(ref);
 		}
 	}
 

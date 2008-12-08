@@ -93,6 +93,8 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 		}
 		// disable the parent composite initially since we know we have not resolved the child yet.
 		CompositeHelper.setDisabled(true, companion, companionContext);
+		// set the permissions of the companion bundle
+		CompositeHelper.setCompositePermissions(companion, companionContext);
 	}
 
 	private boolean updateParentCompanion(BundleData thisData, BundleDescription child, ExportPackageDescription[] matchingExports) throws BundleException {

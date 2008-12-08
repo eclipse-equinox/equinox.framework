@@ -13,6 +13,7 @@ package org.eclipse.osgi.internal.composite;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.AllPermission;
 import java.security.ProtectionDomain;
 import java.util.*;
 import org.eclipse.osgi.baseadaptor.*;
@@ -89,11 +90,16 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 	}
 
 	public LinkBundle newChildLinkBundle(Map frameworkConfig, String location, Map linkManifest) throws BundleException {
+		SecurityManager sm = System.getSecurityManager();
+		if (sm != null)
+			sm.checkPermission(new AllPermission());
 		CompositeHelper.validateLinkManifest(linkManifest);
 		linkManifest = new HashMap(linkManifest);
 		URL content = getBundleInput(frameworkConfig, linkManifest);
 		try {
-			return (LinkBundle) systemContext.installBundle(location, content.openStream());
+			LinkBundle result = (LinkBundle) systemContext.installBundle(location, content.openStream());
+			CompositeHelper.setCompositePermissions(result, systemContext);
+			return result;
 		} catch (IOException e) {
 			throw new BundleException("Error creating link bundle", e);
 		}
