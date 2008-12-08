@@ -5,6 +5,12 @@ import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.BundleException;
 import org.osgi.service.framework.CompositeBundle;
 
+/**
+ * An internal interface only used by the composite implementation
+ * 
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
+ */
 public interface Composite {
 	public void updateContent() throws BundleException;
 
