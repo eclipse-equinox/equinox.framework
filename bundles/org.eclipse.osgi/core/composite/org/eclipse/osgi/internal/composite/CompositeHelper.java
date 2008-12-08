@@ -28,7 +28,7 @@ public class CompositeHelper {
 	private static String ELEMENT_SEPARATOR = "; "; //$NON-NLS-1$
 	private static final Object EQUALS_QUOTE = "=\""; //$NON-NLS-1$
 
-	static String getChildLinkManifest(Map childManifest) {
+	static String getChildCompositeManifest(Map childManifest) {
 		// get the common headers Bundle-ManifestVersion, Bundle-SymbolicName and Bundle-Version
 		StringBuffer manifest = new StringBuffer();
 		// Ignore the manifest version from the map
@@ -45,7 +45,7 @@ public class CompositeHelper {
 		return manifest.toString();
 	}
 
-	static String getParentLinkManifest(Dictionary childManifest, BundleDescription child, ExportPackageDescription[] matchingExports) throws BundleException {
+	static String getParentCompositeManifest(Dictionary childManifest, BundleDescription child, ExportPackageDescription[] matchingExports) throws BundleException {
 		// get the common headers Bundle-ManifestVersion, Bundle-SymbolicName and Bundle-Version
 		StringBuffer manifest = new StringBuffer();
 		// Ignore the manifest version from the map
@@ -215,10 +215,10 @@ public class CompositeHelper {
 		writeManifest(baseFile, manifest);
 	}
 
-	static void validateLinkManifest(Map linkManifest) throws BundleException {
-		if (linkManifest == null)
-			throw new BundleException("The link manifest cannot be null.", BundleException.MANIFEST_ERROR);
-		if (linkManifest.get(Constants.BUNDLE_SYMBOLICNAME) == null)
-			throw new BundleException("The link manifest must contain a Bundle-SymbolicName header.", BundleException.MANIFEST_ERROR);
+	static void validateCompositeManifest(Map compositeManifest) throws BundleException {
+		if (compositeManifest == null)
+			throw new BundleException("The composite manifest cannot be null.", BundleException.MANIFEST_ERROR);
+		if (compositeManifest.get(Constants.BUNDLE_SYMBOLICNAME) == null)
+			throw new BundleException("The composite manifest must contain a Bundle-SymbolicName header.", BundleException.MANIFEST_ERROR);
 	}
 }

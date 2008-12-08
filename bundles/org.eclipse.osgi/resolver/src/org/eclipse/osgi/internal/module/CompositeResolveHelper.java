@@ -12,6 +12,6 @@ package org.eclipse.osgi.internal.module;
 
 import org.eclipse.osgi.service.resolver.ExportPackageDescription;
 
-public interface LinkHelper {
+public interface CompositeResolveHelper {
 	public boolean giveExports(ExportPackageDescription[] matchingExports);
 }

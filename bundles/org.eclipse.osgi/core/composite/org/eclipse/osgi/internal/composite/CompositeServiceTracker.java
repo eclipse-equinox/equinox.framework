@@ -13,22 +13,22 @@ package org.eclipse.osgi.internal.composite;
 import java.util.*;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
-import org.osgi.service.framework.LinkBundle;
-import org.osgi.service.framework.LinkBundleFactory;
+import org.osgi.service.framework.CompositeBundle;
+import org.osgi.service.framework.CompositeBundleFactory;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 class CompositeServiceTracker implements ServiceTrackerCustomizer {
 
-	final LinkBundle composite;
+	final CompositeBundle composite;
 	final ServiceTracker[] trackers;
 	final String[] filters;
-	/* @GuardedBy("serviceLinks") */
-	final HashMap serviceLinks = new HashMap();
+	/* @GuardedBy("serviceComposites") */
+	final HashMap serviceComposites = new HashMap();
 
-	public CompositeServiceTracker(LinkBundle link) {
-		this.composite = link;
-		String servicesHeader = (String) (composite.isParentLink() ? link.getHeaders("").get(LinkBundleFactory.LINK_SERVICE_FILTER_EXPORT) : link.getHeaders("").get(LinkBundleFactory.LINK_SERVICE_FILTER_IMPORT)); //$NON-NLS-1$//$NON-NLS-2$
+	public CompositeServiceTracker(CompositeBundle composite) {
+		this.composite = composite;
+		String servicesHeader = (String) (composite.getCompositeType() == CompositeBundle.TYPE_PARENT ? composite.getHeaders("").get(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_EXPORT) : composite.getHeaders("").get(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT)); //$NON-NLS-1$//$NON-NLS-2$
 		filters = ManifestElement.getArrayFromList(servicesHeader, ","); //$NON-NLS-1$
 		trackers = new ServiceTracker[filters.length];
 	}
@@ -56,11 +56,11 @@ class CompositeServiceTracker implements ServiceTrackerCustomizer {
 	public Object addingService(ServiceReference reference) {
 		ServiceLink serviceLink;
 		int useCount;
-		synchronized (serviceLinks) {
-			serviceLink = (ServiceLink) serviceLinks.get(reference);
+		synchronized (serviceComposites) {
+			serviceLink = (ServiceLink) serviceComposites.get(reference);
 			if (serviceLink == null) {
 				serviceLink = new ServiceLink(reference);
-				serviceLinks.put(reference, serviceLink);
+				serviceComposites.put(reference, serviceLink);
 			}
 			useCount = serviceLink.incrementUse();
 		}
@@ -73,7 +73,7 @@ class CompositeServiceTracker implements ServiceTrackerCustomizer {
 	public void modifiedService(ServiceReference reference, Object service) {
 		ServiceLink serviceLink = (ServiceLink) service;
 		Dictionary serviceProps = null;
-		synchronized (serviceLinks) {
+		synchronized (serviceComposites) {
 			serviceProps = serviceLink.getRefreshProperties();
 		}
 		// set service properties out side the sync block
@@ -83,10 +83,10 @@ class CompositeServiceTracker implements ServiceTrackerCustomizer {
 
 	public void removedService(ServiceReference reference, Object service) {
 		int useCount;
-		synchronized (serviceLinks) {
+		synchronized (serviceComposites) {
 			useCount = ((ServiceLink) service).decrementUse();
 			if (useCount == 0)
-				serviceLinks.remove(reference);
+				serviceComposites.remove(reference);
 		}
 		// unregister outside the sync block
 		if (useCount == 0)
@@ -151,7 +151,7 @@ class CompositeServiceTracker implements ServiceTrackerCustomizer {
 
 		void register() {
 			Dictionary props = getServiceProperties();
-			registration = composite.getCompanionLinkBundle().getBundleContext().registerService((String[]) props.get(Constants.OBJECTCLASS), this, props);
+			registration = composite.getCompanionComposite().getBundleContext().registerService((String[]) props.get(Constants.OBJECTCLASS), this, props);
 		}
 
 		void unregister() {

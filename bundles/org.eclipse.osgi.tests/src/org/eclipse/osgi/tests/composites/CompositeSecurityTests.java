@@ -16,8 +16,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.osgi.framework.*;
 import org.osgi.service.condpermadmin.*;
-import org.osgi.service.framework.LinkBundle;
-import org.osgi.service.framework.LinkBundleFactory;
+import org.osgi.service.framework.CompositeBundle;
+import org.osgi.service.framework.CompositeBundleFactory;
 import org.osgi.service.permissionadmin.PermissionInfo;
 
 public class CompositeSecurityTests extends AbstractCompositeTests {
@@ -89,8 +89,8 @@ public class CompositeSecurityTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testLinkSecurity01"); //$NON-NLS-1$
 		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
 		linkManifest.put(Constants.IMPORT_PACKAGE, "org.eclipse.osgi.tests.bundles"); //$NON-NLS-1$
-		linkManifest.put(LinkBundleFactory.LINK_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
-		LinkBundle composite = createCompositeBundle(linkBundleFactory, "testLinkSecurity01", null, linkManifest, true, true); //$NON-NLS-1$
+		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
+		CompositeBundle composite = createCompositeBundle(linkBundleFactory, "testLinkSecurity01", null, linkManifest, true, true); //$NON-NLS-1$
 
 		startCompositeBundle(composite, false);
 
@@ -102,8 +102,8 @@ public class CompositeSecurityTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testLinkSecurity02"); //$NON-NLS-1$
 		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
 		linkManifest.put(Constants.IMPORT_PACKAGE, "org.eclipse.osgi.tests.bundles"); //$NON-NLS-1$
-		linkManifest.put(LinkBundleFactory.LINK_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
-		LinkBundle composite = createCompositeBundle(linkBundleFactory, "testLinkSecurity02", null, linkManifest, true, true); //$NON-NLS-1$
+		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
+		CompositeBundle composite = createCompositeBundle(linkBundleFactory, "testLinkSecurity02", null, linkManifest, true, true); //$NON-NLS-1$
 		Bundle linkD = installIntoChild(composite.getCompanionFramework(), "test.link.d"); //$NON-NLS-1$
 
 		ConditionInfo[] conditions = new ConditionInfo[] {new ConditionInfo(BundleLocationCondition.class.getName(), new String[] {linkD.getLocation()})};
@@ -174,8 +174,8 @@ public class CompositeSecurityTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testLinkSecurity03"); //$NON-NLS-1$
 		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
 		linkManifest.put(Constants.IMPORT_PACKAGE, "org.eclipse.osgi.tests.bundles"); //$NON-NLS-1$
-		linkManifest.put(LinkBundleFactory.LINK_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
-		LinkBundle composite = createCompositeBundle(linkBundleFactory, "testLinkSecurity03", null, linkManifest, true, true); //$NON-NLS-1$
+		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
+		CompositeBundle composite = createCompositeBundle(linkBundleFactory, "testLinkSecurity03", null, linkManifest, true, true); //$NON-NLS-1$
 
 		Bundle conditionBundle = installIntoChild(composite.getCompanionFramework(), "test.link.postponed"); //$NON-NLS-1$
 		assertTrue("Condition bundle not resolved", getPackageAdmin(composite.getCompanionFramework()).resolveBundles(new Bundle[] {conditionBundle}));

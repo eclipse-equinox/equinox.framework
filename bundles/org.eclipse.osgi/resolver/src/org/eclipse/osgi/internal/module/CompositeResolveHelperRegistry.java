@@ -12,6 +12,6 @@ package org.eclipse.osgi.internal.module;
 
 import org.eclipse.osgi.service.resolver.BundleDescription;
 
-public interface LinkHelperRegistry {
-	public LinkHelper getLinkHelper(BundleDescription bundle);
+public interface CompositeResolveHelperRegistry {
+	public CompositeResolveHelper getCompositeResolveHelper(BundleDescription bundle);
 }

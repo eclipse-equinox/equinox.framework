@@ -5,8 +5,8 @@ import java.util.Map;
 import org.eclipse.osgi.tests.bundles.AbstractBundleTests;
 import org.eclipse.osgi.tests.bundles.BundleInstaller;
 import org.osgi.framework.*;
-import org.osgi.service.framework.LinkBundle;
-import org.osgi.service.framework.LinkBundleFactory;
+import org.osgi.service.framework.CompositeBundle;
+import org.osgi.service.framework.CompositeBundleFactory;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator {
@@ -20,10 +20,10 @@ public class Activator implements BundleActivator {
 			throw new Exception("Missing Service Permission"); //$NON-NLS-1$
 		context.ungetService(installerRef);
 
-		ServiceReference factoryRef = context.getServiceReference(LinkBundleFactory.class.getName());
+		ServiceReference factoryRef = context.getServiceReference(CompositeBundleFactory.class.getName());
 		if (factoryRef == null)
 			throw new Exception("Missing Service Permission"); //$NON-NLS-1$
-		LinkBundleFactory factory = (LinkBundleFactory) context.getService(factoryRef);
+		CompositeBundleFactory factory = (CompositeBundleFactory) context.getService(factoryRef);
 		if (factory == null)
 			throw new Exception("Missing Service Permission"); //$NON-NLS-1$
 
@@ -31,10 +31,10 @@ public class Activator implements BundleActivator {
 		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "childComposite"); //$NON-NLS-1$
 		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
 		linkManifest.put(Constants.IMPORT_PACKAGE, "org.eclipse.osgi.tests.bundles"); //$NON-NLS-1$
-		linkManifest.put(LinkBundleFactory.LINK_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
-		LinkBundle childComposite = null;
+		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
+		CompositeBundle childComposite = null;
 		try {
-			childComposite = factory.newChildLinkBundle(null, "childComposite", linkManifest); //$NON-NLS-1$
+			childComposite = factory.newChildCompositeBundle(null, "childComposite", linkManifest); //$NON-NLS-1$
 		} catch (SecurityException e) {
 			throw new Exception("Missing AllPermissions"); //$NON-NLS-1$
 		}

@@ -19,7 +19,7 @@ import org.eclipse.osgi.framework.adaptor.ClassLoaderDelegate;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Constants;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
-import org.eclipse.osgi.internal.module.LinkHelper;
+import org.eclipse.osgi.internal.module.CompositeResolveHelper;
 import org.eclipse.osgi.internal.module.ResolverBundle;
 import org.eclipse.osgi.launch.Equinox;
 import org.eclipse.osgi.service.internal.composite.Composite;
@@ -27,14 +27,14 @@ import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.ExportPackageDescription;
 import org.osgi.framework.*;
 import org.osgi.framework.launch.Framework;
-import org.osgi.service.framework.LinkBundle;
+import org.osgi.service.framework.CompositeBundle;
 
-public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelper, Composite {
+public class EquinoxComposite extends BundleHost implements CompositeBundle, CompositeResolveHelper, Composite {
 	private static String CHILD_STORAGE = "child.storage"; //$NON-NLS-1$
 	private static String PARENT_CONTENT = "parent.content"; //$NON-NLS-1$
 	public static String CHILD_CONFIGURATION = "childConfig.properties"; //$NON-NLS-1$
 	public static String PROP_PARENTFRAMEWORK = "org.eclipse.equinox.parentFramework"; //$NON-NLS-1$
-	public static String PROP_CHILDLINK = "org.eclipse.equinox.childLink"; //$NON-NLS-1$
+	public static String PROP_CHILDCOMPOSITE = "org.eclipse.equinox.childComposite"; //$NON-NLS-1$
 
 	private final boolean isParent;
 	private final Framework companionFramework;
@@ -42,11 +42,11 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 	private final ServiceTrackerManager trackerManager = new ServiceTrackerManager();
 	private final ThreadLocal refreshing = new ThreadLocal();
 
-	public CompositeBundle(BundleData bundledata, org.eclipse.osgi.framework.internal.core.Framework framework) throws BundleException {
+	public EquinoxComposite(BundleData bundledata, org.eclipse.osgi.framework.internal.core.Framework framework) throws BundleException {
 		super(bundledata, framework);
-		this.isParent = (bundledata.getType() & BundleData.TYPE_LINKBUNDLE_PARENT) > 0;
+		this.isParent = (bundledata.getType() & BundleData.TYPE_COMPOSITEBUNDLE_PARENT) > 0;
 		this.companionFramework = findCompanionFramework(isParent, framework, bundledata);
-		this.companionID = isParent ? ((LinkBundle) FrameworkProperties.getProperties().get(PROP_CHILDLINK)).getBundleId() : 1;
+		this.companionID = isParent ? ((CompositeBundle) FrameworkProperties.getProperties().get(PROP_CHILDCOMPOSITE)).getBundleId() : 1;
 	}
 
 	private Framework findCompanionFramework(boolean parent, org.eclipse.osgi.framework.internal.core.Framework thisFramework, BundleData thisData) throws BundleException {
@@ -72,7 +72,7 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 		// save the parent framework so the parent companion bundle can find it
 		props.put(PROP_PARENTFRAMEWORK, thisFramework.getSystemBundleContext().getBundle());
 		// TODO leaks "this" out of the constructor
-		props.put(PROP_CHILDLINK, this);
+		props.put(PROP_CHILDCOMPOSITE, this);
 		Equinox equinox = new Equinox(props);
 		if (!firstTime)
 			// if not the first time then we are done
@@ -89,7 +89,7 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 			URL parentURL = new URL("reference:" + parentContent.toURL().toExternalForm()); //$NON-NLS-1$
 			companion = companionContext.installBundle(thisData.getLocation(), parentURL.openStream());
 		} catch (IOException e) {
-			throw new BundleException("Error installing parent companion link bundle", e);
+			throw new BundleException("Error installing parent companion composite bundle", e);
 		}
 		// disable the parent composite initially since we know we have not resolved the child yet.
 		CompositeHelper.setDisabled(true, companion, companionContext);
@@ -100,11 +100,11 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 	private boolean updateParentCompanion(BundleData thisData, BundleDescription child, ExportPackageDescription[] matchingExports) throws BundleException {
 		// update the parent content with the matching exports provided by the child
 		getParentCompanionContent(thisData, child, matchingExports);
-		Composite parentComposite = (Composite) getCompanionLinkBundle();
+		Composite parentComposite = (Composite) getCompanionComposite();
 		parentComposite.updateContent();
 		// enable/disable the parent composite based on if we have exports handed to us
 		boolean disable = matchingExports == null ? true : false;
-		CompositeHelper.setDisabled(disable, getCompanionLinkBundle(), getCompanionFramework().getBundleContext());
+		CompositeHelper.setDisabled(disable, getCompanionComposite(), getCompanionFramework().getBundleContext());
 		// return true if we can resolve the parent composite
 		return disable ? false : parentComposite.resolveContent();
 	}
@@ -113,26 +113,26 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 		File parentContent = thisData.getDataFile(PARENT_CONTENT);
 		File manifestFile = new File(parentContent, "META-INF/MANIFEST.MF"); //$NON-NLS-1$
 		manifestFile.getParentFile().mkdirs();
-		String parentManifest = CompositeHelper.getParentLinkManifest(thisData.getManifest(), child, matchingExports);
+		String parentManifest = CompositeHelper.getParentCompositeManifest(thisData.getManifest(), child, matchingExports);
 		try {
 			CompositeHelper.writeManifest(parentContent, parentManifest);
 		} catch (IOException e) {
-			throw new BundleException("Error installing parent companion link bundle", e);
+			throw new BundleException("Error installing parent companion composite bundle", e);
 		}
 		return parentContent;
 	}
 
-	private LinkBundle findCompanionBundle() throws BundleException {
+	private CompositeBundle findCompanionBundle() throws BundleException {
 		if (!isParent && (companionFramework.getState() & (Bundle.INSTALLED | Bundle.RESOLVED)) != 0)
 			companionFramework.init();
-		return (LinkBundle) companionFramework.getBundleContext().getBundle(companionID);
+		return (CompositeBundle) companionFramework.getBundleContext().getBundle(companionID);
 	}
 
 	public Framework getCompanionFramework() {
 		return companionFramework;
 	}
 
-	public LinkBundle getCompanionLinkBundle() {
+	public CompositeBundle getCompanionComposite() {
 		try {
 			return findCompanionBundle();
 		} catch (BundleException e) {
@@ -140,18 +140,18 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 		}
 	}
 
-	public boolean isParentLink() {
-		return isParent;
+	public int getCompositeType() {
+		return isParent ? TYPE_PARENT : TYPE_CHILD;
 	}
 
-	public void update(Map linkManifest) throws BundleException {
-		if (isParentLink())
-			// cannot update parent links
-			throw new BundleException("Cannot update a parent link bundle", BundleException.INVALID_OPERATION);
-		// validate the link manifest
-		CompositeHelper.validateLinkManifest(linkManifest);
-		// get the child link manifest headers
-		String manifest = CompositeHelper.getChildLinkManifest(linkManifest);
+	public void update(Map compositeManifest) throws BundleException {
+		if (getCompositeType() == CompositeBundle.TYPE_PARENT)
+			// cannot update parent composites
+			throw new BundleException("Cannot update a parent composite bundle", BundleException.INVALID_OPERATION);
+		// validate the composite manifest
+		CompositeHelper.validateCompositeManifest(compositeManifest);
+		// get the child composite manifest headers
+		String manifest = CompositeHelper.getChildCompositeManifest(compositeManifest);
 		try {
 			// update the data of the child manifest
 			CompositeHelper.updateChildManifest(getBundleData(), manifest);
@@ -167,8 +167,8 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 	public void uninstall() throws BundleException {
 		// ensure class loader is created if needed
 		checkClassLoader();
-		if (isParentLink()) {
-			getCompanionLinkBundle().uninstall();
+		if (getCompositeType() == CompositeBundle.TYPE_PARENT) {
+			getCompanionComposite().uninstall();
 		} else {
 			// stop first before stopping the child to let the service listener clean up
 			stop(Bundle.STOP_TRANSIENT);
@@ -184,7 +184,7 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 	}
 
 	public void update() throws BundleException {
-		throw new BundleException("Cannot update link bundles", BundleException.INVALID_OPERATION);
+		throw new BundleException("Cannot update composite bundles", BundleException.INVALID_OPERATION);
 	}
 
 	public void updateContent() throws BundleException {
@@ -197,7 +197,7 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 		} catch (IOException e) {
 			// ignore
 		}
-		throw new BundleException("Cannot update link bundles", BundleException.INVALID_OPERATION);
+		throw new BundleException("Cannot update composite bundles", BundleException.INVALID_OPERATION);
 	}
 
 	protected void startHook() throws BundleException {
@@ -207,7 +207,7 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 			companionFramework.start();
 			trackerManager.startedChild();
 		} else {
-			((Composite) getCompanionLinkBundle()).started(this);
+			((Composite) getCompanionComposite()).started(this);
 		}
 
 	}
@@ -219,17 +219,17 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 			if ((bundledata.getStatus() & Constants.BUNDLE_STARTED) == 0)
 				stopChildFramework();
 		} else {
-			((Composite) getCompanionLinkBundle()).stopped(this);
+			((Composite) getCompanionComposite()).stopped(this);
 		}
 	}
 
-	public void started(LinkBundle parent) {
-		if (!isParent && parent == getCompanionLinkBundle())
+	public void started(CompositeBundle parent) {
+		if (!isParent && parent == getCompanionComposite())
 			trackerManager.startedParent();
 	}
 
-	public void stopped(LinkBundle parent) {
-		if (!isParent && parent == getCompanionLinkBundle())
+	public void stopped(CompositeBundle parent) {
+		if (!isParent && parent == getCompanionComposite())
 			trackerManager.stoppedParent();
 	}
 
@@ -255,7 +255,7 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 
 	public boolean giveExports(ExportPackageDescription[] matchingExports) {
 		if (matchingExports == null) {
-			LinkBundle companion = getCompanionLinkBundle();
+			CompositeBundle companion = getCompanionComposite();
 			if (isParent) {
 				// set the parent to disabled to prevent resolution this go around
 				CompositeHelper.setDisabled(true, getBundleDescription());
@@ -276,11 +276,11 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 		return validateCompanion(getBundleDescription(), matchingExports);
 	}
 
-	private boolean validateCompanion(BundleDescription linkBundle, ExportPackageDescription[] matchingExports) {
+	private boolean validateCompanion(BundleDescription compositeBundle, ExportPackageDescription[] matchingExports) {
 		if (isParent)
-			return validExports(linkBundle, matchingExports);
+			return validExports(matchingExports);
 		try {
-			return updateParentCompanion(getBundleData(), linkBundle, matchingExports);
+			return updateParentCompanion(getBundleData(), compositeBundle, matchingExports);
 		} catch (BundleException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -288,9 +288,9 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 		}
 	}
 
-	private boolean validExports(BundleDescription linkBundle, ExportPackageDescription[] matchingExports) {
+	private boolean validExports(ExportPackageDescription[] matchingExports) {
 		// make sure each matching exports matches the export signature of the child composite
-		Composite child = (Composite) getCompanionLinkBundle();
+		Composite child = (Composite) getCompanionComposite();
 		BundleDescription childDesc = child.getCompositeDescription();
 		ExportPackageDescription[] childExports = childDesc.getExportPackages();
 		for (int i = 0; i < matchingExports.length; i++) {
@@ -355,7 +355,7 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 
 		void startedChild() throws BundleException {
 			open(CHILD_ACTIVE);
-			getCompanionLinkBundle().start(Bundle.START_TRANSIENT);
+			getCompanionComposite().start(Bundle.START_TRANSIENT);
 		}
 
 		void startedParent() {
@@ -364,7 +364,7 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 
 		void stoppedChild() throws BundleException {
 			try {
-				getCompanionLinkBundle().stop(Bundle.STOP_TRANSIENT);
+				getCompanionComposite().stop(Bundle.STOP_TRANSIENT);
 			} catch (BundleException e) {
 				// nothing
 			} catch (IllegalStateException e) {
@@ -382,10 +382,10 @@ public class CompositeBundle extends BundleHost implements LinkBundle, LinkHelpe
 			if ((bundlesActive & (CHILD_ACTIVE | PARENT_ACTIVE)) != (CHILD_ACTIVE | PARENT_ACTIVE))
 				return;
 			// create a service tracker to track and share services from the parent framework
-			shareToChildServices = new CompositeServiceTracker(CompositeBundle.this);
+			shareToChildServices = new CompositeServiceTracker(EquinoxComposite.this);
 			shareToChildServices.open();
 			// create a service tracker to track and share services from the child framework
-			shareToParentServices = new CompositeServiceTracker(getCompanionLinkBundle());
+			shareToParentServices = new CompositeServiceTracker(getCompanionComposite());
 			shareToParentServices.open();
 
 		}

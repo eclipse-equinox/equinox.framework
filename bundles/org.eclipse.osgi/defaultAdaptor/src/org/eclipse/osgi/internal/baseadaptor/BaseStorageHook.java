@@ -117,9 +117,9 @@ public class BaseStorageHook implements StorageHook, AdaptorHook {
 			String composite = (String) manifest.get(COMPOSITE_HEADER);
 			if (composite != null) {
 				if (COMPOSITE_BUNDLE_PARENT.equals(composite))
-					bundleType |= BundleData.TYPE_LINKBUNDLE_PARENT;
+					bundleType |= BundleData.TYPE_COMPOSITEBUNDLE_PARENT;
 				else
-					bundleType |= BundleData.TYPE_LINKBUNDLE_CHILD;
+					bundleType |= BundleData.TYPE_COMPOSITEBUNDLE_CHILD;
 			}
 		}
 		target.setType(bundleType);

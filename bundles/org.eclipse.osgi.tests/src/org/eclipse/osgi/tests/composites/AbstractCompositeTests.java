@@ -22,8 +22,8 @@ import org.eclipse.osgi.tests.bundles.AbstractBundleTests;
 import org.eclipse.osgi.tests.bundles.BundleInstaller;
 import org.osgi.framework.*;
 import org.osgi.framework.launch.Framework;
-import org.osgi.service.framework.LinkBundle;
-import org.osgi.service.framework.LinkBundleFactory;
+import org.osgi.service.framework.CompositeBundle;
+import org.osgi.service.framework.CompositeBundleFactory;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -34,13 +34,13 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 
 	ServiceRegistration installerReg;
 	ServiceReference linkBundleFactoryRef;
-	LinkBundleFactory linkBundleFactory;
+	CompositeBundleFactory linkBundleFactory;
 
 	protected void setUp() throws Exception {
 		super.setUp();
-		linkBundleFactoryRef = OSGiTestsActivator.getContext().getServiceReference(LinkBundleFactory.class.getName());
+		linkBundleFactoryRef = OSGiTestsActivator.getContext().getServiceReference(CompositeBundleFactory.class.getName());
 		assertNotNull("LinkBundleFactory reference is null", linkBundleFactoryRef); //$NON-NLS-1$
-		linkBundleFactory = (LinkBundleFactory) OSGiTestsActivator.getContext().getService(linkBundleFactoryRef);
+		linkBundleFactory = (CompositeBundleFactory) OSGiTestsActivator.getContext().getService(linkBundleFactoryRef);
 		assertNotNull("LinkBundleFactory service is null", linkBundleFactory); //$NON-NLS-1$
 
 		installerReg = OSGiTestsActivator.getContext().registerService(BundleInstaller.class.getName(), installer, null);
@@ -57,7 +57,7 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 			installerReg.unregister();
 	}
 
-	LinkBundle createCompositeBundle(LinkBundleFactory factory, String location, Map configuration, Map linkManifest, boolean start, boolean security) {
+	CompositeBundle createCompositeBundle(CompositeBundleFactory factory, String location, Map configuration, Map linkManifest, boolean start, boolean security) {
 		if (configuration == null)
 			configuration = new HashMap();
 		if (security)
@@ -66,16 +66,16 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 			linkManifest = new HashMap();
 			linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, location);
 		}
-		LinkBundle composite = null;
+		CompositeBundle composite = null;
 		try {
-			composite = factory.newChildLinkBundle(configuration, location, linkManifest);
+			composite = factory.newChildCompositeBundle(configuration, location, linkManifest);
 		} catch (BundleException e) {
 			fail("Unexpected exception creating composite bundle", e); //$NON-NLS-1$
 		}
 		assertNotNull("Composite is null", composite); //$NON-NLS-1$
 		assertEquals("Wrong composite location", location, composite.getLocation()); //$NON-NLS-1$
 		assertEquals("Wrong state for SystemBundle", Bundle.STARTING, composite.getCompanionFramework().getState()); //$NON-NLS-1$
-		LinkBundle companion = composite.getCompanionLinkBundle();
+		CompositeBundle companion = composite.getCompanionComposite();
 		assertNotNull("Companion is null", companion); //$NON-NLS-1$
 		assertEquals("Wrong companion location", location, companion.getLocation()); //$NON-NLS-1$
 		if (start)
@@ -125,7 +125,7 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 		return null;
 	}
 
-	void startCompositeBundle(LinkBundle composite, boolean expectFailure) {
+	void startCompositeBundle(CompositeBundle composite, boolean expectFailure) {
 		boolean childFrameworkActive = composite.getCompanionFramework().getState() == Bundle.ACTIVE;
 		try {
 			composite.start();
@@ -140,7 +140,7 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 		assertEquals("Wrong state for SystemBundle", expectedState, childFramework.getState()); //$NON-NLS-1$
 	}
 
-	void stopCompositeBundle(LinkBundle composite) {
+	void stopCompositeBundle(CompositeBundle composite) {
 		Framework childFramework = composite.getCompanionFramework();
 		try {
 			composite.stop();
@@ -159,8 +159,8 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, childFramework.getState()); //$NON-NLS-1$
 	}
 
-	void uninstallCompositeBundle(LinkBundle composite) {
-		Framework childFramework = composite.isParentLink() ? composite.getCompanionLinkBundle().getCompanionFramework() : composite.getCompanionFramework();
+	void uninstallCompositeBundle(CompositeBundle composite) {
+		Framework childFramework = composite.getCompositeType() == CompositeBundle.TYPE_PARENT ? composite.getCompanionComposite().getCompanionFramework() : composite.getCompanionFramework();
 		try {
 			composite.uninstall();
 		} catch (BundleException e) {
@@ -174,12 +174,12 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 		return (PackageAdmin) context.getService(context.getServiceReference(PackageAdmin.class.getName()));
 	}
 
-	LinkBundleFactory getFactory(Bundle framework) {
+	CompositeBundleFactory getFactory(Bundle framework) {
 		BundleContext context = framework.getBundleContext();
 		assertNotNull("Child context is null.", context); //$NON-NLS-1$
-		ServiceReference ref = context.getServiceReference(LinkBundleFactory.class.getName());
+		ServiceReference ref = context.getServiceReference(CompositeBundleFactory.class.getName());
 		assertNotNull("Factory reference is null", ref); //$NON-NLS-1$
-		LinkBundleFactory factory = (LinkBundleFactory) context.getService(ref);
+		CompositeBundleFactory factory = (CompositeBundleFactory) context.getService(ref);
 		assertNotNull("factory service is null", factory); //$NON-NLS-1$
 		// just release now to make testcode simple
 		context.ungetService(ref);

@@ -71,7 +71,7 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 	private GroupingChecker groupingChecker;
 	private Comparator selectionPolicy;
 	private boolean developmentMode = false;
-	private volatile LinkHelperRegistry linkHelpers;
+	private volatile CompositeResolveHelperRegistry compositeHelpers;
 
 	public ResolverImpl(BundleContext context, boolean checkPermissions) {
 		this.permissionChecker = new PermissionChecker(context, checkPermissions, this);
@@ -539,12 +539,12 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 	}
 
 	private void checkComposites(ResolverBundle[] bundles, Dictionary[] platformProperties, ArrayList rejectedSingletons) {
-		LinkHelperRegistry helpers = getLinkHelpers();
+		CompositeResolveHelperRegistry helpers = getCompositeHelpers();
 		if (helpers == null)
 			return;
 		Set exclude = null;
 		for (int i = 0; i < bundles.length; i++) {
-			LinkHelper helper = helpers.getLinkHelper(bundles[i].getBundle());
+			CompositeResolveHelper helper = helpers.getCompositeResolveHelper(bundles[i].getBundle());
 			if (helper == null)
 				continue;
 			if (!bundles[i].isResolved())
@@ -1651,9 +1651,9 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 
 		if (!bundle.getBundle().isResolved() && !developmentMode)
 			return;
-		LinkHelperRegistry currentLinks = linkHelpers;
+		CompositeResolveHelperRegistry currentLinks = compositeHelpers;
 		if (currentLinks != null) {
-			LinkHelper helper = currentLinks.getLinkHelper(bundle.getBundle());
+			CompositeResolveHelper helper = currentLinks.getCompositeResolveHelper(bundle.getBundle());
 			if (helper != null)
 				helper.giveExports(null);
 		}
@@ -1781,11 +1781,11 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 		return selectionPolicy;
 	}
 
-	public void setLinkHelperRegistry(LinkHelperRegistry linkHelpers) {
-		this.linkHelpers = linkHelpers;
+	public void setCompositeResolveHelperRegistry(CompositeResolveHelperRegistry compositeHelpers) {
+		this.compositeHelpers = compositeHelpers;
 	}
 
-	LinkHelperRegistry getLinkHelpers() {
-		return linkHelpers;
+	CompositeResolveHelperRegistry getCompositeHelpers() {
+		return compositeHelpers;
 	}
 }

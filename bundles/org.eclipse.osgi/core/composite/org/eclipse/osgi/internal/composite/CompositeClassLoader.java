@@ -11,13 +11,13 @@ import org.eclipse.osgi.baseadaptor.loader.*;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.adaptor.ClassLoaderDelegate;
 import org.eclipse.osgi.service.internal.composite.Composite;
-import org.osgi.service.framework.LinkBundle;
+import org.osgi.service.framework.CompositeBundle;
 
 public class CompositeClassLoader extends ClassLoader implements BaseClassLoader {
 
 	private final ClassLoaderDelegate delegate;
 	private final ClasspathManager manager;
-	private final ClassLoaderDelegate linkDelegate;
+	private final ClassLoaderDelegate compositeDelegate;
 	//Support to cut class / resource loading cycles in the context of one thread. The contained object is a set of classname
 	private final ThreadLocal beingLoaded = new ThreadLocal();
 
@@ -25,8 +25,8 @@ public class CompositeClassLoader extends ClassLoader implements BaseClassLoader
 		super(parent);
 		this.delegate = delegate;
 		this.manager = new ClasspathManager(data, new String[0], this);
-		Composite companion = (Composite) ((LinkBundle) data.getBundle()).getCompanionLinkBundle();
-		this.linkDelegate = companion.getDelegate();
+		Composite companion = (Composite) ((CompositeBundle) data.getBundle()).getCompanionComposite();
+		this.compositeDelegate = companion.getDelegate();
 	}
 
 	public ClasspathEntry createClassPathEntry(BundleFile bundlefile, ProtectionDomain cpDomain) {
@@ -72,7 +72,7 @@ public class CompositeClassLoader extends ClassLoader implements BaseClassLoader
 		if (!startLoading(classname))
 			throw new ClassNotFoundException(classname);
 		try {
-			return linkDelegate.findClass(classname);
+			return compositeDelegate.findClass(classname);
 		} finally {
 			stopLoading(classname);
 		}
@@ -82,7 +82,7 @@ public class CompositeClassLoader extends ClassLoader implements BaseClassLoader
 		if (!startLoading(resource))
 			return null;
 		try {
-			return linkDelegate.findResource(resource);
+			return compositeDelegate.findResource(resource);
 		} finally {
 			stopLoading(resource);
 		}
@@ -92,7 +92,7 @@ public class CompositeClassLoader extends ClassLoader implements BaseClassLoader
 		if (!startLoading(resource))
 			return null;
 		try {
-			return linkDelegate.findResources(resource);
+			return compositeDelegate.findResources(resource);
 		} catch (IOException e) {
 			return null;
 		} finally {

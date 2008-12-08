@@ -27,15 +27,15 @@ import org.eclipse.osgi.internal.module.*;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.*;
 import org.osgi.framework.launch.Framework;
-import org.osgi.service.framework.LinkBundle;
-import org.osgi.service.framework.LinkBundleFactory;
+import org.osgi.service.framework.CompositeBundle;
+import org.osgi.service.framework.CompositeBundleFactory;
 
-public class CompositeConfigurator implements HookConfigurator, AdaptorHook, ClassLoadingHook, LinkBundleFactory, LinkHelperRegistry {
+public class CompositeConfigurator implements HookConfigurator, AdaptorHook, ClassLoadingHook, CompositeBundleFactory, CompositeResolveHelperRegistry {
 
 	private BaseAdaptor adaptor;
 	private ServiceRegistration factoryService;
 	private BundleContext systemContext;
-	private volatile int linkid = 1;
+	private volatile int compositeID = 1;
 
 	public void addHooks(HookRegistry hookRegistry) {
 		hookRegistry.addAdaptorHook(this);
@@ -56,8 +56,8 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 	 */
 	public void frameworkStart(BundleContext context) throws BundleException {
 		this.systemContext = context;
-		((ResolverImpl) adaptor.getState().getResolver()).setLinkHelperRegistry(this);
-		factoryService = context.registerService(new String[] {LinkBundleFactory.class.getName()}, this, null);
+		((ResolverImpl) adaptor.getState().getResolver()).setCompositeResolveHelperRegistry(this);
+		factoryService = context.registerService(new String[] {CompositeBundleFactory.class.getName()}, this, null);
 	}
 
 	public void frameworkStop(BundleContext context) {
@@ -89,43 +89,43 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 		return false;
 	}
 
-	public LinkBundle newChildLinkBundle(Map frameworkConfig, String location, Map linkManifest) throws BundleException {
+	public CompositeBundle newChildCompositeBundle(Map frameworkConfig, String location, Map compositeManifest) throws BundleException {
 		SecurityManager sm = System.getSecurityManager();
 		if (sm != null)
 			sm.checkPermission(new AllPermission());
-		CompositeHelper.validateLinkManifest(linkManifest);
-		linkManifest = new HashMap(linkManifest);
-		URL content = getBundleInput(frameworkConfig, linkManifest);
+		CompositeHelper.validateCompositeManifest(compositeManifest);
+		compositeManifest = new HashMap(compositeManifest);
+		URL content = getBundleInput(frameworkConfig, compositeManifest);
 		try {
-			LinkBundle result = (LinkBundle) systemContext.installBundle(location, content.openStream());
+			CompositeBundle result = (CompositeBundle) systemContext.installBundle(location, content.openStream());
 			CompositeHelper.setCompositePermissions(result, systemContext);
 			return result;
 		} catch (IOException e) {
-			throw new BundleException("Error creating link bundle", e);
+			throw new BundleException("Error creating composite bundle", e);
 		}
 	}
 
-	private URL getBundleInput(Map frameworkConfig, Map linkManifest) throws BundleException {
+	private URL getBundleInput(Map frameworkConfig, Map compositeManifest) throws BundleException {
 		// using directory bundles for now, could use in memory zip streams but this is way more simple
-		String bsn = (String) linkManifest.get(Constants.BUNDLE_SYMBOLICNAME);
+		String bsn = (String) compositeManifest.get(Constants.BUNDLE_SYMBOLICNAME);
 		// get a unique directory for the bundle content
-		File bundleFile = systemContext.getDataFile("links/" + bsn + '_' + linkid++); //$NON-NLS-1$
+		File bundleFile = systemContext.getDataFile("composites/" + bsn + '_' + compositeID++); //$NON-NLS-1$
 		while (bundleFile.exists())
-			bundleFile = systemContext.getDataFile("links/" + bsn + '_' + linkid++); //$NON-NLS-1$
+			bundleFile = systemContext.getDataFile("composites/" + bsn + '_' + compositeID++); //$NON-NLS-1$
 		bundleFile.mkdirs();
-		// the link bundles only consist of a manifest describing the packages they import and export
-		String manifest = CompositeHelper.getChildLinkManifest(linkManifest);
+		// the composite bundles only consist of a manifest describing the packages they import and export
+		String manifest = CompositeHelper.getChildCompositeManifest(compositeManifest);
 		try {
 			CompositeHelper.writeManifest(bundleFile, manifest);
 			// store the framework config
 			Properties fwProps = new Properties();
 			if (frameworkConfig != null)
 				fwProps.putAll(frameworkConfig);
-			fwProps.store(new FileOutputStream(new File(bundleFile, CompositeBundle.CHILD_CONFIGURATION)), null);
+			fwProps.store(new FileOutputStream(new File(bundleFile, EquinoxComposite.CHILD_CONFIGURATION)), null);
 			// return the reference location
 			return new URL("reference:" + bundleFile.toURL().toExternalForm()); //$NON-NLS-1$
 		} catch (IOException e) {
-			throw new BundleException("Error creating link bundle", e);
+			throw new BundleException("Error creating composite bundle", e);
 		}
 	}
 
@@ -133,10 +133,10 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 		Bundle[] allBundles = systemContext.getBundles();
 		// stop each child framework
 		for (int i = 0; i < allBundles.length; i++) {
-			if (!(allBundles[i] instanceof LinkBundle))
+			if (!(allBundles[i] instanceof CompositeBundle))
 				continue;
-			LinkBundle composite = (LinkBundle) allBundles[i];
-			if (composite.isParentLink())
+			CompositeBundle composite = (CompositeBundle) allBundles[i];
+			if (composite.getCompositeType() == CompositeBundle.TYPE_PARENT)
 				continue;
 			try {
 				Framework child = composite.getCompanionFramework();
@@ -151,9 +151,9 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 		}
 	}
 
-	public LinkHelper getLinkHelper(BundleDescription bundle) {
+	public CompositeResolveHelper getCompositeResolveHelper(BundleDescription bundle) {
 		Bundle composite = systemContext.getBundle(bundle.getBundleId());
-		return (LinkHelper) ((!(composite instanceof LinkBundle)) ? null : composite);
+		return (CompositeResolveHelper) ((!(composite instanceof CompositeBundle)) ? null : composite);
 	}
 
 	public boolean addClassPathEntry(ArrayList cpEntries, String cp, ClasspathManager hostmanager, BaseData sourcedata, ProtectionDomain sourcedomain) {
@@ -162,7 +162,7 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 	}
 
 	public BaseClassLoader createClassLoader(ClassLoader parent, ClassLoaderDelegate delegate, BundleProtectionDomain domain, BaseData data, String[] bundleclasspath) {
-		if ((data.getType() & (BundleData.TYPE_LINKBUNDLE_CHILD | BundleData.TYPE_LINKBUNDLE_PARENT)) == 0)
+		if ((data.getType() & (BundleData.TYPE_COMPOSITEBUNDLE_CHILD | BundleData.TYPE_COMPOSITEBUNDLE_PARENT)) == 0)
 			return null;
 		return new CompositeClassLoader(parent, delegate, data);
 	}

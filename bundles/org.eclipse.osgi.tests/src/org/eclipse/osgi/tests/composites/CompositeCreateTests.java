@@ -13,8 +13,8 @@ package org.eclipse.osgi.tests.composites;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.osgi.framework.Bundle;
-import org.osgi.service.framework.LinkBundle;
-import org.osgi.service.framework.LinkBundleFactory;
+import org.osgi.service.framework.CompositeBundle;
+import org.osgi.service.framework.CompositeBundleFactory;
 
 public class CompositeCreateTests extends AbstractCompositeTests {
 	public static Test suite() {
@@ -22,17 +22,17 @@ public class CompositeCreateTests extends AbstractCompositeTests {
 	}
 
 	public void testCreateComposite01() {
-		LinkBundle composite = createCompositeBundle(linkBundleFactory, "testCreateComposite01", null, null, true, false); //$NON-NLS-1$
+		CompositeBundle composite = createCompositeBundle(linkBundleFactory, "testCreateComposite01", null, null, true, false); //$NON-NLS-1$
 		startCompositeBundle(composite, false);
 		stopCompositeBundle(composite);
 		uninstallCompositeBundle(composite);
 	}
 
 	public void testCreateComposite02() {
-		LinkBundle compositeLevel0 = createCompositeBundle(linkBundleFactory, "compositeLevel0", null, null, true, false); //$NON-NLS-1$
-		LinkBundleFactory factory = getFactory(compositeLevel0.getCompanionFramework());
-		LinkBundle compositeLevel1_1 = createCompositeBundle(factory, "compositeLevel1_1", null, null, true, false); //$NON-NLS-1$
-		LinkBundle compositeLevel1_2 = createCompositeBundle(factory, "compositeLevel1_2", null, null, true, false); //$NON-NLS-1$
+		CompositeBundle compositeLevel0 = createCompositeBundle(linkBundleFactory, "compositeLevel0", null, null, true, false); //$NON-NLS-1$
+		CompositeBundleFactory factory = getFactory(compositeLevel0.getCompanionFramework());
+		CompositeBundle compositeLevel1_1 = createCompositeBundle(factory, "compositeLevel1_1", null, null, true, false); //$NON-NLS-1$
+		CompositeBundle compositeLevel1_2 = createCompositeBundle(factory, "compositeLevel1_2", null, null, true, false); //$NON-NLS-1$
 		long idLevel1_1 = compositeLevel1_1.getBundleId();
 		long idLevel1_2 = compositeLevel1_2.getBundleId();
 
@@ -42,8 +42,8 @@ public class CompositeCreateTests extends AbstractCompositeTests {
 
 		startCompositeBundle(compositeLevel0, false);
 		// need to reget the bundles from child frameworks that were restarted
-		compositeLevel1_1 = (LinkBundle) compositeLevel0.getCompanionFramework().getBundleContext().getBundle(idLevel1_1);
-		compositeLevel1_2 = (LinkBundle) compositeLevel0.getCompanionFramework().getBundleContext().getBundle(idLevel1_2);
+		compositeLevel1_1 = (CompositeBundle) compositeLevel0.getCompanionFramework().getBundleContext().getBundle(idLevel1_1);
+		compositeLevel1_2 = (CompositeBundle) compositeLevel0.getCompanionFramework().getBundleContext().getBundle(idLevel1_2);
 
 		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel1_1.getCompanionFramework().getState()); //$NON-NLS-1$
 		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel1_2.getCompanionFramework().getState()); //$NON-NLS-1$
@@ -54,23 +54,23 @@ public class CompositeCreateTests extends AbstractCompositeTests {
 	}
 
 	public void testCreateComposite03() {
-		LinkBundle compositeLevel0 = createCompositeBundle(linkBundleFactory, "compositeLevel0", null, null, true, false); //$NON-NLS-1$
-		LinkBundleFactory factoryLevel1 = getFactory(compositeLevel0.getCompanionFramework());
+		CompositeBundle compositeLevel0 = createCompositeBundle(linkBundleFactory, "compositeLevel0", null, null, true, false); //$NON-NLS-1$
+		CompositeBundleFactory factoryLevel1 = getFactory(compositeLevel0.getCompanionFramework());
 		// create two level 1 composites
-		LinkBundle compositeLevel1_1 = createCompositeBundle(factoryLevel1, "compositeLevel1_1", null, null, true, false); //$NON-NLS-1$
-		LinkBundle compositeLevel1_2 = createCompositeBundle(factoryLevel1, "compositeLevel1_2", null, null, true, false); //$NON-NLS-1$
+		CompositeBundle compositeLevel1_1 = createCompositeBundle(factoryLevel1, "compositeLevel1_1", null, null, true, false); //$NON-NLS-1$
+		CompositeBundle compositeLevel1_2 = createCompositeBundle(factoryLevel1, "compositeLevel1_2", null, null, true, false); //$NON-NLS-1$
 
 		// create two level 2 composites under 1_1
-		LinkBundleFactory factoryLevel2_1 = getFactory(compositeLevel1_1.getCompanionFramework());
-		LinkBundle compositeLevel2_1 = createCompositeBundle(factoryLevel2_1, "compositeLevel2_1", null, null, true, false); //$NON-NLS-1$
-		LinkBundle compositeLevel2_2 = createCompositeBundle(factoryLevel2_1, "compositeLevel2_2", null, null, true, false); //$NON-NLS-1$
+		CompositeBundleFactory factoryLevel2_1 = getFactory(compositeLevel1_1.getCompanionFramework());
+		CompositeBundle compositeLevel2_1 = createCompositeBundle(factoryLevel2_1, "compositeLevel2_1", null, null, true, false); //$NON-NLS-1$
+		CompositeBundle compositeLevel2_2 = createCompositeBundle(factoryLevel2_1, "compositeLevel2_2", null, null, true, false); //$NON-NLS-1$
 		long idLevel2_1 = compositeLevel2_1.getBundleId();
 		long idLevel2_2 = compositeLevel2_2.getBundleId();
 
 		// create two level 2 composites under 1_2
-		LinkBundleFactory factoryLevel2_2 = getFactory(compositeLevel1_2.getCompanionFramework());
-		LinkBundle compositeLevel2_3 = createCompositeBundle(factoryLevel2_2, "compositeLevel2_3", null, null, true, false); //$NON-NLS-1$
-		LinkBundle compositeLevel2_4 = createCompositeBundle(factoryLevel2_2, "compositeLevel2_4", null, null, true, false); //$NON-NLS-1$
+		CompositeBundleFactory factoryLevel2_2 = getFactory(compositeLevel1_2.getCompanionFramework());
+		CompositeBundle compositeLevel2_3 = createCompositeBundle(factoryLevel2_2, "compositeLevel2_3", null, null, true, false); //$NON-NLS-1$
+		CompositeBundle compositeLevel2_4 = createCompositeBundle(factoryLevel2_2, "compositeLevel2_4", null, null, true, false); //$NON-NLS-1$
 		long idLevel2_3 = compositeLevel2_3.getBundleId();
 		long idLevel2_4 = compositeLevel2_4.getBundleId();
 
@@ -82,8 +82,8 @@ public class CompositeCreateTests extends AbstractCompositeTests {
 
 		startCompositeBundle(compositeLevel1_1, false);
 		// need to reget the bundles from child frameworks that were restarted
-		compositeLevel2_1 = (LinkBundle) compositeLevel1_1.getCompanionFramework().getBundleContext().getBundle(idLevel2_1);
-		compositeLevel2_2 = (LinkBundle) compositeLevel1_1.getCompanionFramework().getBundleContext().getBundle(idLevel2_2);
+		compositeLevel2_1 = (CompositeBundle) compositeLevel1_1.getCompanionFramework().getBundleContext().getBundle(idLevel2_1);
+		compositeLevel2_2 = (CompositeBundle) compositeLevel1_1.getCompanionFramework().getBundleContext().getBundle(idLevel2_2);
 
 		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_1.getCompanionFramework().getState()); //$NON-NLS-1$
 		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_2.getCompanionFramework().getState()); //$NON-NLS-1$
@@ -98,8 +98,8 @@ public class CompositeCreateTests extends AbstractCompositeTests {
 
 		startCompositeBundle(compositeLevel1_2, false);
 		// need to reget the bundles from child frameworks that were restarted
-		compositeLevel2_3 = (LinkBundle) compositeLevel1_2.getCompanionFramework().getBundleContext().getBundle(idLevel2_3);
-		compositeLevel2_4 = (LinkBundle) compositeLevel1_2.getCompanionFramework().getBundleContext().getBundle(idLevel2_4);
+		compositeLevel2_3 = (CompositeBundle) compositeLevel1_2.getCompanionFramework().getBundleContext().getBundle(idLevel2_3);
+		compositeLevel2_4 = (CompositeBundle) compositeLevel1_2.getCompanionFramework().getBundleContext().getBundle(idLevel2_4);
 
 		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_1.getCompanionFramework().getState()); //$NON-NLS-1$
 		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_2.getCompanionFramework().getState()); //$NON-NLS-1$
