@@ -42,6 +42,10 @@ public interface BundleData {
 	public static final int TYPE_SINGLETON = 0x00000008;
 	/** The BundleData is for an extension classpath bundle */
 	public static final int TYPE_EXTCLASSPATH_EXTENSION = 0x00000010;
+	/** The BundleData is for a link bundle child */
+	public static final int TYPE_LINKBUNDLE_CHILD = 0x00000020;
+	/** The BundleData is for a link bundle parent */
+	public static final int TYPE_LINKBUNDLE_PARENT = 0x00000040;
 
 	/**
 	 * Creates the ClassLoader for the BundleData.  The ClassLoader created

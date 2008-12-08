@@ -344,7 +344,7 @@ public class BundleHost extends AbstractBundle {
 		}
 		try {
 			context.start();
-
+			startHook();
 			if (framework.active) {
 				state = ACTIVE;
 
@@ -360,6 +360,7 @@ public class BundleHost extends AbstractBundle {
 			state = STOPPING;
 			framework.publishBundleEvent(BundleEvent.STOPPING, this);
 
+			stopHook();
 			context.close();
 			context = null;
 
@@ -383,6 +384,13 @@ public class BundleHost extends AbstractBundle {
 			context = null;
 			throw new BundleException(NLS.bind(Msg.BUNDLE_UNINSTALLED_EXCEPTION, getBundleData().getLocation()), BundleException.STATECHANGE_ERROR);
 		}
+	}
+
+	/**
+	 * @throws BundleException  
+	 */
+	protected void startHook() throws BundleException {
+		// do nothing by default
 	}
 
 	protected boolean readyToResume() {
@@ -456,6 +464,7 @@ public class BundleHost extends AbstractBundle {
 				if (context != null)
 					context.stop();
 			} finally {
+				stopHook();
 				if (context != null) {
 					context.close();
 					context = null;
@@ -477,6 +486,13 @@ public class BundleHost extends AbstractBundle {
 				}
 			}
 		}
+	}
+
+	/**
+	 * @throws BundleException  
+	 */
+	protected void stopHook() throws BundleException {
+		// do nothing
 	}
 
 	/**
