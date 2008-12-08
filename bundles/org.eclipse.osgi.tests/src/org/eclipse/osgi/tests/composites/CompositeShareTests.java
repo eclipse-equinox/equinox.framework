@@ -384,7 +384,7 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		uninstallCompositeBundle(compositeLevel0);
 	}
 
-	public void testCompositeShare09() {
+	public void testCompositeShare09a() {
 		// exports packages from a bundle installed into the parent
 		// and imports the packages from a bundle installed into the child
 		// and services registered in the parent are propagated to the child
@@ -395,11 +395,11 @@ public class CompositeShareTests extends AbstractCompositeTests {
 			fail("Failed to start test.link.c", e); //$NON-NLS-1$
 		}
 		Map linkManifest = new HashMap();
-		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testCompositeShare09"); //$NON-NLS-1$
+		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testCompositeShare09a"); //$NON-NLS-1$
 		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
 		linkManifest.put(Constants.IMPORT_PACKAGE, "test.link.c.service1,test.link.c.service2,test.link.c.service3"); //$NON-NLS-1$
 		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT, "(objectClass=test.link.c.service1.Service1),(objectClass=test.link.c.service2.Service2),(objectClass=test.link.c.service3.Service3)"); //$NON-NLS-1$
-		CompositeBundle composite = createCompositeBundle(linkBundleFactory, "testCompositeShare09", null, linkManifest, true, false); //$NON-NLS-1$
+		CompositeBundle composite = createCompositeBundle(linkBundleFactory, "testCompositeShare09a", null, linkManifest, true, false); //$NON-NLS-1$
 
 		startCompositeBundle(composite, false);
 
@@ -436,6 +436,109 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		try {
 			cClient.start();
 			cClient.stop();
+		} catch (BundleException e) {
+			fail("Failed to start/stop the client", e); //$NON-NLS-1$
+		}
+		uninstallCompositeBundle(composite);
+	}
+
+	public void testCompositeShare09b() {
+		// exports packages from a bundle installed into the parent
+		// and imports the packages from a bundle installed into the child
+		// and services registered in the parent are propagated to the child
+		Bundle cService = installIntoCurrent("test.link.c"); //$NON-NLS-1$
+		try {
+			cService.start();
+		} catch (BundleException e) {
+			fail("Failed to start test.link.c", e); //$NON-NLS-1$
+		}
+		Map linkManifest = new HashMap();
+		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testCompositeShare09b"); //$NON-NLS-1$
+		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
+		linkManifest.put(Constants.IMPORT_PACKAGE, "test.link.c.service1,test.link.c.service2,test.link.c.service3"); //$NON-NLS-1$
+		linkManifest.put(Constants.EXPORT_PACKAGE, "test.link.e.service1; attr1=\"value1\", test.link.e.service2; attr2=\"value2\"; uses:=\"test.link.e.service1\", test.link.e.service3; attr3=\"value3\"; uses:=\"test.link.e.service2\""); //$NON-NLS-1$
+		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT, "(objectClass=test.link.c.service1.Service1),(objectClass=test.link.c.service2.Service2),(objectClass=test.link.c.service3.Service3)"); //$NON-NLS-1$
+		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_EXPORT, "(objectClass=test.link.e.service1.Service1),(objectClass=test.link.e.service2.Service2),(objectClass=test.link.e.service3.Service3)"); //$NON-NLS-1$
+		CompositeBundle composite = createCompositeBundle(linkBundleFactory, "testCompositeShare09b", null, linkManifest, false, false); //$NON-NLS-1$
+
+		Bundle eService = installIntoChild(composite.getCompanionFramework(), "test.link.e"); //$NON-NLS-1$
+		startCompositeBundle(composite, false);
+
+		try {
+			eService.start();
+		} catch (BundleException e) {
+			fail("Failed to start test.link.e", e); //$NON-NLS-1$
+		}
+
+		ServiceReference[] childServices = composite.getCompanionComposite().getRegisteredServices();
+		assertNotNull("No child services found", childServices); //$NON-NLS-1$
+		assertEquals("Wrong number of child services", 3, childServices.length); //$NON-NLS-1$
+
+		ServiceReference[] parentServices = composite.getRegisteredServices();
+		assertNotNull("No parent services found", parentServices); //$NON-NLS-1$
+		assertEquals("Wrong number of parent services", 3, parentServices.length); //$NON-NLS-1$
+
+		Bundle cClient = installIntoChild(composite.getCompanionFramework(), "test.link.c.client"); //$NON-NLS-1$
+		Bundle eClient = installIntoCurrent("test.link.e.client"); //$NON-NLS-1$
+
+		try {
+			cClient.start();
+			cClient.stop();
+		} catch (BundleException e) {
+			fail("Failed to start/stop the client", e); //$NON-NLS-1$
+		}
+
+		try {
+			cService.stop();
+		} catch (BundleException e) {
+			fail("Failed to stop cService", e); //$NON-NLS-1$
+		}
+
+		try {
+			cClient.start();
+			fail("Should have failed to start cClient"); //$NON-NLS-1$
+		} catch (BundleException e) {
+			// expected
+		}
+		try {
+			cService.start();
+		} catch (BundleException e) {
+			fail("Failed to start test.link.c", e); //$NON-NLS-1$
+		}
+		try {
+			cClient.start();
+			cClient.stop();
+		} catch (BundleException e) {
+			fail("Failed to start/stop the client", e); //$NON-NLS-1$
+		}
+
+		try {
+			eClient.start();
+			eClient.stop();
+		} catch (BundleException e) {
+			fail("Failed to start/stop the client", e); //$NON-NLS-1$
+		}
+
+		try {
+			eService.stop();
+		} catch (BundleException e) {
+			fail("Failed to stop eService", e); //$NON-NLS-1$
+		}
+
+		try {
+			eClient.start();
+			fail("Should have failed to start eClient"); //$NON-NLS-1$
+		} catch (BundleException e) {
+			// expected
+		}
+		try {
+			eService.start();
+		} catch (BundleException e) {
+			fail("Failed to start test.link.e", e); //$NON-NLS-1$
+		}
+		try {
+			eClient.start();
+			eClient.stop();
 		} catch (BundleException e) {
 			fail("Failed to start/stop the client", e); //$NON-NLS-1$
 		}
