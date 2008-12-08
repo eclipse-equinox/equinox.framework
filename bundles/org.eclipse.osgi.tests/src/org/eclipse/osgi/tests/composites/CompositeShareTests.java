@@ -443,9 +443,11 @@ public class CompositeShareTests extends AbstractCompositeTests {
 	}
 
 	public void testCompositeShare09b() {
+		// two way package and service tests
 		// exports packages from a bundle installed into the parent
 		// and imports the packages from a bundle installed into the child
 		// and services registered in the parent are propagated to the child
+		// and services registered in the child are propagated to the parent
 		Bundle cService = installIntoCurrent("test.link.c"); //$NON-NLS-1$
 		try {
 			cService.start();
