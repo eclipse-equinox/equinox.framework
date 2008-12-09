@@ -112,14 +112,69 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		uninstallCompositeBundle(compositeBundle);
 	}
 
-	public void testCompositeShare04() {
+	public void testCompositeShare04a() {
 		// create a composite bundle with one bundle that exports some api to parent
 		// install one bundle into parent that uses API from child
 		Map linkManifest = new HashMap();
-		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testCompositeShare04"); //$NON-NLS-1$
+		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testCompositeShare04a"); //$NON-NLS-1$
 		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
 		linkManifest.put(Constants.EXPORT_PACKAGE, "test.link.a; attr1=\"bad value\"; uses:=\"org.osgi.framework, test.link.a.params\", test.link.a.params; attr2=\"bad value\""); //$NON-NLS-1$
-		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare04", null, linkManifest, false, false); //$NON-NLS-1$
+		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare04a", null, linkManifest, false, false); //$NON-NLS-1$
+		installIntoChild(compositeBundle.getCompanionFramework(), "test.link.a"); //$NON-NLS-1$
+		Bundle testClient = installIntoCurrent("test.link.a.client"); //$NON-NLS-1$
+
+		CompositeBundle companion = compositeBundle.getCompanionComposite();
+		assertNotNull("Companion is null", companion); //$NON-NLS-1$
+		startCompositeBundle(compositeBundle, true);
+		try {
+			testClient.start();
+			fail("Expected start failure"); //$NON-NLS-1$
+		} catch (BundleException e) {
+			assertEquals("Unexpected exception type", BundleException.RESOLVE_ERROR, e.getType()); //$NON-NLS-1$
+		}
+		// put good value back
+		linkManifest.put(Constants.EXPORT_PACKAGE, "test.link.a; attr1=\"value1\"; uses:=\"org.osgi.framework, test.link.a.params\", test.link.a.params; attr2=\"value2\""); //$NON-NLS-1$
+		try {
+			compositeBundle.update(linkManifest);
+		} catch (BundleException e) {
+			fail("Unexpected composite update exception", e); //$NON-NLS-1$
+		}
+
+		startCompositeBundle(compositeBundle, false);
+		try {
+			testClient.start();
+		} catch (BundleException e) {
+			fail("Unexpected exception", e); //$NON-NLS-1$
+		}
+
+		// put bad value back
+		linkManifest.put(Constants.EXPORT_PACKAGE, "test.link.a; attr1=\"bad value\"; uses:=\"org.osgi.framework, test.link.a.params\", test.link.a.params; attr2=\"bad value\""); //$NON-NLS-1$
+		try {
+			compositeBundle.update(linkManifest);
+		} catch (BundleException e) {
+			fail("Unexpected composite update exception", e); //$NON-NLS-1$
+		}
+		installer.refreshPackages(new Bundle[] {compositeBundle});
+		startCompositeBundle(compositeBundle, true);
+		try {
+			testClient.start();
+			fail("Expected start failure"); //$NON-NLS-1$
+		} catch (BundleException e) {
+			assertEquals("Unexpected exception type", BundleException.RESOLVE_ERROR, e.getType()); //$NON-NLS-1$
+		}
+
+		uninstallCompositeBundle(compositeBundle);
+	}
+
+	public void testCompositeShare04b() {
+		// create a composite bundle with one bundle that exports some api to parent
+		// install one bundle into parent that uses API from child
+		// test lazy uninstall
+		Map linkManifest = new HashMap();
+		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testCompositeShare04b"); //$NON-NLS-1$
+		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
+		linkManifest.put(Constants.EXPORT_PACKAGE, "test.link.a; attr1=\"bad value\"; uses:=\"org.osgi.framework, test.link.a.params\", test.link.a.params; attr2=\"bad value\""); //$NON-NLS-1$
+		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare04b", null, linkManifest, false, false); //$NON-NLS-1$
 		installIntoChild(compositeBundle.getCompanionFramework(), "test.link.a"); //$NON-NLS-1$
 		Bundle testClient = installIntoCurrent("test.link.a.client"); //$NON-NLS-1$
 
