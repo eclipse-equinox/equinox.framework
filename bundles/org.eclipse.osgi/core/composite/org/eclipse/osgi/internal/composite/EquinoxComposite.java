@@ -18,6 +18,7 @@ import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.adaptor.ClassLoaderDelegate;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Constants;
+import org.eclipse.osgi.internal.loader.BundleLoader;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.internal.module.CompositeResolveHelper;
 import org.eclipse.osgi.internal.module.ResolverBundle;
@@ -157,6 +158,13 @@ public class EquinoxComposite extends BundleHost implements CompositeBundle, Com
 			CompositeHelper.updateChildManifest(getBundleData(), manifest);
 		} catch (IOException e) {
 			throw new BundleException("Unable to update bundle content", e);
+		}
+		if (isResolved()) {
+			// force the class loader creation before updating the parent companion to cache the current state
+			// this is to allow for lazy updates of composite bundles
+			BundleLoader loader = getBundleLoader();
+			if (loader != null)
+				loader.createClassLoader();
 		}
 		// first update the parent companion and disable it
 		updateParentCompanion(getBundleData(), null, null);
