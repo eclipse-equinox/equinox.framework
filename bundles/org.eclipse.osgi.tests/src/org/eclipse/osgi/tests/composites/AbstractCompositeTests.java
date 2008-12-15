@@ -22,8 +22,7 @@ import org.eclipse.osgi.tests.bundles.AbstractBundleTests;
 import org.eclipse.osgi.tests.bundles.BundleInstaller;
 import org.osgi.framework.*;
 import org.osgi.framework.launch.Framework;
-import org.osgi.service.framework.CompositeBundle;
-import org.osgi.service.framework.CompositeBundleFactory;
+import org.osgi.service.framework.*;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -68,16 +67,16 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 		}
 		CompositeBundle composite = null;
 		try {
-			composite = factory.newChildCompositeBundle(configuration, location, linkManifest);
+			composite = factory.installCompositeBundle(configuration, location, linkManifest);
 		} catch (BundleException e) {
 			fail("Unexpected exception creating composite bundle", e); //$NON-NLS-1$
 		}
 		assertNotNull("Composite is null", composite); //$NON-NLS-1$
 		assertEquals("Wrong composite location", location, composite.getLocation()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.STARTING, composite.getCompanionFramework().getState()); //$NON-NLS-1$
-		CompositeBundle companion = composite.getCompanionComposite();
-		assertNotNull("Companion is null", companion); //$NON-NLS-1$
-		assertEquals("Wrong companion location", location, companion.getLocation()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.STARTING, composite.getCompositeFramework().getState()); //$NON-NLS-1$
+		SurrogateBundle surrogate = composite.getSurrogateBundle();
+		assertNotNull("Surrogate is null", surrogate); //$NON-NLS-1$
+		assertEquals("Wrong surrogte location", location, surrogate.getLocation()); //$NON-NLS-1$
 		if (start)
 			startCompositeBundle(composite, false);
 		return composite;
@@ -126,7 +125,7 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 	}
 
 	void startCompositeBundle(CompositeBundle composite, boolean expectFailure) {
-		boolean childFrameworkActive = composite.getCompanionFramework().getState() == Bundle.ACTIVE;
+		boolean childFrameworkActive = composite.getCompositeFramework().getState() == Bundle.ACTIVE;
 		try {
 			composite.start();
 			if (expectFailure)
@@ -135,13 +134,13 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 			if (!expectFailure)
 				fail("Failed to start composite", e); //$NON-NLS-1$
 		}
-		Framework childFramework = composite.getCompanionFramework();
+		Framework childFramework = composite.getCompositeFramework();
 		int expectedState = expectFailure && !childFrameworkActive ? Bundle.STARTING : Bundle.ACTIVE;
 		assertEquals("Wrong state for SystemBundle", expectedState, childFramework.getState()); //$NON-NLS-1$
 	}
 
 	void stopCompositeBundle(CompositeBundle composite) {
-		Framework childFramework = composite.getCompanionFramework();
+		Framework childFramework = composite.getCompositeFramework();
 		try {
 			composite.stop();
 		} catch (BundleException e) {
@@ -160,7 +159,7 @@ public class AbstractCompositeTests extends AbstractBundleTests {
 	}
 
 	void uninstallCompositeBundle(CompositeBundle composite) {
-		Framework childFramework = composite.getCompositeType() == CompositeBundle.TYPE_PARENT ? composite.getCompanionComposite().getCompanionFramework() : composite.getCompanionFramework();
+		Framework childFramework = composite.getCompositeFramework();
 		try {
 			composite.uninstall();
 		} catch (BundleException e) {

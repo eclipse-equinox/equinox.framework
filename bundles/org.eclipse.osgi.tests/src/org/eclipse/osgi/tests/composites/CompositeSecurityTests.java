@@ -104,10 +104,10 @@ public class CompositeSecurityTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.IMPORT_PACKAGE, "org.eclipse.osgi.tests.bundles"); //$NON-NLS-1$
 		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
 		CompositeBundle composite = createCompositeBundle(linkBundleFactory, "testLinkSecurity02", null, linkManifest, true, true); //$NON-NLS-1$
-		Bundle linkD = installIntoChild(composite.getCompanionFramework(), "test.link.d"); //$NON-NLS-1$
+		Bundle linkD = installIntoChild(composite.getCompositeFramework(), "test.link.d"); //$NON-NLS-1$
 
 		ConditionInfo[] conditions = new ConditionInfo[] {new ConditionInfo(BundleLocationCondition.class.getName(), new String[] {linkD.getLocation()})};
-		ConditionalPermissionAdmin childCondAdmin = getCondPermAdmin(composite.getCompanionFramework().getBundleContext());
+		ConditionalPermissionAdmin childCondAdmin = getCondPermAdmin(composite.getCompositeFramework().getBundleContext());
 		childCondAdmin.addConditionalPermissionInfo(conditions, new PermissionInfo[] {});
 		try {
 			linkD.start();
@@ -177,12 +177,12 @@ public class CompositeSecurityTests extends AbstractCompositeTests {
 		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
 		CompositeBundle composite = createCompositeBundle(linkBundleFactory, "testLinkSecurity03", null, linkManifest, true, true); //$NON-NLS-1$
 
-		Bundle conditionBundle = installIntoChild(composite.getCompanionFramework(), "test.link.postponed"); //$NON-NLS-1$
-		assertTrue("Condition bundle not resolved", getPackageAdmin(composite.getCompanionFramework()).resolveBundles(new Bundle[] {conditionBundle}));
-		Bundle linkD = installIntoChild(composite.getCompanionFramework(), "test.link.d"); //$NON-NLS-1$
+		Bundle conditionBundle = installIntoChild(composite.getCompositeFramework(), "test.link.postponed"); //$NON-NLS-1$
+		assertTrue("Condition bundle not resolved", getPackageAdmin(composite.getCompositeFramework()).resolveBundles(new Bundle[] {conditionBundle}));
+		Bundle linkD = installIntoChild(composite.getCompositeFramework(), "test.link.d"); //$NON-NLS-1$
 
 		ConditionInfo[] conditions = new ConditionInfo[] {new ConditionInfo(BundleLocationCondition.class.getName(), new String[] {linkD.getLocation()})};
-		ConditionalPermissionAdmin childCondAdmin = getCondPermAdmin(composite.getCompanionFramework().getBundleContext());
+		ConditionalPermissionAdmin childCondAdmin = getCondPermAdmin(composite.getCompositeFramework().getBundleContext());
 		childCondAdmin.addConditionalPermissionInfo(conditions, new PermissionInfo[] {});
 		try {
 			linkD.start();

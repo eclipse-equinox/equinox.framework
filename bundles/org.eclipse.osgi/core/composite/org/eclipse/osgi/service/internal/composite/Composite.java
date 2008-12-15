@@ -3,7 +3,6 @@ package org.eclipse.osgi.service.internal.composite;
 import org.eclipse.osgi.framework.adaptor.ClassLoaderDelegate;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.BundleException;
-import org.osgi.service.framework.CompositeBundle;
 
 /**
  * An internal interface only used by the composite implementation
@@ -22,7 +21,7 @@ public interface Composite {
 
 	public ClassLoaderDelegate getDelegate();
 
-	public void started(CompositeBundle parent);
+	public void started(Composite compositeBundle);
 
-	public void stopped(CompositeBundle parent);
+	public void stopped(Composite compositeBundle);
 }

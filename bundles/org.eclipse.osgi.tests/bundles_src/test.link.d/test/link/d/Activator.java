@@ -34,12 +34,12 @@ public class Activator implements BundleActivator {
 		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT, "(objectClass=org.eclipse.osgi.tests.bundles.BundleInstaller)"); //$NON-NLS-1$
 		CompositeBundle childComposite = null;
 		try {
-			childComposite = factory.newChildCompositeBundle(null, "childComposite", linkManifest); //$NON-NLS-1$
+			childComposite = factory.installCompositeBundle(null, "childComposite", linkManifest); //$NON-NLS-1$
 		} catch (SecurityException e) {
 			throw new Exception("Missing AllPermissions"); //$NON-NLS-1$
 		}
 
-		Bundle test = childComposite.getCompanionFramework().getBundleContext().installBundle(installer.getBundleLocation("test")); //$NON-NLS-1$
+		Bundle test = childComposite.getCompositeFramework().getBundleContext().installBundle(installer.getBundleLocation("test")); //$NON-NLS-1$
 		if (test == null)
 			throw new Exception("Install of test bundle is null"); //$NON-NLS-1$
 

@@ -13,28 +13,25 @@ package org.eclipse.osgi.internal.composite;
 import java.util.*;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
-import org.osgi.service.framework.CompositeBundle;
-import org.osgi.service.framework.CompositeBundleFactory;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 class CompositeServiceTracker implements ServiceTrackerCustomizer {
-
-	final CompositeBundle composite;
+	final BundleContext sourceContext;
+	final BundleContext targetContext;
 	final ServiceTracker[] trackers;
 	final String[] filters;
 	/* @GuardedBy("serviceComposites") */
 	final HashMap serviceComposites = new HashMap();
 
-	public CompositeServiceTracker(CompositeBundle composite) {
-		this.composite = composite;
-		String servicesHeader = (String) (composite.getCompositeType() == CompositeBundle.TYPE_PARENT ? composite.getHeaders("").get(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_EXPORT) : composite.getHeaders("").get(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_IMPORT)); //$NON-NLS-1$//$NON-NLS-2$
-		filters = ManifestElement.getArrayFromList(servicesHeader, ","); //$NON-NLS-1$
+	public CompositeServiceTracker(BundleContext sourceContext, BundleContext targetContext, String serviceFilters) {
+		this.sourceContext = sourceContext;
+		this.targetContext = targetContext;
+		filters = ManifestElement.getArrayFromList(serviceFilters, ","); //$NON-NLS-1$
 		trackers = new ServiceTracker[filters.length];
 	}
 
 	synchronized void open() {
-		BundleContext sourceContext = composite.getBundleContext();
 		for (int i = 0; i < trackers.length; i++) {
 			try {
 				trackers[i] = new ServiceTracker(sourceContext, sourceContext.createFilter(filters[i]), this);
@@ -151,7 +148,7 @@ class CompositeServiceTracker implements ServiceTrackerCustomizer {
 
 		void register() {
 			Dictionary props = getServiceProperties();
-			registration = composite.getCompanionComposite().getBundleContext().registerService((String[]) props.get(Constants.OBJECTCLASS), this, props);
+			registration = targetContext.registerService((String[]) props.get(Constants.OBJECTCLASS), this, props);
 		}
 
 		void unregister() {
@@ -170,7 +167,7 @@ class CompositeServiceTracker implements ServiceTrackerCustomizer {
 
 		public synchronized Object getService(Bundle bundle, ServiceRegistration reg) {
 			if (service == null)
-				service = composite.getBundleContext().getService(reference);
+				service = sourceContext.getService(reference);
 			return service;
 		}
 

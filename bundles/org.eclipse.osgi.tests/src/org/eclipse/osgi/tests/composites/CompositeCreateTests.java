@@ -30,88 +30,88 @@ public class CompositeCreateTests extends AbstractCompositeTests {
 
 	public void testCreateComposite02() {
 		CompositeBundle compositeLevel0 = createCompositeBundle(linkBundleFactory, "compositeLevel0", null, null, true, false); //$NON-NLS-1$
-		CompositeBundleFactory factory = getFactory(compositeLevel0.getCompanionFramework());
+		CompositeBundleFactory factory = getFactory(compositeLevel0.getCompositeFramework());
 		CompositeBundle compositeLevel1_1 = createCompositeBundle(factory, "compositeLevel1_1", null, null, true, false); //$NON-NLS-1$
 		CompositeBundle compositeLevel1_2 = createCompositeBundle(factory, "compositeLevel1_2", null, null, true, false); //$NON-NLS-1$
 		long idLevel1_1 = compositeLevel1_1.getBundleId();
 		long idLevel1_2 = compositeLevel1_2.getBundleId();
 
 		stopCompositeBundle(compositeLevel0);
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_1.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_2.getCompanionFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_1.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_2.getCompositeFramework().getState()); //$NON-NLS-1$
 
 		startCompositeBundle(compositeLevel0, false);
 		// need to reget the bundles from child frameworks that were restarted
-		compositeLevel1_1 = (CompositeBundle) compositeLevel0.getCompanionFramework().getBundleContext().getBundle(idLevel1_1);
-		compositeLevel1_2 = (CompositeBundle) compositeLevel0.getCompanionFramework().getBundleContext().getBundle(idLevel1_2);
+		compositeLevel1_1 = (CompositeBundle) compositeLevel0.getCompositeFramework().getBundleContext().getBundle(idLevel1_1);
+		compositeLevel1_2 = (CompositeBundle) compositeLevel0.getCompositeFramework().getBundleContext().getBundle(idLevel1_2);
 
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel1_1.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel1_2.getCompanionFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel1_1.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel1_2.getCompositeFramework().getState()); //$NON-NLS-1$
 
 		uninstallCompositeBundle(compositeLevel0);
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_1.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_1.getCompanionFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_1.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_1.getCompositeFramework().getState()); //$NON-NLS-1$
 	}
 
 	public void testCreateComposite03() {
 		CompositeBundle compositeLevel0 = createCompositeBundle(linkBundleFactory, "compositeLevel0", null, null, true, false); //$NON-NLS-1$
-		CompositeBundleFactory factoryLevel1 = getFactory(compositeLevel0.getCompanionFramework());
+		CompositeBundleFactory factoryLevel1 = getFactory(compositeLevel0.getCompositeFramework());
 		// create two level 1 composites
 		CompositeBundle compositeLevel1_1 = createCompositeBundle(factoryLevel1, "compositeLevel1_1", null, null, true, false); //$NON-NLS-1$
 		CompositeBundle compositeLevel1_2 = createCompositeBundle(factoryLevel1, "compositeLevel1_2", null, null, true, false); //$NON-NLS-1$
 
 		// create two level 2 composites under 1_1
-		CompositeBundleFactory factoryLevel2_1 = getFactory(compositeLevel1_1.getCompanionFramework());
+		CompositeBundleFactory factoryLevel2_1 = getFactory(compositeLevel1_1.getCompositeFramework());
 		CompositeBundle compositeLevel2_1 = createCompositeBundle(factoryLevel2_1, "compositeLevel2_1", null, null, true, false); //$NON-NLS-1$
 		CompositeBundle compositeLevel2_2 = createCompositeBundle(factoryLevel2_1, "compositeLevel2_2", null, null, true, false); //$NON-NLS-1$
 		long idLevel2_1 = compositeLevel2_1.getBundleId();
 		long idLevel2_2 = compositeLevel2_2.getBundleId();
 
 		// create two level 2 composites under 1_2
-		CompositeBundleFactory factoryLevel2_2 = getFactory(compositeLevel1_2.getCompanionFramework());
+		CompositeBundleFactory factoryLevel2_2 = getFactory(compositeLevel1_2.getCompositeFramework());
 		CompositeBundle compositeLevel2_3 = createCompositeBundle(factoryLevel2_2, "compositeLevel2_3", null, null, true, false); //$NON-NLS-1$
 		CompositeBundle compositeLevel2_4 = createCompositeBundle(factoryLevel2_2, "compositeLevel2_4", null, null, true, false); //$NON-NLS-1$
 		long idLevel2_3 = compositeLevel2_3.getBundleId();
 		long idLevel2_4 = compositeLevel2_4.getBundleId();
 
 		stopCompositeBundle(compositeLevel1_1);
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_1.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_2.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_3.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_4.getCompanionFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_1.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_2.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_3.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_4.getCompositeFramework().getState()); //$NON-NLS-1$
 
 		startCompositeBundle(compositeLevel1_1, false);
 		// need to reget the bundles from child frameworks that were restarted
-		compositeLevel2_1 = (CompositeBundle) compositeLevel1_1.getCompanionFramework().getBundleContext().getBundle(idLevel2_1);
-		compositeLevel2_2 = (CompositeBundle) compositeLevel1_1.getCompanionFramework().getBundleContext().getBundle(idLevel2_2);
+		compositeLevel2_1 = (CompositeBundle) compositeLevel1_1.getCompositeFramework().getBundleContext().getBundle(idLevel2_1);
+		compositeLevel2_2 = (CompositeBundle) compositeLevel1_1.getCompositeFramework().getBundleContext().getBundle(idLevel2_2);
 
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_1.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_2.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_3.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_4.getCompanionFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_1.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_2.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_3.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_4.getCompositeFramework().getState()); //$NON-NLS-1$
 
 		stopCompositeBundle(compositeLevel1_2);
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_1.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_2.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_3.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_4.getCompanionFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_1.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_2.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_3.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_4.getCompositeFramework().getState()); //$NON-NLS-1$
 
 		startCompositeBundle(compositeLevel1_2, false);
 		// need to reget the bundles from child frameworks that were restarted
-		compositeLevel2_3 = (CompositeBundle) compositeLevel1_2.getCompanionFramework().getBundleContext().getBundle(idLevel2_3);
-		compositeLevel2_4 = (CompositeBundle) compositeLevel1_2.getCompanionFramework().getBundleContext().getBundle(idLevel2_4);
+		compositeLevel2_3 = (CompositeBundle) compositeLevel1_2.getCompositeFramework().getBundleContext().getBundle(idLevel2_3);
+		compositeLevel2_4 = (CompositeBundle) compositeLevel1_2.getCompositeFramework().getBundleContext().getBundle(idLevel2_4);
 
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_1.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_2.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_3.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_4.getCompanionFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_1.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_2.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_3.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.ACTIVE, compositeLevel2_4.getCompositeFramework().getState()); //$NON-NLS-1$
 
 		uninstallCompositeBundle(compositeLevel0);
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_1.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_2.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_3.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_4.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_1.getCompanionFramework().getState()); //$NON-NLS-1$
-		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_2.getCompanionFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_1.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_2.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_3.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel2_4.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_1.getCompositeFramework().getState()); //$NON-NLS-1$
+		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, compositeLevel1_2.getCompositeFramework().getState()); //$NON-NLS-1$
 	}
 }

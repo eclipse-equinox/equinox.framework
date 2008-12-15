@@ -24,6 +24,7 @@ import org.eclipse.osgi.baseadaptor.loader.*;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.log.FrameworkLog;
 import org.eclipse.osgi.internal.module.*;
+import org.eclipse.osgi.service.internal.composite.Composite;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.*;
 import org.osgi.framework.launch.Framework;
@@ -89,7 +90,7 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 		return false;
 	}
 
-	public CompositeBundle newChildCompositeBundle(Map frameworkConfig, String location, Map compositeManifest) throws BundleException {
+	public CompositeBundle installCompositeBundle(Map frameworkConfig, String location, Map compositeManifest) throws BundleException {
 		SecurityManager sm = System.getSecurityManager();
 		if (sm != null)
 			sm.checkPermission(new AllPermission());
@@ -115,14 +116,14 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 			bundleFile = systemContext.getDataFile("composites/" + bsn + '_' + compositeID++); //$NON-NLS-1$
 		bundleFile.mkdirs();
 		// the composite bundles only consist of a manifest describing the packages they import and export
-		String manifest = CompositeHelper.getChildCompositeManifest(compositeManifest);
+		String manifest = CompositeHelper.getCompositeManifest(compositeManifest);
 		try {
 			CompositeHelper.writeManifest(bundleFile, manifest);
 			// store the framework config
 			Properties fwProps = new Properties();
 			if (frameworkConfig != null)
 				fwProps.putAll(frameworkConfig);
-			fwProps.store(new FileOutputStream(new File(bundleFile, EquinoxComposite.CHILD_CONFIGURATION)), null);
+			fwProps.store(new FileOutputStream(new File(bundleFile, CompositeImpl.COMPOSITE_CONFIGURATION)), null);
 			// return the reference location
 			return new URL("reference:" + bundleFile.toURL().toExternalForm()); //$NON-NLS-1$
 		} catch (IOException e) {
@@ -137,10 +138,8 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 			if (!(allBundles[i] instanceof CompositeBundle))
 				continue;
 			CompositeBundle composite = (CompositeBundle) allBundles[i];
-			if (composite.getCompositeType() == CompositeBundle.TYPE_PARENT)
-				continue;
 			try {
-				Framework child = composite.getCompanionFramework();
+				Framework child = composite.getCompositeFramework();
 				child.stop();
 				// need to wait for each child to stop
 				child.waitForStop(30000);
@@ -155,8 +154,8 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 	public CompositeResolveHelper getCompositeResolveHelper(BundleDescription bundle) {
 		// EquinoxComposite bundles implement the resolver helper
 		Bundle composite = systemContext.getBundle(bundle.getBundleId());
-		// If we found a composite bundle just return it
-		return (CompositeResolveHelper) ((!(composite instanceof CompositeBundle)) ? null : composite);
+		// If we found a resolver helper bundle; return it
+		return (CompositeResolveHelper) ((!(composite instanceof CompositeResolveHelper)) ? null : composite);
 	}
 
 	public boolean addClassPathEntry(ArrayList cpEntries, String cp, ClasspathManager hostmanager, BaseData sourcedata, ProtectionDomain sourcedomain) {
@@ -165,10 +164,11 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 	}
 
 	public BaseClassLoader createClassLoader(ClassLoader parent, ClassLoaderDelegate delegate, BundleProtectionDomain domain, BaseData data, String[] bundleclasspath) {
-		if ((data.getType() & (BundleData.TYPE_COMPOSITEBUNDLE_CHILD | BundleData.TYPE_COMPOSITEBUNDLE_PARENT)) == 0)
+		if ((data.getType() & (BundleData.TYPE_COMPOSITEBUNDLE | BundleData.TYPE_SURROGATEBUNDLE)) == 0)
 			return null;
-		// only create composite class loaders for bundles that are of type composite
-		return new CompositeClassLoader(parent, delegate, data);
+		// only create composite class loaders for bundles that are of type composite | surrogate
+		ClassLoaderDelegate companionDelegate = ((Composite) ((CompositeBase) data.getBundle()).getCompanionBundle()).getDelegate();
+		return new CompositeClassLoader(parent, delegate, companionDelegate, data);
 	}
 
 	public String findLibrary(BaseData data, String libName) {

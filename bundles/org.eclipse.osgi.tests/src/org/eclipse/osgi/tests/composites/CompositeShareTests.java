@@ -15,8 +15,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.eclipse.osgi.tests.OSGiTestsActivator;
 import org.osgi.framework.*;
-import org.osgi.service.framework.CompositeBundle;
-import org.osgi.service.framework.CompositeBundleFactory;
+import org.osgi.service.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class CompositeShareTests extends AbstractCompositeTests {
@@ -24,45 +23,30 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		return new TestSuite(CompositeShareTests.class);
 	}
 
-	public void testCompositeShare01a() {
+	public void testCompositeShare01() {
 		// simple test to create an empty composite bundle
 		// sharing one package from the parent
 		Map linkManifest = new HashMap();
-		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testCompositeShare01a"); //$NON-NLS-1$
+		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testCompositeShare01"); //$NON-NLS-1$
 		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
 		linkManifest.put(Constants.IMPORT_PACKAGE, "org.osgi.service.application"); //$NON-NLS-1$
-		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare01a", null, linkManifest, false, false); //$NON-NLS-1$
+		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare01", null, linkManifest, false, false); //$NON-NLS-1$
 		startCompositeBundle(compositeBundle, false);
-		CompositeBundle companion = compositeBundle.getCompanionComposite();
-		assertNotNull("Companion is null", companion); //$NON-NLS-1$
+		SurrogateBundle surrogate = compositeBundle.getSurrogateBundle();
+		assertNotNull("Surrogate is null", surrogate); //$NON-NLS-1$
 		try {
-			companion.loadClass("org.osgi.service.application.ApplicationDescriptor"); //$NON-NLS-1$
+			surrogate.loadClass("org.osgi.service.application.ApplicationDescriptor"); //$NON-NLS-1$
 		} catch (ClassNotFoundException e) {
 			fail("Unexpected class load exception", e); //$NON-NLS-1$
 		}
 		// make sure missing classes do not endlessly loop
 		try {
-			companion.loadClass("does.not.exist.Here"); //$NON-NLS-1$
+			surrogate.loadClass("does.not.exist.Here"); //$NON-NLS-1$
 			fail("Expected a loadClass exception"); //$NON-NLS-1$
 		} catch (ClassNotFoundException e) {
 			// expected
 		}
 		uninstallCompositeBundle(compositeBundle);
-	}
-
-	public void testCompositeShare01b() {
-		// simple test to create an empty composite bundle
-		// sharing one package from the parent
-		Map linkManifest = new HashMap();
-		linkManifest.put(Constants.BUNDLE_SYMBOLICNAME, "testCompositeShare01b"); //$NON-NLS-1$
-		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
-		linkManifest.put(Constants.IMPORT_PACKAGE, "org.osgi.service.application"); //$NON-NLS-1$
-		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare01a", null, linkManifest, false, false); //$NON-NLS-1$
-		startCompositeBundle(compositeBundle, false);
-		CompositeBundle companion = compositeBundle.getCompanionComposite();
-		assertNotNull("Companion is null", companion); //$NON-NLS-1$
-		uninstallCompositeBundle(companion);
-		assertEquals("Composite is not in the UNINSTALLED state", Bundle.UNINSTALLED, compositeBundle.getState()); //$NON-NLS-1$
 	}
 
 	public void testCompositeShare02() {
@@ -76,10 +60,10 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare02", null, linkManifest, false, false); //$NON-NLS-1$
 
 		startCompositeBundle(compositeBundle, true);
-		CompositeBundle companion = compositeBundle.getCompanionComposite();
-		assertNotNull("Companion is null", companion); //$NON-NLS-1$
+		SurrogateBundle surrogate = compositeBundle.getSurrogateBundle();
+		assertNotNull("Companion is null", surrogate); //$NON-NLS-1$
 		try {
-			companion.loadClass("org.osgi.service.application.ApplicationDescriptor"); //$NON-NLS-1$
+			surrogate.loadClass("org.osgi.service.application.ApplicationDescriptor"); //$NON-NLS-1$
 			fail("Expected a loadClass exception"); //$NON-NLS-1$
 		} catch (ClassNotFoundException e) {
 			// expected
@@ -94,7 +78,7 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
 		linkManifest.put(Constants.EXPORT_PACKAGE, "test.link.a; attr1=\"value1\"; uses:=\"org.osgi.framework, test.link.a.params\", test.link.a.params; attr2=\"value2\""); //$NON-NLS-1$
 		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare03", null, linkManifest, false, false); //$NON-NLS-1$
-		installIntoChild(compositeBundle.getCompanionFramework(), "test.link.a"); //$NON-NLS-1$
+		installIntoChild(compositeBundle.getCompositeFramework(), "test.link.a"); //$NON-NLS-1$
 
 		startCompositeBundle(compositeBundle, false);
 		try {
@@ -120,11 +104,11 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
 		linkManifest.put(Constants.EXPORT_PACKAGE, "test.link.a; attr1=\"bad value\"; uses:=\"org.osgi.framework, test.link.a.params\", test.link.a.params; attr2=\"bad value\""); //$NON-NLS-1$
 		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare04a", null, linkManifest, false, false); //$NON-NLS-1$
-		installIntoChild(compositeBundle.getCompanionFramework(), "test.link.a"); //$NON-NLS-1$
+		installIntoChild(compositeBundle.getCompositeFramework(), "test.link.a"); //$NON-NLS-1$
 		Bundle testClient = installIntoCurrent("test.link.a.client"); //$NON-NLS-1$
 
-		CompositeBundle companion = compositeBundle.getCompanionComposite();
-		assertNotNull("Companion is null", companion); //$NON-NLS-1$
+		SurrogateBundle surrogate = compositeBundle.getSurrogateBundle();
+		assertNotNull("Companion is null", surrogate); //$NON-NLS-1$
 		startCompositeBundle(compositeBundle, true);
 		try {
 			testClient.start();
@@ -175,11 +159,11 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
 		linkManifest.put(Constants.EXPORT_PACKAGE, "test.link.a; attr1=\"bad value\"; uses:=\"org.osgi.framework, test.link.a.params\", test.link.a.params; attr2=\"bad value\""); //$NON-NLS-1$
 		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare04b", null, linkManifest, false, false); //$NON-NLS-1$
-		installIntoChild(compositeBundle.getCompanionFramework(), "test.link.a"); //$NON-NLS-1$
+		installIntoChild(compositeBundle.getCompositeFramework(), "test.link.a"); //$NON-NLS-1$
 		Bundle testClient = installIntoCurrent("test.link.a.client"); //$NON-NLS-1$
 
-		CompositeBundle companion = compositeBundle.getCompanionComposite();
-		assertNotNull("Companion is null", companion); //$NON-NLS-1$
+		SurrogateBundle surrogate = compositeBundle.getSurrogateBundle();
+		assertNotNull("Surrogate is null", surrogate); //$NON-NLS-1$
 		startCompositeBundle(compositeBundle, true);
 		try {
 			testClient.start();
@@ -230,10 +214,10 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.IMPORT_PACKAGE, "test.link.a; attr1=\"bad value\", test.link.a.params;  attr2=\"bad value\""); //$NON-NLS-1$
 		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare03", null, linkManifest, false, false); //$NON-NLS-1$
 		installIntoCurrent("test.link.a"); //$NON-NLS-1$
-		Bundle testClient = installIntoChild(compositeBundle.getCompanionFramework(), "test.link.a.client"); //$NON-NLS-1$
+		Bundle testClient = installIntoChild(compositeBundle.getCompositeFramework(), "test.link.a.client"); //$NON-NLS-1$
 
-		CompositeBundle companion = compositeBundle.getCompanionComposite();
-		assertNotNull("Companion is null", companion); //$NON-NLS-1$
+		SurrogateBundle surrogate = compositeBundle.getSurrogateBundle();
+		assertNotNull("Surrogate is null", surrogate); //$NON-NLS-1$
 		startCompositeBundle(compositeBundle, true);
 		try {
 			testClient.start();
@@ -286,11 +270,11 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.IMPORT_PACKAGE, "org.osgi.service.application, org.osgi.framework"); //$NON-NLS-1$
 		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare06", null, linkManifest, false, false); //$NON-NLS-1$
 		startCompositeBundle(compositeBundle, false);
-		CompositeBundle companion = compositeBundle.getCompanionComposite();
-		assertNotNull("Companion is null", companion); //$NON-NLS-1$
+		SurrogateBundle surrogate = compositeBundle.getSurrogateBundle();
+		assertNotNull("Surrogate is null", surrogate); //$NON-NLS-1$
 		try {
-			companion.loadClass("org.osgi.service.application.ApplicationDescriptor"); //$NON-NLS-1$
-			Class bundleClass = companion.loadClass("org.osgi.framework.Bundle"); //$NON-NLS-1$
+			surrogate.loadClass("org.osgi.service.application.ApplicationDescriptor"); //$NON-NLS-1$
+			Class bundleClass = surrogate.loadClass("org.osgi.framework.Bundle"); //$NON-NLS-1$
 			assertEquals("Bundle classes are not the same", Bundle.class, bundleClass); //$NON-NLS-1$
 		} catch (ClassNotFoundException e) {
 			fail("Unexpected class load exception", e); //$NON-NLS-1$
@@ -312,8 +296,8 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.EXPORT_PACKAGE, "test.link.b; attr1=\"value1\"; uses:=\"org.osgi.framework, test.link.b.params\", test.link.b.params; attr2=\"value2\""); //$NON-NLS-1$
 		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare07a", null, linkManifest, false, false); //$NON-NLS-1$
 		installIntoCurrent("test.link.a"); //$NON-NLS-1$
-		Bundle testClientA = installIntoChild(compositeBundle.getCompanionFramework(), "test.link.a.client"); //$NON-NLS-1$
-		installIntoChild(compositeBundle.getCompanionFramework(), "test.link.b"); //$NON-NLS-1$
+		Bundle testClientA = installIntoChild(compositeBundle.getCompositeFramework(), "test.link.a.client"); //$NON-NLS-1$
+		installIntoChild(compositeBundle.getCompositeFramework(), "test.link.b"); //$NON-NLS-1$
 		Bundle testClientB = installIntoCurrent("test.link.b.client"); //$NON-NLS-1$
 
 		startCompositeBundle(compositeBundle, false);
@@ -387,8 +371,8 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		linkManifest.put(Constants.EXPORT_PACKAGE, "test.link.b; attr1=\"value1\"; uses:=\"org.osgi.framework, test.link.b.params\", test.link.b.params; attr2=\"value2\""); //$NON-NLS-1$
 		CompositeBundle compositeBundle = createCompositeBundle(linkBundleFactory, "testCompositeShare07b", null, linkManifest, false, false); //$NON-NLS-1$
 		installIntoCurrent("test.link.a"); //$NON-NLS-1$
-		Bundle testClientA = installIntoChild(compositeBundle.getCompanionFramework(), "test.link.a.client"); //$NON-NLS-1$
-		installIntoChild(compositeBundle.getCompanionFramework(), "test.link.b"); //$NON-NLS-1$
+		Bundle testClientA = installIntoChild(compositeBundle.getCompositeFramework(), "test.link.a.client"); //$NON-NLS-1$
+		installIntoChild(compositeBundle.getCompositeFramework(), "test.link.b"); //$NON-NLS-1$
 		Bundle testClientB = installIntoCurrent("test.link.b.client"); //$NON-NLS-1$
 
 		startCompositeBundle(compositeBundle, false);
@@ -455,10 +439,10 @@ public class CompositeShareTests extends AbstractCompositeTests {
 	public void testCompositeShare08() {
 		// Create a child framework to install composites into to test persistence
 		CompositeBundle compositeLevel0 = createCompositeBundle(linkBundleFactory, "testCompositeShare08LV0", null, null, true, false); //$NON-NLS-1$
-		CompositeBundleFactory factoryLevel1 = getFactory(compositeLevel0.getCompanionFramework());
+		CompositeBundleFactory factoryLevel1 = getFactory(compositeLevel0.getCompositeFramework());
 		// create a level 1 composites
 		CompositeBundle compositeLevel1 = createCompositeBundle(factoryLevel1, "testCompositeShare08LV1", null, null, true, false); //$NON-NLS-1$
-		CompositeBundleFactory factoryLevel2 = getFactory(compositeLevel1.getCompanionFramework());
+		CompositeBundleFactory factoryLevel2 = getFactory(compositeLevel1.getCompositeFramework());
 		long level1ID = compositeLevel1.getBundleId();
 
 		// test two way sharing
@@ -474,11 +458,11 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		CompositeBundle compositeLevel2 = createCompositeBundle(factoryLevel2, "testCompositeShare08LV2", null, linkManifest, false, false); //$NON-NLS-1$
 		long level2ID = compositeLevel2.getBundleId();
 
-		installIntoChild(compositeLevel1.getCompanionFramework(), "test.link.a"); //$NON-NLS-1$
-		Bundle testClientA = installIntoChild(compositeLevel2.getCompanionFramework(), "test.link.a.client"); //$NON-NLS-1$
+		installIntoChild(compositeLevel1.getCompositeFramework(), "test.link.a"); //$NON-NLS-1$
+		Bundle testClientA = installIntoChild(compositeLevel2.getCompositeFramework(), "test.link.a.client"); //$NON-NLS-1$
 		long clientAID = testClientA.getBundleId();
-		installIntoChild(compositeLevel2.getCompanionFramework(), "test.link.b"); //$NON-NLS-1$
-		Bundle testClientB = installIntoChild(compositeLevel1.getCompanionFramework(), "test.link.b.client"); //$NON-NLS-1$
+		installIntoChild(compositeLevel2.getCompositeFramework(), "test.link.b"); //$NON-NLS-1$
+		Bundle testClientB = installIntoChild(compositeLevel1.getCompositeFramework(), "test.link.b.client"); //$NON-NLS-1$
 		long clientBID = testClientB.getBundleId();
 
 		startCompositeBundle(compositeLevel2, false);
@@ -505,10 +489,10 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		startCompositeBundle(compositeLevel0, false);
 
 		// get reified level 1 and 2 composites and client A and B bundles 
-		compositeLevel1 = (CompositeBundle) compositeLevel0.getCompanionFramework().getBundleContext().getBundle(level1ID);
-		compositeLevel2 = (CompositeBundle) compositeLevel1.getCompanionFramework().getBundleContext().getBundle(level2ID);
-		testClientA = compositeLevel2.getCompanionFramework().getBundleContext().getBundle(clientAID);
-		testClientB = compositeLevel1.getCompanionFramework().getBundleContext().getBundle(clientBID);
+		compositeLevel1 = (CompositeBundle) compositeLevel0.getCompositeFramework().getBundleContext().getBundle(level1ID);
+		compositeLevel2 = (CompositeBundle) compositeLevel1.getCompositeFramework().getBundleContext().getBundle(level2ID);
+		testClientA = compositeLevel2.getCompositeFramework().getBundleContext().getBundle(clientAID);
+		testClientB = compositeLevel1.getCompositeFramework().getBundleContext().getBundle(clientBID);
 
 		// check the state of bundles installed into composite frameworks
 		assertEquals("Wrong state for client A", Bundle.ACTIVE, testClientA.getState()); //$NON-NLS-1$
@@ -536,11 +520,11 @@ public class CompositeShareTests extends AbstractCompositeTests {
 
 		startCompositeBundle(composite, false);
 
-		ServiceReference[] targetServices = composite.getCompanionComposite().getRegisteredServices();
+		ServiceReference[] targetServices = composite.getSurrogateBundle().getRegisteredServices();
 		assertNotNull("No target services found", targetServices); //$NON-NLS-1$
 		assertEquals("Wrong number of target services", 3, targetServices.length); //$NON-NLS-1$
 
-		Bundle cClient = installIntoChild(composite.getCompanionFramework(), "test.link.c.client"); //$NON-NLS-1$
+		Bundle cClient = installIntoChild(composite.getCompositeFramework(), "test.link.c.client"); //$NON-NLS-1$
 
 		try {
 			cClient.start();
@@ -596,7 +580,7 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		linkManifest.put(CompositeBundleFactory.COMPOSITE_SERVICE_FILTER_EXPORT, "(objectClass=test.link.e.service1.Service1),(objectClass=test.link.e.service2.Service2),(objectClass=test.link.e.service3.Service3)"); //$NON-NLS-1$
 		CompositeBundle composite = createCompositeBundle(linkBundleFactory, "testCompositeShare09b", null, linkManifest, false, false); //$NON-NLS-1$
 
-		Bundle eService = installIntoChild(composite.getCompanionFramework(), "test.link.e"); //$NON-NLS-1$
+		Bundle eService = installIntoChild(composite.getCompositeFramework(), "test.link.e"); //$NON-NLS-1$
 		startCompositeBundle(composite, false);
 
 		try {
@@ -605,7 +589,7 @@ public class CompositeShareTests extends AbstractCompositeTests {
 			fail("Failed to start test.link.e", e); //$NON-NLS-1$
 		}
 
-		ServiceReference[] childServices = composite.getCompanionComposite().getRegisteredServices();
+		ServiceReference[] childServices = composite.getSurrogateBundle().getRegisteredServices();
 		assertNotNull("No child services found", childServices); //$NON-NLS-1$
 		assertEquals("Wrong number of child services", 3, childServices.length); //$NON-NLS-1$
 
@@ -613,7 +597,7 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		assertNotNull("No parent services found", parentServices); //$NON-NLS-1$
 		assertEquals("Wrong number of parent services", 3, parentServices.length); //$NON-NLS-1$
 
-		Bundle cClient = installIntoChild(composite.getCompanionFramework(), "test.link.c.client"); //$NON-NLS-1$
+		Bundle cClient = installIntoChild(composite.getCompositeFramework(), "test.link.c.client"); //$NON-NLS-1$
 		Bundle eClient = installIntoCurrent("test.link.e.client"); //$NON-NLS-1$
 
 		try {
@@ -702,7 +686,7 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		// install listener to test with before registering the service so we can get the REGISTERED event
 		TestServiceListener resultListener = new TestServiceListener();
 		try {
-			composite.getCompanionFramework().getBundleContext().addServiceListener(resultListener, "(&" + filter1 + filter2 + filter3 + ")"); //$NON-NLS-1$//$NON-NLS-2$
+			composite.getCompositeFramework().getBundleContext().addServiceListener(resultListener, "(&" + filter1 + filter2 + filter3 + ")"); //$NON-NLS-1$//$NON-NLS-2$
 		} catch (InvalidSyntaxException e) {
 			fail("failed to add listener", e); //$NON-NLS-1$
 		}
@@ -714,7 +698,7 @@ public class CompositeShareTests extends AbstractCompositeTests {
 			int[] results = resultListener.getResults();
 			assertEquals("Wrong listener results", new int[] {1, 0, 0, 0}, results); //$NON-NLS-1$
 
-			ServiceReference[] targetServices = composite.getCompanionComposite().getRegisteredServices();
+			ServiceReference[] targetServices = composite.getSurrogateBundle().getRegisteredServices();
 			assertNotNull("No target services found", targetServices); //$NON-NLS-1$
 			assertEquals("Wrong number of target services", 1, targetServices.length); //$NON-NLS-1$
 
@@ -755,7 +739,7 @@ public class CompositeShareTests extends AbstractCompositeTests {
 			assertEquals("Wrong listener results", new int[] {1, 2, 1, 1}, results); //$NON-NLS-1$
 
 		} finally {
-			composite.getCompanionFramework().getBundleContext().removeServiceListener(resultListener);
+			composite.getCompositeFramework().getBundleContext().removeServiceListener(resultListener);
 			if (registration != null)
 				registration.unregister();
 		}
@@ -786,7 +770,7 @@ public class CompositeShareTests extends AbstractCompositeTests {
 		ServiceTracker tracker = null;
 		TestTrackerCustomizer resultListener = new TestTrackerCustomizer();
 		try {
-			tracker = new ServiceTracker(composite.getCompanionFramework().getBundleContext(), composite.getCompanionFramework().getBundleContext().createFilter("(&" + filter1 + filter2 + filter3 + ")"), resultListener); //$NON-NLS-1$ //$NON-NLS-2$
+			tracker = new ServiceTracker(composite.getCompositeFramework().getBundleContext(), composite.getCompositeFramework().getBundleContext().createFilter("(&" + filter1 + filter2 + filter3 + ")"), resultListener); //$NON-NLS-1$ //$NON-NLS-2$
 			tracker.open();
 		} catch (InvalidSyntaxException e) {
 			fail("failed to add listener", e); //$NON-NLS-1$
@@ -799,7 +783,7 @@ public class CompositeShareTests extends AbstractCompositeTests {
 			int[] results = resultListener.getResults();
 			assertEquals("Wrong listener results", new int[] {1, 0, 0}, results); //$NON-NLS-1$
 
-			ServiceReference[] targetServices = composite.getCompanionComposite().getRegisteredServices();
+			ServiceReference[] targetServices = composite.getSurrogateBundle().getRegisteredServices();
 			assertNotNull("No target services found", targetServices); //$NON-NLS-1$
 			assertEquals("Wrong number of target services", 1, targetServices.length); //$NON-NLS-1$
 

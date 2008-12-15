@@ -29,52 +29,52 @@ public class CompositeHelper {
 	private static final Object EQUALS_QUOTE = "=\""; //$NON-NLS-1$
 	private static final String[] INVALID_COMPOSITE_HEADERS = new String[] {Constants.DYNAMICIMPORT_PACKAGE, Constants.FRAGMENT_HOST, Constants.REQUIRE_BUNDLE, Constants.BUNDLE_NATIVECODE, Constants.BUNDLE_CLASSPATH, Constants.BUNDLE_ACTIVATOR, Constants.BUNDLE_LOCALIZATION, Constants.BUNDLE_ACTIVATIONPOLICY};
 
-	static String getChildCompositeManifest(Map childManifest) {
+	static String getCompositeManifest(Map compositeManifest) {
 		// get the common headers Bundle-ManifestVersion, Bundle-SymbolicName and Bundle-Version
 		StringBuffer manifest = new StringBuffer();
 		// get the manifest version from the map
-		String manifestVersion = (String) childManifest.remove(Constants.BUNDLE_MANIFESTVERSION);
+		String manifestVersion = (String) compositeManifest.remove(Constants.BUNDLE_MANIFESTVERSION);
 		// here we assume the validation got the correct version for us
 		manifest.append(Constants.BUNDLE_MANIFESTVERSION).append(HEADER_SEPARATOR).append(manifestVersion).append('\n');
 		// Ignore the Equinox composite bundle header
-		childManifest.remove(BaseStorageHook.COMPOSITE_HEADER);
-		manifest.append(BaseStorageHook.COMPOSITE_HEADER).append(HEADER_SEPARATOR).append(BaseStorageHook.COMPOSITE_BUNDLE_CHILD).append('\n');
-		for (Iterator entries = childManifest.entrySet().iterator(); entries.hasNext();) {
+		compositeManifest.remove(BaseStorageHook.COMPOSITE_HEADER);
+		manifest.append(BaseStorageHook.COMPOSITE_HEADER).append(HEADER_SEPARATOR).append(BaseStorageHook.COMPOSITE_BUNDLE).append('\n');
+		for (Iterator entries = compositeManifest.entrySet().iterator(); entries.hasNext();) {
 			Map.Entry entry = (Entry) entries.next();
 			manifest.append(entry.getKey()).append(HEADER_SEPARATOR).append(entry.getValue()).append('\n');
 		}
 		return manifest.toString();
 	}
 
-	static String getParentCompositeManifest(Dictionary childManifest, BundleDescription child, ExportPackageDescription[] matchingExports) throws BundleException {
+	static String getSurrogateManifest(Dictionary compositeManifest, BundleDescription compositeDesc, ExportPackageDescription[] matchingExports) throws BundleException {
 		// get the common headers Bundle-ManifestVersion, Bundle-SymbolicName and Bundle-Version
 		StringBuffer manifest = new StringBuffer();
 		// Ignore the manifest version from the map
 		// always use bundle manifest version 2
 		manifest.append(Constants.BUNDLE_MANIFESTVERSION).append(": 2\n"); //$NON-NLS-1$
 		// Ignore the Equinox composite bundle header
-		manifest.append(BaseStorageHook.COMPOSITE_HEADER).append(HEADER_SEPARATOR).append(BaseStorageHook.COMPOSITE_BUNDLE_PARENT).append('\n');
+		manifest.append(BaseStorageHook.COMPOSITE_HEADER).append(HEADER_SEPARATOR).append(BaseStorageHook.SURROGATE_BUNDLE).append('\n');
 
-		if (child != null && matchingExports != null) {
-			// convert the exports from the child composite into imports
-			addImports(manifest, child, matchingExports);
+		if (compositeDesc != null && matchingExports != null) {
+			// convert the exports from the composite into imports
+			addImports(manifest, compositeDesc, matchingExports);
 
-			// convert the matchingExports from the child composite into exports
+			// convert the matchingExports from the composite into exports
 			addExports(manifest, matchingExports);
 		}
 
 		// add the rest
-		for (Enumeration keys = childManifest.keys(); keys.hasMoreElements();) {
+		for (Enumeration keys = compositeManifest.keys(); keys.hasMoreElements();) {
 			Object header = keys.nextElement();
 			if (Constants.BUNDLE_MANIFESTVERSION.equals(header) || BaseStorageHook.COMPOSITE_HEADER.equals(header) || Constants.IMPORT_PACKAGE.equals(header) || Constants.EXPORT_PACKAGE.equals(header))
 				continue;
-			manifest.append(header).append(HEADER_SEPARATOR).append(childManifest.get(header)).append('\n');
+			manifest.append(header).append(HEADER_SEPARATOR).append(compositeManifest.get(header)).append('\n');
 		}
 		return manifest.toString();
 	}
 
-	private static void addImports(StringBuffer manifest, BundleDescription child, ExportPackageDescription[] matchingExports) {
-		ExportPackageDescription[] exports = child.getExportPackages();
+	private static void addImports(StringBuffer manifest, BundleDescription compositeDesc, ExportPackageDescription[] matchingExports) {
+		ExportPackageDescription[] exports = compositeDesc.getExportPackages();
 		List systemExports = getSystemExports(matchingExports);
 		if (exports.length == 0 && systemExports.size() == 0)
 			return;
@@ -171,17 +171,17 @@ public class CompositeHelper {
 		}
 	}
 
-	static void setDisabled(boolean disable, Bundle companion, BundleContext companionContext) {
-		ServiceReference ref = companionContext.getServiceReference(PlatformAdmin.class.getName());
-		PlatformAdmin pa = (PlatformAdmin) (ref == null ? null : companionContext.getService(ref));
+	static void setDisabled(boolean disable, Bundle bundle, BundleContext systemContext) {
+		ServiceReference ref = systemContext.getServiceReference(PlatformAdmin.class.getName());
+		PlatformAdmin pa = (PlatformAdmin) (ref == null ? null : systemContext.getService(ref));
 		if (pa == null)
 			throw new RuntimeException("No Platform Admin service is available.");
 		try {
 			State state = pa.getState(false);
-			BundleDescription desc = state.getBundle(companion.getBundleId());
+			BundleDescription desc = state.getBundle(bundle.getBundleId());
 			setDisabled(disable, desc);
 		} finally {
-			companionContext.ungetService(ref);
+			systemContext.ungetService(ref);
 		}
 	}
 
@@ -209,8 +209,8 @@ public class CompositeHelper {
 		}
 	}
 
-	static void updateChildManifest(BundleData childData, String manifest) throws IOException {
-		File baseFile = ((BaseData) childData).getBundleFile().getBaseFile();
+	static void updateCompositeManifest(BundleData compositeData, String manifest) throws IOException {
+		File baseFile = ((BaseData) compositeData).getBundleFile().getBaseFile();
 		if (!baseFile.isDirectory())
 			throw new RuntimeException("Base bundle file must be a directory");
 		writeManifest(baseFile, manifest);

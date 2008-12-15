@@ -19,7 +19,8 @@ import java.util.*;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.util.KeyedElement;
-import org.eclipse.osgi.internal.composite.EquinoxComposite;
+import org.eclipse.osgi.internal.composite.CompositeImpl;
+import org.eclipse.osgi.internal.composite.SurrogateImpl;
 import org.eclipse.osgi.internal.loader.BundleLoader;
 import org.eclipse.osgi.internal.permadmin.EquinoxProtectionDomain;
 import org.eclipse.osgi.internal.permadmin.EquinoxSecurityManager;
@@ -62,8 +63,10 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		AbstractBundle result;
 		if ((bundledata.getType() & BundleData.TYPE_FRAGMENT) > 0)
 			result = new BundleFragment(bundledata, framework);
-		else if ((bundledata.getType() & (BundleData.TYPE_COMPOSITEBUNDLE_CHILD | BundleData.TYPE_COMPOSITEBUNDLE_PARENT)) > 0)
-			result = new EquinoxComposite(bundledata, framework);
+		else if ((bundledata.getType() & BundleData.TYPE_COMPOSITEBUNDLE) > 0)
+			result = new CompositeImpl(bundledata, framework);
+		else if ((bundledata.getType() & BundleData.TYPE_SURROGATEBUNDLE) > 0)
+			result = new SurrogateImpl(bundledata, framework);
 		else
 			result = new BundleHost(bundledata, framework);
 		if (setBundle)
