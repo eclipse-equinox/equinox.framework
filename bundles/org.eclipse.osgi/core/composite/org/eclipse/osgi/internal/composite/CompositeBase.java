@@ -7,14 +7,14 @@ import org.eclipse.osgi.framework.adaptor.ClassLoaderDelegate;
 import org.eclipse.osgi.framework.internal.core.BundleHost;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.internal.module.CompositeResolveHelper;
-import org.eclipse.osgi.service.internal.composite.Composite;
+import org.eclipse.osgi.service.internal.composite.CompositeModule;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 import org.osgi.service.framework.CompositeBundle;
 
-public abstract class CompositeBase extends BundleHost implements CompositeResolveHelper, Composite {
+public abstract class CompositeBase extends BundleHost implements CompositeResolveHelper, CompositeModule {
 	protected static String PROP_COMPOSITE = "org.eclipse.equinox.Composite"; //$NON-NLS-1$
 	protected static String PROP_PARENTFRAMEWORK = "org.eclipse.equinox.parentFramework"; //$NON-NLS-1$
 
@@ -61,11 +61,11 @@ public abstract class CompositeBase extends BundleHost implements CompositeResol
 		return framework.getPackageAdmin().resolveBundles(new Bundle[] {this});
 	}
 
-	public void started(Composite surrogate) {
+	public void started(CompositeModule surrogate) {
 		// nothing
 	}
 
-	public void stopped(Composite surrogate) {
+	public void stopped(CompositeModule surrogate) {
 		// nothing
 	}
 

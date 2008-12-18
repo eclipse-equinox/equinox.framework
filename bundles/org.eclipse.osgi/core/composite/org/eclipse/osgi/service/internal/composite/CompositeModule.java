@@ -10,7 +10,7 @@ import org.osgi.framework.BundleException;
  * @noextend This interface is not intended to be extended by clients.
  * @noimplement This interface is not intended to be implemented by clients.
  */
-public interface Composite {
+public interface CompositeModule {
 	public void updateContent() throws BundleException;
 
 	public void refreshContent(boolean synchronously);
@@ -21,7 +21,7 @@ public interface Composite {
 
 	public ClassLoaderDelegate getDelegate();
 
-	public void started(Composite compositeBundle);
+	public void started(CompositeModule compositeBundle);
 
-	public void stopped(Composite compositeBundle);
+	public void stopped(CompositeModule compositeBundle);
 }

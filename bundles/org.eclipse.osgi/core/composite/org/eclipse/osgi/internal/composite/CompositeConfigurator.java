@@ -24,7 +24,7 @@ import org.eclipse.osgi.baseadaptor.loader.*;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.log.FrameworkLog;
 import org.eclipse.osgi.internal.module.*;
-import org.eclipse.osgi.service.internal.composite.Composite;
+import org.eclipse.osgi.service.internal.composite.CompositeModule;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.*;
 import org.osgi.framework.launch.Framework;
@@ -167,7 +167,7 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 		if ((data.getType() & (BundleData.TYPE_COMPOSITEBUNDLE | BundleData.TYPE_SURROGATEBUNDLE)) == 0)
 			return null;
 		// only create composite class loaders for bundles that are of type composite | surrogate
-		ClassLoaderDelegate companionDelegate = ((Composite) ((CompositeBase) data.getBundle()).getCompanionBundle()).getDelegate();
+		ClassLoaderDelegate companionDelegate = ((CompositeModule) ((CompositeBase) data.getBundle()).getCompanionBundle()).getDelegate();
 		return new CompositeClassLoader(parent, delegate, companionDelegate, data);
 	}
 

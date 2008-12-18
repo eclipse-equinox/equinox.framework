@@ -20,7 +20,7 @@ import org.eclipse.osgi.framework.internal.core.Constants;
 import org.eclipse.osgi.internal.loader.BundleLoader;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.launch.Equinox;
-import org.eclipse.osgi.service.internal.composite.Composite;
+import org.eclipse.osgi.service.internal.composite.CompositeModule;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.ExportPackageDescription;
 import org.osgi.framework.*;
@@ -85,7 +85,7 @@ public class CompositeImpl extends CompositeBase implements CompositeBundle {
 	private boolean updateSurrogate(BundleData thisData, BundleDescription child, ExportPackageDescription[] matchingExports) throws BundleException {
 		// update the surrogate content with the matching exports provided by the composite
 		getSurrogateContent(thisData, child, matchingExports);
-		Composite surrogateComposite = (Composite) getSurrogateBundle();
+		CompositeModule surrogateComposite = (CompositeModule) getSurrogateBundle();
 		surrogateComposite.updateContent();
 		// enable/disable the surrogate composite based on if we have exports handed to us
 		boolean disable = matchingExports == null ? true : false;
@@ -177,12 +177,12 @@ public class CompositeImpl extends CompositeBase implements CompositeBundle {
 			stopChildFramework();
 	}
 
-	public void started(Composite surrogate) {
+	public void started(CompositeModule surrogate) {
 		if (surrogate == getSurrogateBundle())
 			trackerManager.startedSurrogate();
 	}
 
-	public void stopped(Composite surrogate) {
+	public void stopped(CompositeModule surrogate) {
 		if (surrogate == getSurrogateBundle())
 			trackerManager.stoppedSurrogate();
 	}
@@ -213,7 +213,7 @@ public class CompositeImpl extends CompositeBase implements CompositeBundle {
 			// disable the surrogate
 			CompositeHelper.setDisabled(true, getSurrogateBundle(), getCompositeFramework().getBundleContext());
 			// refresh the parent composite synchronously
-			((Composite) surrogate).refreshContent(true);
+			((CompositeModule) surrogate).refreshContent(true);
 			return true;
 		}
 		try {

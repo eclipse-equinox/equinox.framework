@@ -3,7 +3,7 @@ package org.eclipse.osgi.internal.composite;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.internal.module.ResolverBundle;
-import org.eclipse.osgi.service.internal.composite.Composite;
+import org.eclipse.osgi.service.internal.composite.CompositeModule;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.ExportPackageDescription;
 import org.osgi.framework.*;
@@ -38,7 +38,7 @@ public class SurrogateImpl extends CompositeBase implements SurrogateBundle {
 			// should only do this if the composite is not in the process of refreshing this 
 			// surrogate bundle
 			if (refreshing.get() == null)
-				((Composite) getCompanionBundle()).refreshContent(false);
+				((CompositeModule) getCompanionBundle()).refreshContent(false);
 			return true;
 		}
 		return validExports(matchingExports);
@@ -46,7 +46,7 @@ public class SurrogateImpl extends CompositeBase implements SurrogateBundle {
 
 	private boolean validExports(ExportPackageDescription[] matchingExports) {
 		// make sure each matching exports matches the export signature of the composite
-		Composite composite = (Composite) getCompanionBundle();
+		CompositeModule composite = (CompositeModule) getCompanionBundle();
 		BundleDescription childDesc = composite.getCompositeDescription();
 		ExportPackageDescription[] childExports = childDesc.getExportPackages();
 		for (int i = 0; i < matchingExports.length; i++) {
@@ -74,10 +74,10 @@ public class SurrogateImpl extends CompositeBase implements SurrogateBundle {
 	}
 
 	protected void startHook() {
-		((Composite) getCompanionBundle()).started(this);
+		((CompositeModule) getCompanionBundle()).started(this);
 	}
 
 	protected void stopHook() {
-		((Composite) getCompanionBundle()).stopped(this);
+		((CompositeModule) getCompanionBundle()).stopped(this);
 	}
 }
