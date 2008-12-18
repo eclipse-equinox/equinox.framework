@@ -10,8 +10,8 @@
  *******************************************************************************/
 package org.eclipse.osgi.internal.composite;
 
-import java.io.*;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLConnection;
 import java.security.AllPermission;
 import java.security.ProtectionDomain;
@@ -36,7 +36,6 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 	private BaseAdaptor adaptor;
 	private ServiceRegistration factoryService;
 	private BundleContext systemContext;
-	private volatile int compositeID = 1;
 
 	public void addHooks(HookRegistry hookRegistry) {
 		hookRegistry.addAdaptorHook(this);
@@ -97,35 +96,12 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 		// make a local copy of the manifest first
 		compositeManifest = new HashMap(compositeManifest);
 		CompositeHelper.validateCompositeManifest(compositeManifest);
-		URL content = getBundleInput(frameworkConfig, compositeManifest);
+
 		try {
-			CompositeBundle result = (CompositeBundle) systemContext.installBundle(location, content.openStream());
+			InputStream content = CompositeHelper.getCompositeInput(frameworkConfig, compositeManifest);
+			CompositeBundle result = (CompositeBundle) systemContext.installBundle(location, content);
 			CompositeHelper.setCompositePermissions(result, systemContext);
 			return result;
-		} catch (IOException e) {
-			throw new BundleException("Error creating composite bundle", e);
-		}
-	}
-
-	private URL getBundleInput(Map frameworkConfig, Map compositeManifest) throws BundleException {
-		// using directory bundles for now, could use in memory zip streams but this is way more simple
-		String bsn = (String) compositeManifest.get(Constants.BUNDLE_SYMBOLICNAME);
-		// get a unique directory for the bundle content
-		File bundleFile = systemContext.getDataFile("composites/" + bsn + '_' + compositeID++); //$NON-NLS-1$
-		while (bundleFile.exists())
-			bundleFile = systemContext.getDataFile("composites/" + bsn + '_' + compositeID++); //$NON-NLS-1$
-		bundleFile.mkdirs();
-		// the composite bundles only consist of a manifest describing the packages they import and export
-		String manifest = CompositeHelper.getCompositeManifest(compositeManifest);
-		try {
-			CompositeHelper.writeManifest(bundleFile, manifest);
-			// store the framework config
-			Properties fwProps = new Properties();
-			if (frameworkConfig != null)
-				fwProps.putAll(frameworkConfig);
-			fwProps.store(new FileOutputStream(new File(bundleFile, CompositeImpl.COMPOSITE_CONFIGURATION)), null);
-			// return the reference location
-			return new URL("reference:" + bundleFile.toURL().toExternalForm()); //$NON-NLS-1$
 		} catch (IOException e) {
 			throw new BundleException("Error creating composite bundle", e);
 		}

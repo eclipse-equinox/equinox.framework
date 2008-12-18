@@ -69,8 +69,8 @@ public abstract class CompositeBase extends BundleHost implements CompositeResol
 		// nothing
 	}
 
-	public void updateContent() throws BundleException {
-		super.update();
+	public void updateContent(InputStream content) throws BundleException {
+		super.update(content);
 	}
 
 	public void update() throws BundleException {

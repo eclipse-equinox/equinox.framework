@@ -16,7 +16,7 @@ public class SurrogateImpl extends CompositeBase implements SurrogateBundle {
 		super(bundledata, framework);
 	}
 
-	protected Framework findCompanionFramework(org.eclipse.osgi.framework.internal.core.Framework thisFramework, BundleData thisData) throws BundleException {
+	protected Framework findCompanionFramework(org.eclipse.osgi.framework.internal.core.Framework thisFramework, BundleData thisData) {
 		// just get the property which was set when creating the child framework
 		return (Framework) FrameworkProperties.getProperties().get(PROP_PARENTFRAMEWORK);
 	}

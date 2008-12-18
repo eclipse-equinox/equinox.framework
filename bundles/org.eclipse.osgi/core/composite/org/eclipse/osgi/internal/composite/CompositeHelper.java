@@ -13,8 +13,7 @@ package org.eclipse.osgi.internal.composite;
 import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
-import org.eclipse.osgi.baseadaptor.BaseData;
-import org.eclipse.osgi.framework.adaptor.BundleData;
+import java.util.jar.*;
 import org.eclipse.osgi.internal.baseadaptor.BaseStorageHook;
 import org.eclipse.osgi.service.resolver.*;
 import org.osgi.framework.*;
@@ -24,43 +23,46 @@ import org.osgi.service.permissionadmin.PermissionInfo;
 public class CompositeHelper {
 	private static final PermissionInfo[] COMPOSITE_PERMISSIONS = new PermissionInfo[] {new PermissionInfo(PackagePermission.class.getName(), "*", PackagePermission.EXPORT), new PermissionInfo(ServicePermission.class.getName(), "*", ServicePermission.REGISTER + ',' + ServicePermission.GET)}; //$NON-NLS-1$ //$NON-NLS-2$
 	private static final String COMPOSITE_POLICY = "org.eclipse.osgi.composite"; //$NON-NLS-1$
-	private static String HEADER_SEPARATOR = ": "; //$NON-NLS-1$
 	private static String ELEMENT_SEPARATOR = "; "; //$NON-NLS-1$
 	private static final Object EQUALS_QUOTE = "=\""; //$NON-NLS-1$
 	private static final String[] INVALID_COMPOSITE_HEADERS = new String[] {Constants.DYNAMICIMPORT_PACKAGE, Constants.FRAGMENT_HOST, Constants.REQUIRE_BUNDLE, Constants.BUNDLE_NATIVECODE, Constants.BUNDLE_CLASSPATH, Constants.BUNDLE_ACTIVATOR, Constants.BUNDLE_LOCALIZATION, Constants.BUNDLE_ACTIVATIONPOLICY};
 
-	static String getCompositeManifest(Map compositeManifest) {
+	static Manifest getCompositeManifest(Map compositeManifest) {
+		Manifest manifest = new Manifest();
+		Attributes attributes = manifest.getMainAttributes();
+		attributes.putValue("Manifest-Version", "1.0"); //$NON-NLS-1$//$NON-NLS-2$
 		// get the common headers Bundle-ManifestVersion, Bundle-SymbolicName and Bundle-Version
-		StringBuffer manifest = new StringBuffer();
 		// get the manifest version from the map
 		String manifestVersion = (String) compositeManifest.remove(Constants.BUNDLE_MANIFESTVERSION);
 		// here we assume the validation got the correct version for us
-		manifest.append(Constants.BUNDLE_MANIFESTVERSION).append(HEADER_SEPARATOR).append(manifestVersion).append('\n');
+		attributes.putValue(Constants.BUNDLE_MANIFESTVERSION, manifestVersion);
 		// Ignore the Equinox composite bundle header
 		compositeManifest.remove(BaseStorageHook.COMPOSITE_HEADER);
-		manifest.append(BaseStorageHook.COMPOSITE_HEADER).append(HEADER_SEPARATOR).append(BaseStorageHook.COMPOSITE_BUNDLE).append('\n');
+		attributes.putValue(BaseStorageHook.COMPOSITE_HEADER, BaseStorageHook.COMPOSITE_BUNDLE);
 		for (Iterator entries = compositeManifest.entrySet().iterator(); entries.hasNext();) {
 			Map.Entry entry = (Entry) entries.next();
-			manifest.append(entry.getKey()).append(HEADER_SEPARATOR).append(entry.getValue()).append('\n');
+			if (entry.getKey() instanceof String && entry.getValue() instanceof String)
+				attributes.putValue((String) entry.getKey(), (String) entry.getValue());
 		}
-		return manifest.toString();
+		return manifest;
 	}
 
-	static String getSurrogateManifest(Dictionary compositeManifest, BundleDescription compositeDesc, ExportPackageDescription[] matchingExports) throws BundleException {
-		// get the common headers Bundle-ManifestVersion, Bundle-SymbolicName and Bundle-Version
-		StringBuffer manifest = new StringBuffer();
+	static Manifest getSurrogateManifest(Dictionary compositeManifest, BundleDescription compositeDesc, ExportPackageDescription[] matchingExports) {
+		Manifest manifest = new Manifest();
+		Attributes attributes = manifest.getMainAttributes();
+		attributes.putValue("Manifest-Version", "1.0"); //$NON-NLS-1$//$NON-NLS-2$
 		// Ignore the manifest version from the map
 		// always use bundle manifest version 2
-		manifest.append(Constants.BUNDLE_MANIFESTVERSION).append(": 2\n"); //$NON-NLS-1$
+		attributes.putValue(Constants.BUNDLE_MANIFESTVERSION, "2"); //$NON-NLS-1$
 		// Ignore the Equinox composite bundle header
-		manifest.append(BaseStorageHook.COMPOSITE_HEADER).append(HEADER_SEPARATOR).append(BaseStorageHook.SURROGATE_BUNDLE).append('\n');
+		attributes.putValue(BaseStorageHook.COMPOSITE_HEADER, BaseStorageHook.SURROGATE_BUNDLE);
 
 		if (compositeDesc != null && matchingExports != null) {
 			// convert the exports from the composite into imports
-			addImports(manifest, compositeDesc, matchingExports);
+			addImports(attributes, compositeDesc, matchingExports);
 
 			// convert the matchingExports from the composite into exports
-			addExports(manifest, matchingExports);
+			addExports(attributes, matchingExports);
 		}
 
 		// add the rest
@@ -68,35 +70,73 @@ public class CompositeHelper {
 			Object header = keys.nextElement();
 			if (Constants.BUNDLE_MANIFESTVERSION.equals(header) || BaseStorageHook.COMPOSITE_HEADER.equals(header) || Constants.IMPORT_PACKAGE.equals(header) || Constants.EXPORT_PACKAGE.equals(header))
 				continue;
-			manifest.append(header).append(HEADER_SEPARATOR).append(compositeManifest.get(header)).append('\n');
+			if (header instanceof String && compositeManifest.get(header) instanceof String)
+				attributes.putValue((String) header, (String) compositeManifest.get(header));
 		}
-		return manifest.toString();
+		return manifest;
 	}
 
-	private static void addImports(StringBuffer manifest, BundleDescription compositeDesc, ExportPackageDescription[] matchingExports) {
+	static InputStream getCompositeInput(Map frameworkConfig, Map compositeManifest) throws IOException {
+		// use an in memory stream to store the content
+		ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+		// the composite bundles only consist of a manifest describing the packages they import and export
+		// and a framework config properties file
+		Manifest manifest = CompositeHelper.getCompositeManifest(compositeManifest);
+		JarOutputStream jarOut = new JarOutputStream(bytesOut, manifest);
+		try {
+			// store the framework config
+			Properties fwProps = new Properties();
+			if (frameworkConfig != null)
+				fwProps.putAll(frameworkConfig);
+			JarEntry entry = new JarEntry(CompositeImpl.COMPOSITE_CONFIGURATION);
+			jarOut.putNextEntry(entry);
+			fwProps.store(jarOut, null);
+			jarOut.closeEntry();
+			jarOut.flush();
+		} finally {
+			try {
+				jarOut.close();
+			} catch (IOException e) {
+				// nothing
+			}
+		}
+		return new ByteArrayInputStream(bytesOut.toByteArray());
+	}
+
+	static InputStream getSurrogateInput(Dictionary compositeManifest, BundleDescription compositeDesc, ExportPackageDescription[] matchingExports) throws IOException {
+		// use an in memory stream to store the content
+		ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+		Manifest manifest = CompositeHelper.getSurrogateManifest(compositeManifest, compositeDesc, matchingExports);
+		JarOutputStream jarOut = new JarOutputStream(bytesOut, manifest);
+		jarOut.flush();
+		jarOut.close();
+		return new ByteArrayInputStream(bytesOut.toByteArray());
+	}
+
+	private static void addImports(Attributes attrigutes, BundleDescription compositeDesc, ExportPackageDescription[] matchingExports) {
 		ExportPackageDescription[] exports = compositeDesc.getExportPackages();
 		List systemExports = getSystemExports(matchingExports);
 		if (exports.length == 0 && systemExports.size() == 0)
 			return;
-		manifest.append(Constants.IMPORT_PACKAGE).append(HEADER_SEPARATOR);
+		StringBuffer importStatement = new StringBuffer();
 		Collection importedNames = new ArrayList(exports.length);
 		int i = 0;
 		for (; i < exports.length; i++) {
 			if (i != 0)
-				manifest.append(',').append('\n').append(' ');
+				importStatement.append(',');
 			importedNames.add(exports[i].getName());
-			getImportFrom(exports[i], manifest);
+			getImportFrom(exports[i], importStatement);
 		}
 		for (Iterator iSystemExports = systemExports.iterator(); iSystemExports.hasNext();) {
 			ExportPackageDescription systemExport = (ExportPackageDescription) iSystemExports.next();
 			if (!importedNames.contains(systemExport.getName())) {
 				if (i != 0)
-					manifest.append(',').append('\n').append(' ');
+					importStatement.append(',');
 				i++;
-				manifest.append(systemExport.getName()).append(ELEMENT_SEPARATOR).append(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE).append('=').append(Constants.SYSTEM_BUNDLE_SYMBOLICNAME);
+				importStatement.append(systemExport.getName()).append(ELEMENT_SEPARATOR).append(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE).append('=').append(Constants.SYSTEM_BUNDLE_SYMBOLICNAME);
 			}
 		}
-		manifest.append('\n');
+		attrigutes.putValue(Constants.IMPORT_PACKAGE, importStatement.toString());
 	}
 
 	private static List getSystemExports(ExportPackageDescription[] matchingExports) {
@@ -111,30 +151,30 @@ public class CompositeHelper {
 		return list == null ? Collections.EMPTY_LIST : list;
 	}
 
-	private static void getImportFrom(ExportPackageDescription export, StringBuffer manifest) {
-		manifest.append(export.getName()).append(ELEMENT_SEPARATOR);
+	private static void getImportFrom(ExportPackageDescription export, StringBuffer importStatement) {
+		importStatement.append(export.getName()).append(ELEMENT_SEPARATOR);
 		Version version = export.getVersion();
-		manifest.append(Constants.VERSION_ATTRIBUTE).append(EQUALS_QUOTE).append('[').append(version).append(',').append(new Version(version.getMajor(), version.getMinor(), version.getMicro() + 1)).append(')').append('\"');
-		addMap(manifest, export.getAttributes(), "="); //$NON-NLS-1$
+		importStatement.append(Constants.VERSION_ATTRIBUTE).append(EQUALS_QUOTE).append('[').append(version).append(',').append(new Version(version.getMajor(), version.getMinor(), version.getMicro() + 1)).append(')').append('\"');
+		addMap(importStatement, export.getAttributes(), "="); //$NON-NLS-1$
 	}
 
-	private static void addExports(StringBuffer manifest, ExportPackageDescription[] matchingExports) {
+	private static void addExports(Attributes attributes, ExportPackageDescription[] matchingExports) {
 		if (matchingExports.length == 0)
 			return;
-		manifest.append(Constants.EXPORT_PACKAGE).append(HEADER_SEPARATOR);
+		StringBuffer exportStatement = new StringBuffer();
 		for (int i = 0; i < matchingExports.length; i++) {
 			if (i != 0)
-				manifest.append(',').append('\n').append(' ');
-			getExportFrom(matchingExports[i], manifest);
+				exportStatement.append(',');
+			getExportFrom(matchingExports[i], exportStatement);
 		}
-		manifest.append('\n');
+		attributes.putValue(Constants.EXPORT_PACKAGE, exportStatement.toString());
 	}
 
-	private static void getExportFrom(ExportPackageDescription export, StringBuffer manifest) {
-		manifest.append(export.getName()).append(ELEMENT_SEPARATOR);
-		manifest.append(Constants.VERSION_ATTRIBUTE).append(EQUALS_QUOTE).append(export.getVersion()).append('\"');
-		addMap(manifest, export.getDirectives(), ":="); //$NON-NLS-1$
-		addMap(manifest, export.getAttributes(), "="); //$NON-NLS-1$
+	private static void getExportFrom(ExportPackageDescription export, StringBuffer exportStatement) {
+		exportStatement.append(export.getName()).append(ELEMENT_SEPARATOR);
+		exportStatement.append(Constants.VERSION_ATTRIBUTE).append(EQUALS_QUOTE).append(export.getVersion()).append('\"');
+		addMap(exportStatement, export.getDirectives(), ":="); //$NON-NLS-1$
+		addMap(exportStatement, export.getAttributes(), "="); //$NON-NLS-1$
 	}
 
 	private static void addMap(StringBuffer manifest, Map values, String assignment) {
@@ -185,7 +225,7 @@ public class CompositeHelper {
 		}
 	}
 
-	public static void setDisabled(boolean disable, BundleDescription bundle) {
+	static void setDisabled(boolean disable, BundleDescription bundle) {
 		State state = bundle.getContainingState();
 		if (disable) {
 			state.addDisabledInfo(new DisabledInfo(COMPOSITE_POLICY, "Composite companion bundle is not resolved.", bundle));
@@ -194,26 +234,6 @@ public class CompositeHelper {
 			if (toRemove != null)
 				state.removeDisabledInfo(toRemove);
 		}
-	}
-
-	static void writeManifest(File baseBundleFile, String manifest) throws IOException {
-		File manifestFile = new File(baseBundleFile, "META-INF/MANIFEST.MF"); //$NON-NLS-1$
-		manifestFile.getParentFile().mkdirs();
-		PrintWriter pw = null;
-		try {
-			pw = new PrintWriter(new FileOutputStream(manifestFile));
-			pw.write(manifest);
-		} finally {
-			if (pw != null)
-				pw.close();
-		}
-	}
-
-	static void updateCompositeManifest(BundleData compositeData, String manifest) throws IOException {
-		File baseFile = ((BaseData) compositeData).getBundleFile().getBaseFile();
-		if (!baseFile.isDirectory())
-			throw new RuntimeException("Base bundle file must be a directory");
-		writeManifest(baseFile, manifest);
 	}
 
 	static void validateCompositeManifest(Map compositeManifest) throws BundleException {

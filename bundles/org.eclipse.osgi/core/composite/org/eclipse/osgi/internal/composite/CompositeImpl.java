@@ -10,8 +10,7 @@
  *******************************************************************************/
 package org.eclipse.osgi.internal.composite;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
@@ -28,8 +27,7 @@ import org.osgi.framework.launch.Framework;
 import org.osgi.service.framework.*;
 
 public class CompositeImpl extends CompositeBase implements CompositeBundle {
-	private static String COMPOSITE_STORAGE = "composite.storage"; //$NON-NLS-1$
-	private static String SURROGATE_CONTENT = "surrogate.content"; //$NON-NLS-1$
+	private static String COMPOSITE_STORAGE = "store"; //$NON-NLS-1$
 	public static String COMPOSITE_CONFIGURATION = "compositeConfig.properties"; //$NON-NLS-1$
 
 	private final ServiceTrackerManager trackerManager = new ServiceTrackerManager();
@@ -68,43 +66,34 @@ public class CompositeImpl extends CompositeBase implements CompositeBundle {
 	}
 
 	private void installSurrogate(BundleContext companionContext, BundleData thisData) throws BundleException {
-		File parentContent = getSurrogateContent(thisData, null, null);
-		Bundle companion;
+		Bundle surrogate;
 		try {
-			URL parentURL = new URL("reference:" + parentContent.toURL().toExternalForm()); //$NON-NLS-1$
-			companion = companionContext.installBundle(thisData.getLocation(), parentURL.openStream());
+			InputStream surrogateContent = CompositeHelper.getSurrogateInput(thisData.getManifest(), null, null);
+			surrogate = companionContext.installBundle(thisData.getLocation(), surrogateContent);
 		} catch (IOException e) {
 			throw new BundleException("Error installing parent companion composite bundle", e);
 		}
-		// disable the parent composite initially since we know we have not resolved the child yet.
-		CompositeHelper.setDisabled(true, companion, companionContext);
-		// set the permissions of the companion bundle
-		CompositeHelper.setCompositePermissions(companion, companionContext);
+		// disable the surrogate initially since we know we have not resolved the composite yet.
+		CompositeHelper.setDisabled(true, surrogate, companionContext);
+		// set the permissions of the surrogate bundle
+		CompositeHelper.setCompositePermissions(surrogate, companionContext);
 	}
 
 	private boolean updateSurrogate(BundleData thisData, BundleDescription child, ExportPackageDescription[] matchingExports) throws BundleException {
 		// update the surrogate content with the matching exports provided by the composite
-		getSurrogateContent(thisData, child, matchingExports);
+		InputStream surrogateContent;
+		try {
+			surrogateContent = CompositeHelper.getSurrogateInput(thisData.getManifest(), child, matchingExports);
+		} catch (IOException e) {
+			throw new BundleException("Error updating surrogate bundle.", e);
+		}
 		CompositeModule surrogateComposite = (CompositeModule) getSurrogateBundle();
-		surrogateComposite.updateContent();
+		surrogateComposite.updateContent(surrogateContent);
 		// enable/disable the surrogate composite based on if we have exports handed to us
 		boolean disable = matchingExports == null ? true : false;
 		CompositeHelper.setDisabled(disable, getSurrogateBundle(), getCompositeFramework().getBundleContext());
 		// return true if we can resolve the surrogate bundle
 		return disable ? false : surrogateComposite.resolveContent();
-	}
-
-	private File getSurrogateContent(BundleData thisData, BundleDescription compositeDesc, ExportPackageDescription[] matchingExports) throws BundleException {
-		File surrogateContent = thisData.getDataFile(SURROGATE_CONTENT);
-		File manifestFile = new File(surrogateContent, "META-INF/MANIFEST.MF"); //$NON-NLS-1$
-		manifestFile.getParentFile().mkdirs();
-		String surrogateManifest = CompositeHelper.getSurrogateManifest(thisData.getManifest(), compositeDesc, matchingExports);
-		try {
-			CompositeHelper.writeManifest(surrogateContent, surrogateManifest);
-		} catch (IOException e) {
-			throw new BundleException("Error installing parent companion composite bundle", e);
-		}
-		return surrogateContent;
 	}
 
 	private SurrogateBundle findSurrogateBundle() throws BundleException {
@@ -128,25 +117,29 @@ public class CompositeImpl extends CompositeBase implements CompositeBundle {
 	public void update(Map compositeManifest) throws BundleException {
 		// validate the composite manifest
 		CompositeHelper.validateCompositeManifest(compositeManifest);
-		// get the composite manifest headers
-		String manifest = CompositeHelper.getCompositeManifest(compositeManifest);
-		try {
-			// update the data of the composite manifest
-			CompositeHelper.updateCompositeManifest(getBundleData(), manifest);
-		} catch (IOException e) {
-			throw new BundleException("Unable to update bundle content", e);
-		}
 		if (isResolved()) {
-			// force the class loader creation before updating the parent companion to cache the current state
+			// force the class loader creation before updating the surrogate to cache the current state
 			// this is to allow for lazy updates of composite bundles
 			BundleLoader loader = getBundleLoader();
 			if (loader != null)
 				loader.createClassLoader();
 		}
-		// first update the parent companion and disable it
-		updateSurrogate(getBundleData(), null, null);
-		// update the content with the new manifest
-		updateContent();
+		try {
+			Map frameworkConfig = getFrameworkConfig();
+			// first update the parent companion and disable it
+			updateSurrogate(getBundleData(), null, null);
+			// update the content with the new manifest
+			updateContent(CompositeHelper.getCompositeInput(frameworkConfig, compositeManifest));
+		} catch (IOException e) {
+			throw new BundleException("Error updating composite.", e);
+		}
+	}
+
+	private Map getFrameworkConfig() throws IOException {
+		Properties result = new Properties();
+		URL config = getEntry(COMPOSITE_CONFIGURATION);
+		result.load(config.openStream());
+		return result;
 	}
 
 	public void uninstall() throws BundleException {
