@@ -27,7 +27,7 @@ public class CompositeHelper {
 	private static final Object EQUALS_QUOTE = "=\""; //$NON-NLS-1$
 	private static final String[] INVALID_COMPOSITE_HEADERS = new String[] {Constants.DYNAMICIMPORT_PACKAGE, Constants.FRAGMENT_HOST, Constants.REQUIRE_BUNDLE, Constants.BUNDLE_NATIVECODE, Constants.BUNDLE_CLASSPATH, Constants.BUNDLE_ACTIVATOR, Constants.BUNDLE_LOCALIZATION, Constants.BUNDLE_ACTIVATIONPOLICY};
 
-	static Manifest getCompositeManifest(Map compositeManifest) {
+	private static Manifest getCompositeManifest(Map compositeManifest) {
 		Manifest manifest = new Manifest();
 		Attributes attributes = manifest.getMainAttributes();
 		attributes.putValue("Manifest-Version", "1.0"); //$NON-NLS-1$//$NON-NLS-2$
@@ -47,7 +47,7 @@ public class CompositeHelper {
 		return manifest;
 	}
 
-	static Manifest getSurrogateManifest(Dictionary compositeManifest, BundleDescription compositeDesc, ExportPackageDescription[] matchingExports) {
+	private static Manifest getSurrogateManifest(Dictionary compositeManifest, BundleDescription compositeDesc, ExportPackageDescription[] matchingExports) {
 		Manifest manifest = new Manifest();
 		Attributes attributes = manifest.getMainAttributes();
 		attributes.putValue("Manifest-Version", "1.0"); //$NON-NLS-1$//$NON-NLS-2$
@@ -199,13 +199,13 @@ public class CompositeHelper {
 		}
 	}
 
-	static void setCompositePermissions(Bundle bundle, BundleContext systemContext) {
+	static void setCompositePermissions(String bundleLocation, BundleContext systemContext) {
 		ServiceReference ref = systemContext.getServiceReference(PermissionAdmin.class.getName());
 		PermissionAdmin permAdmin = (PermissionAdmin) (ref == null ? null : systemContext.getService(ref));
 		if (permAdmin == null)
 			throw new RuntimeException("No Permission Admin service is available");
 		try {
-			permAdmin.setPermissions(bundle.getLocation(), COMPOSITE_PERMISSIONS);
+			permAdmin.setPermissions(bundleLocation, COMPOSITE_PERMISSIONS);
 		} finally {
 			systemContext.ungetService(ref);
 		}

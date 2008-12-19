@@ -76,7 +76,7 @@ public class CompositeImpl extends CompositeBase implements CompositeBundle {
 		// disable the surrogate initially since we know we have not resolved the composite yet.
 		CompositeHelper.setDisabled(true, surrogate, companionContext);
 		// set the permissions of the surrogate bundle
-		CompositeHelper.setCompositePermissions(surrogate, companionContext);
+		CompositeHelper.setCompositePermissions(thisData.getLocation(), companionContext);
 	}
 
 	private boolean updateSurrogate(BundleData thisData, BundleDescription child, ExportPackageDescription[] matchingExports) throws BundleException {

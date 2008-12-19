@@ -33,12 +33,18 @@ import org.osgi.service.framework.CompositeBundleFactory;
 
 public class CompositeConfigurator implements HookConfigurator, AdaptorHook, ClassLoadingHook, CompositeBundleFactory, CompositeResolveHelperRegistry {
 
+	// the base adaptor
 	private BaseAdaptor adaptor;
+	// the composite bundle factory service reference
 	private ServiceRegistration factoryService;
+	// the system bundle context
 	private BundleContext systemContext;
 
 	public void addHooks(HookRegistry hookRegistry) {
+		// this is an adaptor hook to register the composite factory and 
+		// to shutdown child frameworks on shutdown
 		hookRegistry.addAdaptorHook(this);
+		// this is a class loading hook in order to create special class loaders for composites
 		hookRegistry.addClassLoadingHook(this);
 	}
 
@@ -56,14 +62,18 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 	 */
 	public void frameworkStart(BundleContext context) throws BundleException {
 		this.systemContext = context;
+		// this is a composite resolve helper registry; add it to the resolver
 		((ResolverImpl) adaptor.getState().getResolver()).setCompositeResolveHelperRegistry(this);
+		// register this as the composite bundle factory
 		factoryService = context.registerService(new String[] {CompositeBundleFactory.class.getName()}, this, null);
 	}
 
 	public void frameworkStop(BundleContext context) {
+		// unregister the factory
 		if (factoryService != null)
 			factoryService.unregister();
 		factoryService = null;
+		// stop any child frameworks than may still be running.
 		stopFrameworks();
 	}
 
@@ -92,15 +102,19 @@ public class CompositeConfigurator implements HookConfigurator, AdaptorHook, Cla
 	public CompositeBundle installCompositeBundle(Map frameworkConfig, String location, Map compositeManifest) throws BundleException {
 		SecurityManager sm = System.getSecurityManager();
 		if (sm != null)
+			// must have AllPermission to do this
 			sm.checkPermission(new AllPermission());
 		// make a local copy of the manifest first
 		compositeManifest = new HashMap(compositeManifest);
+		// make sure the manifest is valid
 		CompositeHelper.validateCompositeManifest(compositeManifest);
 
 		try {
+			// get an in memory input stream to jar content of the composite we want to install
 			InputStream content = CompositeHelper.getCompositeInput(frameworkConfig, compositeManifest);
 			CompositeBundle result = (CompositeBundle) systemContext.installBundle(location, content);
-			CompositeHelper.setCompositePermissions(result, systemContext);
+			// set the permissions
+			CompositeHelper.setCompositePermissions(location, systemContext);
 			return result;
 		} catch (IOException e) {
 			throw new BundleException("Error creating composite bundle", e);
