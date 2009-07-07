@@ -202,17 +202,17 @@ public class PackageAdminImpl implements PackageAdmin {
 			framework.publishBundleEvent(Framework.BATCHEVENT_BEGIN, framework.systemBundle);
 			State systemState = framework.adaptor.getState();
 			BundleDescription[] descriptions = null;
-			synchronized (framework.bundles) {
-				int numBundles = bundles == null ? 0 : bundles.length;
-				if (!refreshPackages)
-					// in this case we must make descriptions non-null so we do
-					// not force the removal pendings to be processed when resolving
-					// the state.
-					descriptions = new BundleDescription[0];
-				else if (numBundles > 0) {
-					// populate the resolved hosts package sources first
-					populateLoaders(framework.bundles.getBundles());
-					// not collect the descriptions to refresh
+			int numBundles = bundles == null ? 0 : bundles.length;
+			if (!refreshPackages)
+				// in this case we must make descriptions non-null so we do
+				// not force the removal pendings to be processed when resolving
+				// the state.
+				descriptions = new BundleDescription[0];
+			else if (numBundles > 0) {
+				// populate the resolved hosts package sources first (do this outside sync block: bug 280929)
+				populateLoaders(framework.getAllBundles());
+				synchronized (framework.bundles) {
+					// now collect the descriptions to refresh
 					ArrayList results = new ArrayList(numBundles);
 					BundleDelta[] addDeltas = null;
 					for (int i = 0; i < numBundles; i++) {
@@ -259,15 +259,14 @@ public class PackageAdminImpl implements PackageAdmin {
 		}
 	}
 
-	private void populateLoaders(List bundles) {
+	private void populateLoaders(AbstractBundle[] bundles) {
 		// populate all the loaders with their package source information
 		// this is needed to fix bug 259903.
-		for (Iterator iBundles = bundles.listIterator(); iBundles.hasNext();) {
-			AbstractBundle bundle = (AbstractBundle) iBundles.next();
+		for (int i = 0; i < bundles.length; i++) {
 			// only need to do this for host bundles which are resolved
-			if (bundle instanceof BundleHost && bundle.isResolved()) {
+			if (bundles[i] instanceof BundleHost && bundles[i].isResolved()) {
 				// getting the BundleLoader object populates the require-bundle sources
-				BundleLoader loader = ((BundleHost) bundle).getBundleLoader();
+				BundleLoader loader = ((BundleHost) bundles[i]).getBundleLoader();
 				if (loader != null)
 					// need to explicitly get the import package sources
 					loader.getImportedSources(null);
