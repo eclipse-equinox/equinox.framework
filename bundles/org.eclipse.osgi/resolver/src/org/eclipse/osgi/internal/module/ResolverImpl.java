@@ -72,7 +72,6 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 	private GroupingChecker groupingChecker;
 	private Comparator selectionPolicy;
 	private boolean developmentMode = false;
-	private volatile CompositeResolveHelperRegistry compositeHelpers;
 
 	public ResolverImpl(BundleContext context, boolean checkPermissions) {
 		this.permissionChecker = new PermissionChecker(context, checkPermissions, this);
@@ -536,32 +535,6 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 				resolveFragment(unresolved[i]);
 		}
 		checkUsesConstraints(bundles, platformProperties, rejectedSingletons);
-		checkComposites(bundles, platformProperties, rejectedSingletons);
-	}
-
-	private void checkComposites(ResolverBundle[] bundles, Dictionary[] platformProperties, ArrayList rejectedSingletons) {
-		CompositeResolveHelperRegistry helpers = getCompositeHelpers();
-		if (helpers == null)
-			return;
-		Set exclude = null;
-		for (int i = 0; i < bundles.length; i++) {
-			CompositeResolveHelper helper = helpers.getCompositeResolveHelper(bundles[i].getBundle());
-			if (helper == null)
-				continue;
-			if (!bundles[i].isResolved())
-				continue;
-			if (!helper.giveExports(getExportsWiredTo(bundles[i]))) {
-				state.addResolverError(bundles[i].getBundle(), ResolverError.DISABLED_BUNDLE, null, null);
-				bundles[i].setResolvable(false);
-				bundles[i].clearRefs();
-				// We pass false for keepFragmentsAttached because we need to redo the attachments (bug 272561)
-				setBundleUnresolved(bundles[i], false, false);
-				if (exclude == null)
-					exclude = new HashSet(1);
-				exclude.add(bundles[i]);
-			}
-		}
-		reResolveBundles(exclude, bundles, platformProperties, rejectedSingletons);
 	}
 
 	private void checkUsesConstraints(ResolverBundle[] bundles, Dictionary[] platformProperties, ArrayList rejectedSingletons) {
@@ -1660,12 +1633,7 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 
 		if (!bundle.getBundle().isResolved() && !developmentMode)
 			return;
-		CompositeResolveHelperRegistry currentLinks = compositeHelpers;
-		if (currentLinks != null) {
-			CompositeResolveHelper helper = currentLinks.getCompositeResolveHelper(bundle.getBundle());
-			if (helper != null)
-				helper.giveExports(null);
-		}
+
 		// if not removed then add to the list of unresolvedBundles,
 		// passing false for devmode because we need all fragments detached
 		setBundleUnresolved(bundle, removed, false);
@@ -1790,11 +1758,4 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 		return selectionPolicy;
 	}
 
-	public void setCompositeResolveHelperRegistry(CompositeResolveHelperRegistry compositeHelpers) {
-		this.compositeHelpers = compositeHelpers;
-	}
-
-	CompositeResolveHelperRegistry getCompositeHelpers() {
-		return compositeHelpers;
-	}
 }
