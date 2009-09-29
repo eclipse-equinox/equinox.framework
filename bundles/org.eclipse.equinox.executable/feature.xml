@@ -2,7 +2,7 @@
 <feature
       id="org.eclipse.equinox.executable"
       label="%featureName"
-      version="3.3.200.qualifier">
+      version="3.3.201.qualifier">
 
    <description>
       %description
@@ -217,6 +217,5 @@
          install-size="0"
          version="0.0.0"
          fragment="true"/>
-
 
 </feature>
