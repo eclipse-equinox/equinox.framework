@@ -586,6 +586,7 @@ public class ServiceRegistry {
 				/* already unregistered */
 			}
 		}
+		removeServiceRegistrations(context); // remove empty list
 	}
 
 	/**
@@ -814,23 +815,26 @@ public class ServiceRegistry {
 	 * @param registration The ServiceRegistration to remove.
 	 */
 	/* @GuardedBy("this") */
-	void removeServiceRegistration(BundleContextImpl context, ServiceRegistrationImpl serviceReg) {
+	void removeServiceRegistration(BundleContextImpl context, ServiceRegistrationImpl registration) {
 		// Remove the ServiceRegistrationImpl from the list of Services published by BundleContextImpl.
 		List contextServices = (List) publishedServicesByContext.get(context);
 		if (contextServices != null) {
-			contextServices.remove(serviceReg);
+			contextServices.remove(registration);
 		}
 
 		// Remove the ServiceRegistrationImpl from the list of Services published by Class Name.
-		String[] clazzes = serviceReg.getClasses();
+		String[] clazzes = registration.getClasses();
 		for (int i = 0, size = clazzes.length; i < size; i++) {
 			String clazz = clazzes[i];
 			List services = (List) publishedServicesByClass.get(clazz);
-			services.remove(serviceReg);
+			services.remove(registration);
+			if (services.isEmpty()) { // remove empty list
+				publishedServicesByClass.remove(clazz);
+			}
 		}
 
 		// Remove the ServiceRegistrationImpl from the list of all published Services.
-		allPublishedServices.remove(serviceReg);
+		allPublishedServices.remove(registration);
 	}
 
 	/**
@@ -885,6 +889,15 @@ public class ServiceRegistry {
 		}
 
 		return new ArrayList(result); /* make a new list since we don't want to change the real list */
+	}
+
+	/**
+	 * Remove Service Registrations in the data structure by BundleContext.
+	 * 
+	 * @param context The BundleContext for which to remove Service Registrations.
+	 */
+	private synchronized void removeServiceRegistrations(BundleContextImpl context) {
+		publishedServicesByContext.remove(context);
 	}
 
 	/**
