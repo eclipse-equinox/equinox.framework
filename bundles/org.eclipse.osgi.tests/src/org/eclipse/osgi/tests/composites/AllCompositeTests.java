@@ -16,9 +16,9 @@ import junit.framework.TestSuite;
 public class AllCompositeTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite(AllCompositeTests.class.getName());
-		suite.addTest(CompositeCreateTests.suite());
-		suite.addTest(CompositeShareTests.suite());
-		suite.addTest(CompositeSecurityTests.suite());
+		//		suite.addTest(CompositeCreateTests.suite());
+		//		suite.addTest(CompositeShareTests.suite());
+		//		suite.addTest(CompositeSecurityTests.suite());
 		return suite;
 	}
 }
