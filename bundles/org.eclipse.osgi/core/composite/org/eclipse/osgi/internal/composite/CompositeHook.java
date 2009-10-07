@@ -30,7 +30,8 @@ public class CompositeHook implements HookConfigurator, AdaptorHook {
 	}
 
 	public void frameworkStart(BundleContext context) throws BundleException {
-		adaptor.getState().getResolver().setScopePolicy(policy);
+		// TODO uncomment this!
+		//adaptor.getState().getResolver().setScopePolicy(policy);
 	}
 
 	public void frameworkStop(BundleContext context) throws BundleException {
