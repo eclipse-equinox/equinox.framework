@@ -5,6 +5,13 @@
 <message_arguments>
 <message_argument value="org.eclipse.osgi.framework.internal.protocol.URLStreamHandlerFactoryProxyFor15.openConnection(URL, Proxy)"/>
 <message_argument value="Proxy"/>
+<message_argument value="J2SE-1.4"/>
+</message_arguments>
+</filter>
+<filter id="646971428">
+<message_arguments>
+<message_argument value="org.eclipse.osgi.framework.internal.protocol.URLStreamHandlerFactoryProxyFor15.openConnection(URL, Proxy)"/>
+<message_argument value="Proxy"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
 </message_arguments>
 </filter>
@@ -58,15 +65,15 @@
 </filter>
 <filter id="646971428">
 <message_arguments>
-<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.fatalError(SAXParseException)"/>
-<message_argument value="SAXException"/>
+<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.error(SAXParseException)"/>
+<message_argument value="SAXParseException"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
 </message_arguments>
 </filter>
 <filter id="646971428">
 <message_arguments>
-<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.error(SAXParseException)"/>
-<message_argument value="SAXParseException"/>
+<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.fatalError(SAXParseException)"/>
+<message_argument value="SAXException"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
 </message_arguments>
 </filter>
@@ -79,14 +86,14 @@
 </filter>
 <filter id="646971428">
 <message_arguments>
-<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.parsePluginRequiresImport(Attributes)"/>
+<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.handleRequiresState(String, Attributes)"/>
 <message_argument value="Attributes"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
 </message_arguments>
 </filter>
 <filter id="646971428">
 <message_arguments>
-<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.handleRequiresState(String, Attributes)"/>
+<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.parsePluginRequiresImport(Attributes)"/>
 <message_argument value="Attributes"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
 </message_arguments>
@@ -198,15 +205,15 @@
 </filter>
 <filter id="646971428">
 <message_arguments>
-<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.warning(SAXParseException)"/>
-<message_argument value="SAXParseException"/>
+<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.handleInitialState(String, Attributes)"/>
+<message_argument value="Attributes"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
 </message_arguments>
 </filter>
 <filter id="646971428">
 <message_arguments>
-<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.handleInitialState(String, Attributes)"/>
-<message_argument value="Attributes"/>
+<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.warning(SAXParseException)"/>
+<message_argument value="SAXParseException"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
 </message_arguments>
 </filter>
@@ -242,7 +249,7 @@
 </filter>
 <filter id="647004193">
 <message_arguments>
-<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.parsePluginRequiresImport(Attributes)"/>
+<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.parseLibraryAttributes(Attributes)"/>
 <message_argument value="Attributes"/>
 <message_argument value="getValue(String, String)"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
@@ -258,7 +265,7 @@
 </filter>
 <filter id="647004193">
 <message_arguments>
-<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.parseLibraryAttributes(Attributes)"/>
+<message_argument value="org.eclipse.core.runtime.internal.adaptor.PluginParser.parsePluginRequiresImport(Attributes)"/>
 <message_argument value="Attributes"/>
 <message_argument value="getValue(String, String)"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
@@ -393,13 +400,13 @@
 <filter id="403804204">
 <message_arguments>
 <message_argument value="org.osgi.framework.Bundle"/>
-<message_argument value="getVersion()"/>
+<message_argument value="getSignerCertificates(int)"/>
 </message_arguments>
 </filter>
 <filter id="403804204">
 <message_arguments>
 <message_argument value="org.osgi.framework.Bundle"/>
-<message_argument value="getSignerCertificates(int)"/>
+<message_argument value="getVersion()"/>
 </message_arguments>
 </filter>
 <filter id="1209008130">
@@ -580,7 +587,7 @@
 <filter id="403767336">
 <message_arguments>
 <message_argument value="org.osgi.framework.Constants"/>
-<message_argument value="FRAMEWORK_BUNDLE_PARENT_APP"/>
+<message_argument value="SERVICE_TYPE"/>
 </message_arguments>
 </filter>
 <filter id="403767336">
@@ -592,7 +599,7 @@
 <filter id="403767336">
 <message_arguments>
 <message_argument value="org.osgi.framework.Constants"/>
-<message_argument value="SERVICE_TYPE"/>
+<message_argument value="FRAMEWORK_BUNDLE_PARENT_APP"/>
 </message_arguments>
 </filter>
 <filter id="403767336">
@@ -696,14 +703,14 @@
 <message_arguments>
 <message_argument value="1.5"/>
 <message_argument value="3.5"/>
-<message_argument value="FRAMEWORK_TRUST_REPOSITORIES"/>
+<message_argument value="FRAMEWORK_SECURITY"/>
 </message_arguments>
 </filter>
 <filter id="1209008130">
 <message_arguments>
 <message_argument value="1.5"/>
 <message_argument value="3.5"/>
-<message_argument value="FRAMEWORK_SECURITY"/>
+<message_argument value="FRAMEWORK_TRUST_REPOSITORIES"/>
 </message_arguments>
 </filter>
 <filter id="1209008130">
@@ -731,14 +738,14 @@
 <message_arguments>
 <message_argument value="1.5"/>
 <message_argument value="3.5"/>
-<message_argument value="FRAMEWORK_LIBRARY_EXTENSIONS"/>
+<message_argument value="FRAMEWORK_STORAGE_CLEAN"/>
 </message_arguments>
 </filter>
 <filter id="1209008130">
 <message_arguments>
 <message_argument value="1.5"/>
 <message_argument value="3.5"/>
-<message_argument value="FRAMEWORK_STORAGE_CLEAN"/>
+<message_argument value="FRAMEWORK_LIBRARY_EXTENSIONS"/>
 </message_arguments>
 </filter>
 <filter id="1209008130">
@@ -782,14 +789,14 @@
 <message_arguments>
 <message_argument value="1.5"/>
 <message_argument value="3.5"/>
-<message_argument value="STOPPED_UPDATE"/>
+<message_argument value="STOPPED_BOOTCLASSPATH_MODIFIED"/>
 </message_arguments>
 </filter>
 <filter id="1141899266">
 <message_arguments>
 <message_argument value="1.5"/>
 <message_argument value="3.5"/>
-<message_argument value="STOPPED_BOOTCLASSPATH_MODIFIED"/>
+<message_argument value="STOPPED_UPDATE"/>
 </message_arguments>
 </filter>
 </resource>
@@ -1010,14 +1017,14 @@
 <message_arguments>
 <message_argument value="1.1"/>
 <message_argument value="3.5"/>
-<message_argument value="toString()"/>
+<message_argument value="hashCode()"/>
 </message_arguments>
 </filter>
 <filter id="1209008130">
 <message_arguments>
 <message_argument value="1.1"/>
 <message_argument value="3.5"/>
-<message_argument value="hashCode()"/>
+<message_argument value="toString()"/>
 </message_arguments>
 </filter>
 </resource>
@@ -1079,14 +1086,6 @@
 </filter>
 <filter id="647004193">
 <message_arguments>
-<message_argument value="org.eclipse.core.runtime.internal.adaptor.Locker_JavaNio.isLocked()"/>
-<message_argument value="FileLock"/>
-<message_argument value="release()"/>
-<message_argument value="CDC-1.1/Foundation-1.1"/>
-</message_arguments>
-</filter>
-<filter id="647004193">
-<message_arguments>
 <message_argument value="org.eclipse.core.runtime.internal.adaptor.Locker_JavaNio.lock()"/>
 <message_argument value="FileChannel"/>
 <message_argument value="tryLock(long, long, boolean)"/>
@@ -1096,8 +1095,8 @@
 <filter id="647004193">
 <message_arguments>
 <message_argument value="org.eclipse.core.runtime.internal.adaptor.Locker_JavaNio.isLocked()"/>
-<message_argument value="FileChannel"/>
-<message_argument value="tryLock(long, long, boolean)"/>
+<message_argument value="FileLock"/>
+<message_argument value="release()"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
 </message_arguments>
 </filter>
@@ -1106,6 +1105,14 @@
 <message_argument value="org.eclipse.core.runtime.internal.adaptor.Locker_JavaNio.isLocked()"/>
 <message_argument value="RandomAccessFile"/>
 <message_argument value="getChannel()"/>
+<message_argument value="CDC-1.1/Foundation-1.1"/>
+</message_arguments>
+</filter>
+<filter id="647004193">
+<message_arguments>
+<message_argument value="org.eclipse.core.runtime.internal.adaptor.Locker_JavaNio.isLocked()"/>
+<message_argument value="FileChannel"/>
+<message_argument value="tryLock(long, long, boolean)"/>
 <message_argument value="CDC-1.1/Foundation-1.1"/>
 </message_arguments>
 </filter>
