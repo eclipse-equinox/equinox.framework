@@ -203,8 +203,8 @@ public class BaseAdaptor implements FrameworkAdaptor {
 	/**
 	 * @see FrameworkAdaptor#installBundle(String, URLConnection)
 	 */
-	public BundleOperation installBundle(String location, URLConnection source) {
-		return storage.installBundle(location, source);
+	public BundleOperation installBundle(String location, long compositeID, URLConnection source) {
+		return storage.installBundle(location, compositeID, source);
 	}
 
 	/**

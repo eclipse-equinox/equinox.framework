@@ -15,7 +15,7 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Dictionary;
-import org.eclipse.osgi.baseadaptor.*;
+import org.eclipse.osgi.baseadaptor.BaseData;
 import org.eclipse.osgi.baseadaptor.hooks.StorageHook;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.adaptor.BundleOperation;
@@ -43,7 +43,7 @@ public class BundleUpdate implements BundleOperation {
 	 */
 	public BundleData begin() throws BundleException {
 		try {
-			newData = storage.createBaseData(data.getBundleID(), data.getLocation());
+			newData = storage.createBaseData(data.getBundleID(), data.getCompositeID(), data.getLocation());
 			newData.setLastModified(System.currentTimeMillis());
 			newData.setStartLevel(data.getStartLevel());
 			newData.setStatus(data.getStatus());

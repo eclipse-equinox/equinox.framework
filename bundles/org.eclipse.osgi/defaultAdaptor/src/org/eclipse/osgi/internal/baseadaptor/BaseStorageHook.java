@@ -33,6 +33,7 @@ import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
+import org.osgi.service.composite.CompositeConstants;
 
 public class BaseStorageHook implements StorageHook, AdaptorHook {
 	public static final String KEY = BaseStorageHook.class.getName();
@@ -91,6 +92,9 @@ public class BaseStorageHook implements StorageHook, AdaptorHook {
 				singleton = bsnHeader[0].getAttribute(Constants.SINGLETON_DIRECTIVE);
 			if ("true".equals(singleton)) //$NON-NLS-1$
 				bundleType |= BundleData.TYPE_SINGLETON;
+			String composite = bsnHeader[0].getDirective(CompositeConstants.COMPOSITE_DIRECTIVE);
+			if ("true".equals(composite)) //$NON-NLS-1$
+				bundleType |= BundleData.TYPE_COMPOSITEBUNDLE;
 		}
 		// check that the classpath is valid
 		String classpath = (String) manifest.get(Constants.BUNDLE_CLASSPATH);

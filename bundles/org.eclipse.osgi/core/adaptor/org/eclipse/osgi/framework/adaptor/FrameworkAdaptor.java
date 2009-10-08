@@ -115,13 +115,14 @@ public interface FrameworkAdaptor {
 	 * to undo the change to persistent storage.
 	 *
 	 * @param location Bundle location.
+	 * @param compositeID the composite ID for the bundle.
 	 * @param source URLConnection from which the bundle may be read.
 	 * Any InputStreams returned from the source
 	 * (URLConnections.getInputStream) must be closed by the
 	 * <code>BundleOperation</code> object.
 	 * @return BundleOperation object to be used to complete the install.
 	 */
-	public BundleOperation installBundle(String location, URLConnection source);
+	public BundleOperation installBundle(String location, long compositeID, URLConnection source);
 
 	/**
 	 * Prepare to update a bundle from a URLConnection.

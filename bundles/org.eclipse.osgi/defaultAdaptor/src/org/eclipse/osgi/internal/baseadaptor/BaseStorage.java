@@ -57,7 +57,7 @@ public class BaseStorage implements SynchronousBundleListener {
 	private static final String PROP_CLEAN = "osgi.clean"; //$NON-NLS-1$
 
 	/** The current bundle data version */
-	public static final byte BUNDLEDATA_VERSION = 18;
+	public static final byte BUNDLEDATA_VERSION = 19;
 	/**
 	 * flag to indicate a framework extension is being intialized
 	 */
@@ -367,6 +367,7 @@ public class BaseStorage implements SynchronousBundleListener {
 				int bundleCount = in.readInt();
 				ArrayList result = new ArrayList(bundleCount);
 				long id = -1;
+				long compositeID = -1;
 				boolean bundleDiscarded = false;
 				for (int i = 0; i < bundleCount; i++) {
 					boolean error = false;
@@ -374,7 +375,8 @@ public class BaseStorage implements SynchronousBundleListener {
 					try {
 						id = in.readLong();
 						if (id != 0) {
-							data = loadBaseData(id, in);
+							compositeID = in.readLong();
+							data = loadBaseData(id, compositeID, in);
 							data.getBundleFile();
 							StorageHook[] dataStorageHooks = data.getStorageHooks();
 							for (int j = 0; j < dataStorageHooks.length; j++)
@@ -560,6 +562,7 @@ public class BaseStorage implements SynchronousBundleListener {
 					out.writeLong(id);
 					if (id != 0) {
 						BundleData data = ((org.eclipse.osgi.framework.internal.core.AbstractBundle) bundles[i]).getBundleData();
+						out.writeLong(data.getCompositeID());
 						saveBaseData((BaseData) data, out);
 					}
 				}
@@ -636,8 +639,8 @@ public class BaseStorage implements SynchronousBundleListener {
 		}
 	}
 
-	public BundleOperation installBundle(String location, URLConnection source) {
-		BaseData data = createBaseData(getNextBundleId(), location);
+	public BundleOperation installBundle(String location, long compositeID, URLConnection source) {
+		BaseData data = createBaseData(getNextBundleId(), compositeID, location);
 		return new BundleInstall(data, source, this);
 	}
 
@@ -890,8 +893,8 @@ public class BaseStorage implements SynchronousBundleListener {
 		}
 	}
 
-	protected BaseData loadBaseData(long id, DataInputStream in) throws IOException {
-		BaseData result = new BaseData(id, adaptor);
+	protected BaseData loadBaseData(long id, long compositeID, DataInputStream in) throws IOException {
+		BaseData result = new BaseData(id, compositeID, adaptor);
 		int numHooks = in.readInt();
 		StorageHook[] hooks = new StorageHook[numHooks];
 		for (int i = 0; i < numHooks; i++) {
@@ -905,8 +908,8 @@ public class BaseStorage implements SynchronousBundleListener {
 		return result;
 	}
 
-	protected BaseData createBaseData(long id, String location) {
-		BaseData result = new BaseData(id, adaptor);
+	protected BaseData createBaseData(long id, long compositeID, String location) {
+		BaseData result = new BaseData(id, compositeID, adaptor);
 		result.setLocation(location);
 		return result;
 	}

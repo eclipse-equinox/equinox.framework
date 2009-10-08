@@ -43,8 +43,9 @@ import org.osgi.framework.*;
  */
 public class BaseData implements BundleData {
 	private final static boolean COPY_NATIVES = Boolean.valueOf(FrameworkProperties.getProperty("osgi.classloader.copy.natives")).booleanValue(); //$NON-NLS-1$
-	private long id;
-	private BaseAdaptor adaptor;
+	private final long id;
+	private final BaseAdaptor adaptor;
+	private final long compositeID;
 	private Bundle bundle;
 	private int startLevel = -1;
 	private int status = 0;
@@ -75,8 +76,9 @@ public class BaseData implements BundleData {
 	 * @param id the id of the BaseData
 	 * @param adaptor the adaptor of the BaseData
 	 */
-	public BaseData(long id, BaseAdaptor adaptor) {
+	public BaseData(long id, long compositeID, BaseAdaptor adaptor) {
 		this.id = id;
+		this.compositeID = compositeID;
 		this.adaptor = adaptor;
 	}
 
@@ -179,6 +181,10 @@ public class BaseData implements BundleData {
 
 	public long getBundleID() {
 		return id;
+	}
+
+	public long getCompositeID() {
+		return compositeID;
 	}
 
 	public final String getLocation() {

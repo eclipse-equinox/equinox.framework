@@ -42,6 +42,8 @@ public interface BundleData {
 	public static final int TYPE_SINGLETON = 0x00000008;
 	/** The BundleData is for an extension classpath bundle */
 	public static final int TYPE_EXTCLASSPATH_EXTENSION = 0x00000010;
+	/** The BundleData is for a composite bundle */
+	public static final int TYPE_COMPOSITEBUNDLE = 0x00000020;
 
 	/**
 	 * Creates the ClassLoader for the BundleData.  The ClassLoader created
@@ -241,4 +243,6 @@ public interface BundleData {
 	 * @return the DynamicImport-Packaget for this BundleData.
 	 */
 	public String getDynamicImports();
+
+	public long getCompositeID();
 }

@@ -14,6 +14,7 @@ package org.eclipse.osgi.internal.module;
 import java.security.AccessController;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.FrameworkAdaptor;
+import org.eclipse.osgi.framework.adaptor.ScopePolicy;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.debug.FrameworkDebugOptions;
 import org.eclipse.osgi.framework.internal.core.Constants;
@@ -72,6 +73,7 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 	private GroupingChecker groupingChecker;
 	private Comparator selectionPolicy;
 	private boolean developmentMode = false;
+	private volatile ScopePolicy scopePolicy;
 
 	public ResolverImpl(BundleContext context, boolean checkPermissions) {
 		this.permissionChecker = new PermissionChecker(context, checkPermissions, this);
@@ -1756,6 +1758,16 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 
 	public Comparator getSelectionPolicy() {
 		return selectionPolicy;
+	}
+
+	public ScopePolicy getScopePolicy() {
+		return scopePolicy;
+	}
+
+	public void setScopePolicy(ScopePolicy policy) {
+		if (scopePolicy != null)
+			throw new IllegalStateException("Cannot change the scope policy of a Resolver"); //$NON-NLS-1$
+		this.scopePolicy = policy;
 	}
 
 }

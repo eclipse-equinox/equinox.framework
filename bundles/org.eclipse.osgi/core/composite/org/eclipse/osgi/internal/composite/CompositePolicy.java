@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2003, 2009 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.osgi.internal.composite;
 
 import java.util.*;
@@ -7,7 +17,7 @@ import org.osgi.framework.*;
 
 public class CompositePolicy implements ScopePolicy {
 
-	private final Map compositeInfos = new HashMap();
+	private final Map/* <Long, CompositeInfo> */compositeInfos = new HashMap();
 
 	public boolean isVisible(Long clientId, ServiceReference serviceProvider) {
 		return isVisible0(clientId, serviceProvider, null);
@@ -61,6 +71,7 @@ public class CompositePolicy implements ScopePolicy {
 					if (providerComposite == parent)
 						// the parent actually provides this
 						return true;
+					// check if the provider is visible from the parent policy perspective
 					else if (parent.isVisible(provider, this, providerComposite))
 						return true;
 				}
@@ -73,7 +84,7 @@ public class CompositePolicy implements ScopePolicy {
 					if (child.matchExportPolicy(provider)) {
 						// the child policy allows the provider to be exported from the child.
 						if (providerComposite == child)
-							// the child actually provies this
+							// the child actually provides this
 							return true;
 						else if (child.isVisible(provider, this, providerComposite))
 							return true;
@@ -105,6 +116,13 @@ public class CompositePolicy implements ScopePolicy {
 		private boolean matchExportPolicy(Object provider) {
 			if (provider instanceof ServiceReference)
 				return exportServicePolicy != null && exportServicePolicy.match((ServiceReference) provider);
+			if (provider instanceof ExportPackageDescription) {
+				if (exportPackagePolicy == null)
+					return false;
+				for (int i = 0; i < exportPackagePolicy.length; i++)
+					if (exportPackagePolicy[i].isSatisfiedBy((ExportPackageDescription) provider))
+						return true;
+			}
 			return false;
 		}
 

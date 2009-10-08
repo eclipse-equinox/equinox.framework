@@ -98,8 +98,12 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	protected static final int BATCHEVENT_END = Integer.MIN_VALUE;
 	/** EventManager for event delivery. */
 	protected EventManager eventManager;
-	/* Reservation object for install synchronization */
-	protected Hashtable installLock;
+	/* Reservation object for install synchronization.
+	 * Initialize the installLock; there is no way of knowing 
+	 * what the initial size should be, at most it will be the number
+	 * of threads trying to install a bundle (probably a very low number).
+	 */
+	protected final Hashtable installLock = new Hashtable(10);
 	/** System Bundle object */
 	protected InternalSystemBundle systemBundle;
 	private String[] bootDelegation;
@@ -203,8 +207,6 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
-		if (Profile.PROFILE && Profile.STARTUP)
-			Profile.logTime("Framework.initialze()", "done init props & new PermissionAdminImpl"); //$NON-NLS-1$//$NON-NLS-2$
 		startLevelManager = new StartLevelManager(this);
 		/* create the event manager and top level event dispatchers */
 		eventManager = new EventManager("Framework Event Dispatcher"); //$NON-NLS-1$
@@ -215,10 +217,6 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 			Profile.logTime("Framework.initialze()", "done new EventManager"); //$NON-NLS-1$ //$NON-NLS-2$
 		/* create the service registry */
 		serviceRegistry = new ServiceRegistry(this);
-		// Initialize the installLock; there is no way of knowing 
-		// what the initial size should be, at most it will be the number
-		// of threads trying to install a bundle (probably a very low number).
-		installLock = new Hashtable(10);
 		/* create the system bundle */
 		createSystemBundle();
 		loadVMProfile(); // load VM profile after the system bundle has been created
@@ -825,7 +823,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	 *            then the location is used to get the bundle content.
 	 * @return The Bundle of the installed bundle.
 	 */
-	protected AbstractBundle installBundle(final String location, final InputStream in) throws BundleException {
+	protected AbstractBundle installBundle(final String location, final long compositeID, final InputStream in) throws BundleException {
 		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
 			Debug.println("install from inputstream: " + location + ", " + in); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -835,7 +833,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 				/* Map the InputStream or location to a URLConnection */
 				URLConnection source = in != null ? new BundleSource(in) : adaptor.mapLocationToURLConnection(location);
 				/* call the worker to install the bundle */
-				return installWorkerPrivileged(location, source, callerContext);
+				return installWorkerPrivileged(location, compositeID, source, callerContext);
 			}
 		});
 	}
@@ -909,14 +907,16 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	 * 
 	 * @param location
 	 *            The location identifier of the bundle to install.
+	 * @param compositeID
+	 *            The composite ID for the bundle to install.
 	 * @param source
 	 *            The URLConnection from which the bundle will be read.
 	 * @return The {@link AbstractBundle}of the installed bundle.
 	 * @exception BundleException
 	 *                If the provided stream cannot be read.
 	 */
-	protected AbstractBundle installWorkerPrivileged(String location, URLConnection source, AccessControlContext callerContext) throws BundleException {
-		BundleOperation storage = adaptor.installBundle(location, source);
+	protected AbstractBundle installWorkerPrivileged(String location, long compositeID, URLConnection source, AccessControlContext callerContext) throws BundleException {
+		BundleOperation storage = adaptor.installBundle(location, compositeID, source);
 		final AbstractBundle bundle;
 		try {
 			BundleData bundledata = storage.begin();

@@ -30,7 +30,7 @@ public class SystemBundleData extends BaseData {
 	private static final String OSGI_FRAMEWORK = "osgi.framework"; //$NON-NLS-1$
 
 	public SystemBundleData(BaseAdaptor adaptor) throws BundleException {
-		super(0, adaptor);
+		super(0, 0, adaptor);
 		File osgiBase = getOsgiBase();
 		createBundleFile(osgiBase);
 		manifest = createManifest(osgiBase);

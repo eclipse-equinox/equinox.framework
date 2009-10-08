@@ -11,15 +11,39 @@
 
 package org.eclipse.osgi.internal.composite;
 
+import java.util.Map;
 import org.eclipse.osgi.framework.adaptor.BundleData;
-import org.eclipse.osgi.framework.internal.core.BundleHost;
-import org.eclipse.osgi.framework.internal.core.Framework;
+import org.eclipse.osgi.framework.internal.core.*;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.service.composite.CompositeBundle;
 
-public class CompositeImpl extends BundleHost {
+public class CompositeImpl extends BundleHost implements CompositeBundle {
+
+	final BundleContext systemContext;
 
 	public CompositeImpl(BundleData bundledata, Framework framework) throws BundleException {
 		super(bundledata, framework);
+		systemContext = new CompositeContext((BundleHost) framework.getBundle(0));
 	}
 
+	public BundleContext getSystemBundleContext() {
+		return systemContext;
+	}
+
+	public void update(Map compositeManifest) throws BundleException {
+		// TODO Auto-generated method stub
+
+	}
+
+	public class CompositeContext extends BundleContextImpl {
+
+		protected CompositeContext(BundleHost bundle) {
+			super(bundle);
+		}
+
+		protected long getCompositeID() {
+			return getBundleId();
+		}
+	}
 }

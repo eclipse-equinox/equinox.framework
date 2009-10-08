@@ -164,7 +164,11 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	public Bundle installBundle(String location, InputStream in) throws BundleException {
 		checkValid();
 		//note AdminPermission is checked after bundle is loaded
-		return framework.installBundle(location, in);
+		return framework.installBundle(location, getCompositeID(), in);
+	}
+
+	protected long getCompositeID() {
+		return bundle.getBundleData().getCompositeID();
 	}
 
 	/**
