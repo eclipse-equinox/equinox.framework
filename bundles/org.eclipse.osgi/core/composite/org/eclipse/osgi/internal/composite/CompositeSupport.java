@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2009 IBM Corporation and others.
+ * Copyright (c) 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,8 @@ import java.security.AllPermission;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.jar.*;
+import org.eclipse.osgi.framework.internal.core.BundleHost;
+import org.eclipse.osgi.framework.internal.core.Framework;
 import org.osgi.framework.*;
 import org.osgi.service.composite.CompositeAdmin;
 import org.osgi.service.composite.CompositeBundle;
@@ -22,6 +24,12 @@ import org.osgi.service.composite.CompositeBundle;
 public class CompositeSupport implements ServiceFactory {
 	private static final String[] INVALID_COMPOSITE_HEADERS = new String[] {Constants.DYNAMICIMPORT_PACKAGE, Constants.IMPORT_PACKAGE, Constants.EXPORT_PACKAGE, Constants.REQUIRE_BUNDLE, Constants.FRAGMENT_HOST, Constants.BUNDLE_NATIVECODE, Constants.BUNDLE_CLASSPATH, Constants.BUNDLE_ACTIVATOR, Constants.BUNDLE_LOCALIZATION, Constants.BUNDLE_ACTIVATIONPOLICY};
 	public static String COMPOSITE_CONFIGURATION = "compositeConfig.properties"; //$NON-NLS-1$
+
+	final Framework framework;
+
+	public CompositeSupport(Framework framework) {
+		this.framework = framework;
+	}
 
 	public Object getService(Bundle bundle, ServiceRegistration registration) {
 		// TODO Auto-generated method stub
@@ -34,14 +42,22 @@ public class CompositeSupport implements ServiceFactory {
 	}
 
 	class EquinoxCompositeAdmin implements CompositeAdmin {
+		private final BundleHost bundle;
+
+		public EquinoxCompositeAdmin(BundleHost bundle) {
+			this.bundle = bundle;
+		}
+
 		public String getFrameworkUUID() {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 		public CompositeBundle getParentCompositeBundle() {
-			// TODO Auto-generated method stub
-			return null;
+			Bundle composite = framework.getBundle(bundle.getBundleData().getCompositeID());
+			if (!(composite instanceof CompositeBundle))
+				throw new IllegalStateException("Unexpected bundle type for the composite: " + composite); //$NON-NLS-1$
+			return (CompositeBundle) composite;
 		}
 
 		public CompositeBundle installCompositeBundle(String location, Map compositeManifest, Map configuration) throws BundleException {
@@ -53,8 +69,16 @@ public class CompositeSupport implements ServiceFactory {
 			compositeManifest = new HashMap(compositeManifest);
 			// make sure the manifest is valid
 			CompositeSupport.validateCompositeManifest(compositeManifest);
-
-			return null;
+			try {
+				// get an in memory input stream to jar content of the composite we want to install
+				InputStream content = CompositeSupport.getCompositeInput(configuration, compositeManifest);
+				Bundle result = framework.installBundle(location, bundle.getBundleData().getCompositeID(), content);
+				if (!(result instanceof CompositeBundle))
+					throw new BundleException("A bundle is already installed at the location: " + location); //$NON-NLS-1$
+				return (CompositeBundle) result;
+			} catch (IOException e) {
+				throw new BundleException("Error creating composite bundle", e); //$NON-NLS-1$
+			}
 		}
 	}
 
@@ -102,7 +126,7 @@ public class CompositeSupport implements ServiceFactory {
 		return manifest;
 	}
 
-	private static void validateCompositeManifest(Map compositeManifest) throws BundleException {
+	static void validateCompositeManifest(Map compositeManifest) throws BundleException {
 		if (compositeManifest == null)
 			throw new BundleException("The composite manifest cannot be null.", BundleException.MANIFEST_ERROR); //$NON-NLS-1$
 		// check for symbolic name

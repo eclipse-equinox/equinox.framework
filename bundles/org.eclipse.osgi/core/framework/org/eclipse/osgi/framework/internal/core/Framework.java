@@ -823,7 +823,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	 *            then the location is used to get the bundle content.
 	 * @return The Bundle of the installed bundle.
 	 */
-	protected AbstractBundle installBundle(final String location, final long compositeID, final InputStream in) throws BundleException {
+	public AbstractBundle installBundle(final String location, final long compositeID, final InputStream in) throws BundleException {
 		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
 			Debug.println("install from inputstream: " + location + ", " + in); //$NON-NLS-1$ //$NON-NLS-2$
 		}

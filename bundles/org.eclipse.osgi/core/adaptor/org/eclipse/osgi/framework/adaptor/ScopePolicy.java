@@ -11,6 +11,8 @@
 package org.eclipse.osgi.framework.adaptor;
 
 import org.eclipse.osgi.service.resolver.BaseDescription;
+import org.eclipse.osgi.service.resolver.BundleDescription;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -20,20 +22,20 @@ import org.osgi.framework.ServiceReference;
  */
 public interface ScopePolicy {
 	/**
-	 * Determines if the specified client ID should have visibility to the 
+	 * Determines if the specified client should have visibility to the 
 	 * specified service reference.
-	 * @param clientId the id of the potential client bundle
+	 * @param client the potential client bundle
 	 * @param serviceProvider the service reference to determine visibility of
 	 * @return true if the client has visibility according to this scope policy; false otherwise
 	 */
-	boolean isVisible(Long clientId, ServiceReference serviceProvider);
+	boolean isVisible(Bundle client, ServiceReference serviceProvider);
 
 	/**
-	 * Determines if the specified client ID should have visibility to the 
-	 * specified constraint provider (exported package, bundle symbolic name etc).
-	 * @param clientId the id of the potential client bundle
+	 * Determines if the specified client should have visibility to the 
+	 * specified constraint provider (exported package, bundle symbolic name etc.).
+	 * @param clientId the potential client bundle
 	 * @param constraintProvider the service reference to determine visibility of
 	 * @return true if the client has visibility according to this scope policy; false otherwise
 	 */
-	boolean isVisible(Long clientId, BaseDescription constraintProvider);
+	boolean isVisible(BundleDescription client, BaseDescription constraintProvider);
 }
