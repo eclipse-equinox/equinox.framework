@@ -290,7 +290,7 @@ public class ServiceRegistry {
 		List references = changeRegistrationsToReferences(lookupServiceRegistrations(clazz, filter));
 		for (Iterator iter = references.iterator(); iter.hasNext();) {
 			ServiceReferenceImpl reference = (ServiceReferenceImpl) iter.next();
-			if (allservices || isAssignableTo(context, reference)) {
+			if (isInScope(context, reference) && (allservices || isAssignableTo(context, reference))) {
 				try { /* test for permission to get the service */
 					checkGetServicePermission(reference);
 				} catch (SecurityException se) {
@@ -426,7 +426,9 @@ public class ServiceRegistry {
 	public Object getService(BundleContextImpl context, ServiceReferenceImpl reference) {
 		/* test for permission to get the service */
 		checkGetServicePermission(reference);
-
+		if (!isInScope(context, reference))
+			// TODO is this really needed?  It would mean a bundle got their hands on a reference outside of their scope
+			throw new IllegalArgumentException("The service reference is not visible."); //$NON-NLS-1$
 		return reference.getRegistration().getService(context);
 	}
 
@@ -1019,6 +1021,10 @@ public class ServiceRegistry {
 			if (!reference.isAssignableTo(bundle, clazzes[i]))
 				return false;
 		return true;
+	}
+
+	boolean isInScope(BundleContextImpl context, ServiceReferenceImpl reference) {
+		return framework.getCompositeSupport().getCompositePolicy().isVisible(context.getBundle(), reference);
 	}
 
 	/**
