@@ -23,7 +23,7 @@ import org.osgi.service.composite.CompositeBundle;
 import org.osgi.service.composite.CompositeConstants;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle {
-	private static final CompositeInfo rootInfo = new CompositeInfo(null, null, null, null, null, null);
+	static final CompositeInfo rootInfo = new CompositeInfo(null, null, null, null, null, null);
 	final BundleContext systemContext;
 	final CompositeInfo compositeInfo;
 

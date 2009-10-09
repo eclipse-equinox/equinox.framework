@@ -13,6 +13,8 @@ package org.eclipse.osgi.internal.baseadaptor;
 
 import java.io.File;
 import java.io.IOException;
+import org.eclipse.osgi.framework.adaptor.ScopePolicy;
+import org.eclipse.osgi.framework.internal.core.BundleContextImpl;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.internal.loader.BundleLoader;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
@@ -75,17 +77,6 @@ public class StateManager implements PlatformAdmin, Runnable {
 	 * @param stateFile a file with the data required to persist in memory
 	 * @param lazyFile a file with the data that may be lazy loaded and can be flushed from memory
 	 * @param context the bundle context of the system bundle
-	 */
-	public StateManager(File stateFile, File lazyFile, BundleContext context) {
-		// a negative timestamp means no timestamp checking
-		this(stateFile, lazyFile, context, -1);
-	}
-
-	/**
-	 * Constructs a StateManager using the specified files and context
-	 * @param stateFile a file with the data required to persist in memory
-	 * @param lazyFile a file with the data that may be lazy loaded and can be flushed from memory
-	 * @param context the bundle context of the system bundle
 	 * @param expectedTimeStamp the expected timestamp of the persisted system state.  A negative
 	 * value indicates that no timestamp checking is done
 	 */
@@ -132,7 +123,7 @@ public class StateManager implements PlatformAdmin, Runnable {
 		StateImpl state = systemState;
 		if (removalPendings.length > 0) {
 			state = (StateImpl) state.getFactory().createState(systemState);
-			state.setResolver(createResolver(System.getSecurityManager() != null));
+			state.setResolver(createSystemResolver(System.getSecurityManager() != null));
 			state.setPlatformProperties(FrameworkProperties.getProperties());
 			state.resolve(false);
 		}
@@ -201,7 +192,7 @@ public class StateManager implements PlatformAdmin, Runnable {
 	}
 
 	private boolean initializeSystemState() {
-		systemState.setResolver(createResolver(System.getSecurityManager() != null));
+		systemState.setResolver(createSystemResolver(System.getSecurityManager() != null));
 		lastTimeStamp = systemState.getTimeStamp();
 		return !systemState.setPlatformProperties(FrameworkProperties.getProperties());
 	}
@@ -302,6 +293,14 @@ public class StateManager implements PlatformAdmin, Runnable {
 
 	private Resolver createResolver(boolean checkPermissions) {
 		return new org.eclipse.osgi.internal.module.ResolverImpl(context, checkPermissions);
+	}
+
+	private Resolver createSystemResolver(boolean checkPermissions) {
+		Resolver resolver = createResolver(false);
+		// TODO need a better way to do this
+		ScopePolicy policy = ((BundleContextImpl) context).getFramework().getCompositeSupport().getCompositePolicy();
+		resolver.setScopePolicy(policy);
+		return resolver;
 	}
 
 	/**

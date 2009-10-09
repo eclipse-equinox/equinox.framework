@@ -8,6 +8,7 @@
  ******************************************************************************/
 package org.eclipse.osgi.internal.module;
 
+import org.eclipse.osgi.framework.adaptor.ScopePolicy;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.VersionConstraint;
 
@@ -43,6 +44,9 @@ public abstract class ResolverConstraint {
 	// Same as VersionConstraint but does additinal permission checks
 	boolean isSatisfiedBy(VersionSupplier vs) {
 		if (!bundle.getResolver().getPermissionChecker().checkPermission(constraint, vs.getBaseDescription()))
+			return false;
+		ScopePolicy currentScope = bundle.getResolver().getScopePolicy();
+		if (currentScope != null && !currentScope.isVisible(bundle.getBundle(), vs.getBaseDescription()))
 			return false;
 		return vs.getSubstitute() == null && !vs.getResolverBundle().isUninstalled() && constraint.isSatisfiedBy(vs.getBaseDescription());
 	}

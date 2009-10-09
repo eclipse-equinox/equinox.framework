@@ -62,7 +62,8 @@ class CompositeInfo {
 				}
 			}
 		}
-		return true;
+		// cannot import from parent or children
+		return false;
 	}
 
 	private boolean matchImportPolicy(Object provider) {

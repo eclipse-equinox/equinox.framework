@@ -50,7 +50,7 @@ public class CompositePolicy implements ScopePolicy {
 		if (clientCompID == providerCompID)
 			return true; // in the same composite
 		CompositeInfo clientInfo = ((CompositeImpl) framework.getBundle(clientCompID)).getCompositeInfo();
-		CompositeInfo providerInfo = ((CompositeImpl) framework.getBundle(providerCompID)).getCompositeInfo();
+		CompositeInfo providerInfo = providerCompID == 0 ? CompositeImpl.rootInfo : ((CompositeImpl) framework.getBundle(providerCompID)).getCompositeInfo();
 		if (providerInfo == null || clientInfo == providerInfo)
 			return true;
 		return clientInfo.isVisible(serviceProvider != null ? (Object) serviceProvider : (Object) constraintProvider, clientInfo, providerInfo);

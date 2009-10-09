@@ -193,7 +193,10 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * object per installed bundle.
 	 */
 	public Bundle[] getBundles() {
-		return framework.getBundles(getCompositeId());
+		long compositeID = getCompositeId();
+		if (compositeID == 0 && getBundle().getBundleId() == 0)
+			compositeID = -1;
+		return framework.getBundles(compositeID);
 	}
 
 	/**
