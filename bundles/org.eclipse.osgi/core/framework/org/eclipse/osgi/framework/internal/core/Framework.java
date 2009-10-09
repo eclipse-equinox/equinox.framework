@@ -705,10 +705,15 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	AbstractBundle createAndVerifyBundle(BundleData bundledata, boolean setBundle) throws BundleException {
 		// Check for a bundle already installed with the same symbolic name and version.
 		if (bundledata.getSymbolicName() != null) {
-			AbstractBundle installedBundle = getBundleBySymbolicName(bundledata.getSymbolicName(), bundledata.getVersion());
-			if (installedBundle != null && installedBundle.getBundleId() != bundledata.getBundleID()) {
-				String msg = NLS.bind(Msg.BUNDLE_INSTALL_SAME_UNIQUEID, new Object[] {installedBundle.getSymbolicName(), installedBundle.getVersion().toString(), installedBundle.getLocation()});
-				throw new DuplicateBundleException(msg, installedBundle);
+			synchronized (bundles) {
+				AbstractBundle[] sameBSNs = bundles.getBundles(bundledata.getSymbolicName());
+				if (sameBSNs != null)
+					for (int i = 0; i < sameBSNs.length; i++) {
+						if (sameBSNs[i].getVersion().equals(bundledata.getVersion()) && sameBSNs[i].getBundleId() != bundledata.getBundleID() && sameBSNs[i].getCompositeId() == bundledata.getCompositeID()) {
+							String msg = NLS.bind(Msg.BUNDLE_INSTALL_SAME_UNIQUEID, new Object[] {sameBSNs[i].getSymbolicName(), sameBSNs[i].getVersion().toString(), sameBSNs[i].bundledata.getLocation()});
+							throw new DuplicateBundleException(msg, sameBSNs[i]);
+						}
+					}
 			}
 		}
 		return AbstractBundle.createBundle(bundledata, this, setBundle);
@@ -1008,21 +1013,6 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 
 	public CompositeSupport getCompositeSupport() {
 		return compositeSupport;
-	}
-
-	/**
-	 * Retrieve the bundle that has the given symbolic name and version.
-	 * 
-	 * @param symbolicName
-	 *            The symbolic name of the bundle to retrieve
-	 * @param version The version of the bundle to retrieve
-	 * @return A {@link AbstractBundle}object, or <code>null</code> if the
-	 *         identifier doesn't match any installed bundle.
-	 */
-	public AbstractBundle getBundleBySymbolicName(String symbolicName, Version version) {
-		synchronized (bundles) {
-			return bundles.getBundle(symbolicName, version);
-		}
 	}
 
 	/**

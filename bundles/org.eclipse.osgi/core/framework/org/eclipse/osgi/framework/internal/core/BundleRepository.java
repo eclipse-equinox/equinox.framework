@@ -68,20 +68,6 @@ public final class BundleRepository {
 		return (AbstractBundle[]) bundlesBySymbolicName.get(symbolicName);
 	}
 
-	public synchronized AbstractBundle getBundle(String symbolicName, Version version) {
-		AbstractBundle[] bundles = getBundles(symbolicName);
-		if (bundles != null) {
-			if (bundles.length > 0) {
-				for (int i = 0; i < bundles.length; i++) {
-					if (bundles[i].getVersion().equals(version)) {
-						return bundles[i];
-					}
-				}
-			}
-		}
-		return null;
-	}
-
 	public synchronized void add(AbstractBundle bundle) {
 		bundlesByInstallOrder.add(bundle);
 		bundlesById.add(bundle);
