@@ -15,30 +15,35 @@ import java.security.AllPermission;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.jar.*;
+import org.eclipse.osgi.framework.adaptor.ScopePolicy;
 import org.eclipse.osgi.framework.internal.core.BundleHost;
 import org.eclipse.osgi.framework.internal.core.Framework;
+import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
-import org.osgi.service.composite.CompositeAdmin;
-import org.osgi.service.composite.CompositeBundle;
+import org.osgi.service.composite.*;
 
 public class CompositeSupport implements ServiceFactory {
 	private static final String[] INVALID_COMPOSITE_HEADERS = new String[] {Constants.DYNAMICIMPORT_PACKAGE, Constants.IMPORT_PACKAGE, Constants.EXPORT_PACKAGE, Constants.REQUIRE_BUNDLE, Constants.FRAGMENT_HOST, Constants.BUNDLE_NATIVECODE, Constants.BUNDLE_CLASSPATH, Constants.BUNDLE_ACTIVATOR, Constants.BUNDLE_LOCALIZATION, Constants.BUNDLE_ACTIVATIONPOLICY};
 	public static String COMPOSITE_CONFIGURATION = "compositeConfig.properties"; //$NON-NLS-1$
 
 	final Framework framework;
+	final CompositePolicy compositPolicy;
 
 	public CompositeSupport(Framework framework) {
 		this.framework = framework;
+		this.compositPolicy = new CompositePolicy(framework);
 	}
 
 	public Object getService(Bundle bundle, ServiceRegistration registration) {
-		// TODO Auto-generated method stub
-		return null;
+		return new EquinoxCompositeAdmin((BundleHost) bundle);
 	}
 
 	public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
-		// TODO Auto-generated method stub
+		// Nothing to do
+	}
 
+	public ScopePolicy getCompositePolicy() {
+		return compositPolicy;
 	}
 
 	class EquinoxCompositeAdmin implements CompositeAdmin {
@@ -54,7 +59,9 @@ public class CompositeSupport implements ServiceFactory {
 		}
 
 		public CompositeBundle getParentCompositeBundle() {
-			Bundle composite = framework.getBundle(bundle.getBundleData().getCompositeID());
+			if (bundle.getCompositeId() == 0)
+				return null;
+			Bundle composite = framework.getBundle(bundle.getCompositeId());
 			if (!(composite instanceof CompositeBundle))
 				throw new IllegalStateException("Unexpected bundle type for the composite: " + composite); //$NON-NLS-1$
 			return (CompositeBundle) composite;
@@ -72,7 +79,7 @@ public class CompositeSupport implements ServiceFactory {
 			try {
 				// get an in memory input stream to jar content of the composite we want to install
 				InputStream content = CompositeSupport.getCompositeInput(configuration, compositeManifest);
-				Bundle result = framework.installBundle(location, bundle.getBundleData().getCompositeID(), content);
+				Bundle result = framework.installBundle(location, bundle.getCompositeId(), content);
 				if (!(result instanceof CompositeBundle))
 					throw new BundleException("A bundle is already installed at the location: " + location); //$NON-NLS-1$
 				return (CompositeBundle) result;
@@ -133,6 +140,12 @@ public class CompositeSupport implements ServiceFactory {
 		String bsn = (String) compositeManifest.get(Constants.BUNDLE_SYMBOLICNAME);
 		if (bsn == null)
 			throw new BundleException("The composite manifest must contain a Bundle-SymbolicName header.", BundleException.MANIFEST_ERROR); //$NON-NLS-1$
+		ManifestElement[] bsnElements = ManifestElement.parseHeader(Constants.BUNDLE_SYMBOLICNAME, bsn);
+		if (bsnElements.length != 1)
+			throw new BundleException("Invalid composite manifest Bundle-SymbolicName header: " + bsn, BundleException.MANIFEST_ERROR); //$NON-NLS-1$
+		String composite = bsnElements[0].getDirective(CompositeConstants.COMPOSITE_DIRECTIVE);
+		if (!"true".equals(composite)) //$NON-NLS-1$
+			throw new BundleException("Composite manifest Bundle-SymbolicName header must set composite directive to true: " + bsn, BundleException.MANIFEST_ERROR); //$NON-NLS-1$
 		// check for invalid manifests headers
 		for (int i = 0; i < INVALID_COMPOSITE_HEADERS.length; i++)
 			if (compositeManifest.get(INVALID_COMPOSITE_HEADERS[i]) != null)

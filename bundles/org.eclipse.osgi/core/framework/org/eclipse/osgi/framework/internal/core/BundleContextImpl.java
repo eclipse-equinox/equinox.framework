@@ -164,11 +164,11 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	public Bundle installBundle(String location, InputStream in) throws BundleException {
 		checkValid();
 		//note AdminPermission is checked after bundle is loaded
-		return framework.installBundle(location, getCompositeID(), in);
+		return framework.installBundle(location, getCompositeId(), in);
 	}
 
-	protected long getCompositeID() {
-		return bundle.getBundleData().getCompositeID();
+	protected long getCompositeId() {
+		return bundle.getCompositeId();
 	}
 
 	/**
@@ -179,18 +179,8 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * if the identifier doesn't match any installed bundle.
 	 */
 	public Bundle getBundle(long id) {
-		return (framework.getBundle(id));
-	}
-
-	/**
-	 * Retrieve the bundle that has the given location.
-	 *
-	 * @param location The location string of the bundle to retrieve.
-	 * @return A Bundle object, or <code>null</code>
-	 * if the location doesn't match any installed bundle.
-	 */
-	public AbstractBundle getBundleByLocation(String location) {
-		return (framework.getBundleByLocation(location));
+		AbstractBundle result = framework.getBundle(id);
+		return id == 0 || result.getCompositeId() == getCompositeId() ? result : null;
 	}
 
 	/**
@@ -203,7 +193,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * object per installed bundle.
 	 */
 	public Bundle[] getBundles() {
-		return framework.getAllBundles();
+		return framework.getBundles(getCompositeId());
 	}
 
 	/**
@@ -908,6 +898,9 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 						}
 
 						BundleEvent event = (BundleEvent) object;
+						AbstractBundle source = (AbstractBundle) event.getBundle();
+						if (source.getCompositeId() != getCompositeId() && source.getBundleId() != 0 && getBundle().getBundleId() != 0)
+							break; // Do not deliver event if the composite is different and the system bundle is not the source or client
 						switch (event.getType()) {
 							case Framework.BATCHEVENT_BEGIN : {
 								if (listener instanceof BatchBundleListener)

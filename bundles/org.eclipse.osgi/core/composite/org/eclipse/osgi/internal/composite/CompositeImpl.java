@@ -76,20 +76,23 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		desc = factory.createBundleDescription(null, builderManifest, "", 0); //$NON-NLS-1$
 		if (exportPackage != null)
 			exports = desc.getImportPackages();
-		// TODO set parent info
 
+		// set the parent info
 		CompositeInfo parentInfo;
 		long compositeID = bundledata.getCompositeID();
-		if (compositeID == 0)
+		if (compositeID == 0) // this is the root framework
 			parentInfo = rootInfo;
 		else
 			parentInfo = ((CompositeImpl) framework.getBundle(bundledata.getCompositeID())).getCompositeInfo();
 		CompositeInfo result = new CompositeInfo(parentInfo, imports, exports, requires, importServiceFilter, exportServiceFilter);
+		// add the the composite info as a child of the parent.
 		parentInfo.addChild(result);
 		return result;
 	}
 
 	public BundleContext getSystemBundleContext() {
+		if (getState() == Bundle.UNINSTALLED)
+			return null;
 		return systemContext;
 	}
 
@@ -98,9 +101,32 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 
 	}
 
-	public void uninstall() throws BundleException {
-		super.uninstall();
-		// TODO remove the CompositeInfo as a child from the parent
+	protected void startHook() {
+		// TODO increment start-level for the composite framework
+	}
+
+	protected void stopHook() {
+		// TODO decrement start-level for the composite framework
+	}
+
+	public void uninstallWorkerPrivileged() throws BundleException {
+		// first do the work to uninstall the composite
+		super.uninstallWorkerPrivileged();
+		// not uninstall all the constituents
+		Bundle[] bundles = systemContext.getBundles();
+		for (int i = 0; i < bundles.length; i++)
+			if (bundles[i].getBundleId() != 0) // not the system bundle
+				try {
+					bundles[i].uninstall();
+				} catch (BundleException e) {
+					framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundles[i], e);
+				}
+	}
+
+	protected void close() {
+		super.close();
+		// remove the composite info from the parent
+		compositeInfo.getParent().removeChild(compositeInfo);
 	}
 
 	public class CompositeContext extends BundleContextImpl {
@@ -109,7 +135,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			super(bundle);
 		}
 
-		protected long getCompositeID() {
+		protected long getCompositeId() {
 			return getBundleId();
 		}
 	}

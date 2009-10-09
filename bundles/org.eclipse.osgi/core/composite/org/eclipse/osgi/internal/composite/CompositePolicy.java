@@ -38,13 +38,15 @@ public class CompositePolicy implements ScopePolicy {
 			throw new IllegalArgumentException("Client cannot be null"); //$NON-NLS-1$
 		if (serviceProvider == null && constraintProvider == null)
 			throw new IllegalArgumentException("Provider cannot be null"); //$NON-NLS-1$
-		long clientCompID = client.getBundleData().getCompositeID();
-		long providerCompID = 0;
-		if (serviceProvider != null) {
-			providerCompID = ((AbstractBundle) serviceProvider.getBundle()).getBundleData().getCompositeID();
-		} else {
-			providerCompID = framework.getBundle(constraintProvider.getSupplier().getBundleId()).getBundleData().getCompositeID();
-		}
+		if (client.getBundleId() == 0)
+			// System bundle sees everything
+			return true;
+		AbstractBundle providerBundle = serviceProvider != null ? (AbstractBundle) serviceProvider.getBundle() : framework.getBundle(constraintProvider.getSupplier().getBundleId());
+		if (providerBundle.getBundleId() == 0)
+			// Everyone sees the system bundle
+			return true;
+		long clientCompID = client.getCompositeId();
+		long providerCompID = providerBundle.getCompositeId();
 		if (clientCompID == providerCompID)
 			return true; // in the same composite
 		CompositeInfo clientInfo = ((CompositeImpl) framework.getBundle(clientCompID)).getCompositeInfo();

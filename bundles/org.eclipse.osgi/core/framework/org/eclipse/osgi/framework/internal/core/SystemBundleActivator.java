@@ -15,6 +15,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import org.eclipse.osgi.framework.debug.FrameworkDebugOptions;
 import org.osgi.framework.*;
+import org.osgi.service.composite.CompositeAdmin;
 import org.osgi.service.condpermadmin.ConditionalPermissionAdmin;
 
 /**
@@ -30,6 +31,7 @@ public class SystemBundleActivator implements BundleActivator {
 	private ServiceRegistration startLevel;
 	private ServiceRegistration debugOptions;
 	private ServiceRegistration contextFinder;
+	private ServiceRegistration compositeAdmin;
 
 	public SystemBundleActivator() {
 	}
@@ -45,6 +47,8 @@ public class SystemBundleActivator implements BundleActivator {
 			securityAdmin = register(new String[] {Constants.OSGI_PERMISSIONADMIN_NAME, ConditionalPermissionAdmin.class.getName()}, framework.securityAdmin, null);
 		if (framework.startLevelManager != null)
 			startLevel = register(new String[] {Constants.OSGI_STARTLEVEL_NAME}, framework.startLevelManager, null);
+		if (framework.compositeSupport != null)
+			compositeAdmin = register(new String[] {CompositeAdmin.class.getName()}, framework.compositeSupport, null);
 		FrameworkDebugOptions dbgOptions = null;
 		if ((dbgOptions = FrameworkDebugOptions.getDefault()) != null) {
 			dbgOptions.start(context);
@@ -77,6 +81,8 @@ public class SystemBundleActivator implements BundleActivator {
 			securityAdmin.unregister();
 		if (startLevel != null)
 			startLevel.unregister();
+		if (compositeAdmin != null)
+			compositeAdmin.unregister();
 		if (debugOptions != null) {
 			FrameworkDebugOptions dbgOptions = FrameworkDebugOptions.getDefault();
 			if (dbgOptions != null)

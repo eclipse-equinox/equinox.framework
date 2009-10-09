@@ -25,6 +25,7 @@ import org.eclipse.osgi.framework.internal.protocol.StreamHandlerFactory;
 import org.eclipse.osgi.framework.log.FrameworkLog;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
 import org.eclipse.osgi.framework.util.SecureAction;
+import org.eclipse.osgi.internal.composite.CompositeSupport;
 import org.eclipse.osgi.internal.loader.*;
 import org.eclipse.osgi.internal.permadmin.EquinoxSecurityManager;
 import org.eclipse.osgi.internal.permadmin.SecurityAdmin;
@@ -74,6 +75,8 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	protected SecurityAdmin securityAdmin;
 	/** Startlevel object. This object manages the framework and bundle startlevels */
 	protected StartLevelManager startLevelManager;
+	/** CompositeAdmin impl used to manage composites */
+	CompositeSupport compositeSupport;
 	/** The ServiceRegistry */
 	private ServiceRegistry serviceRegistry;
 
@@ -208,6 +211,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 			throw new RuntimeException(e.getMessage());
 		}
 		startLevelManager = new StartLevelManager(this);
+		compositeSupport = new CompositeSupport(this);
 		/* create the event manager and top level event dispatchers */
 		eventManager = new EventManager("Framework Event Dispatcher"); //$NON-NLS-1$
 		bundleEvent = new CopyOnWriteIdentityMap();
@@ -1002,6 +1006,10 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 		return packageAdmin;
 	}
 
+	public CompositeSupport getCompositeSupport() {
+		return compositeSupport;
+	}
+
 	/**
 	 * Retrieve the bundle that has the given symbolic name and version.
 	 * 
@@ -1038,13 +1046,21 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	 *         bundle.
 	 */
 	protected AbstractBundle[] getAllBundles() {
+		return getBundles(-1);
+	}
+
+	AbstractBundle[] getBundles(long compositeID) {
 		synchronized (bundles) {
 			List allBundles = bundles.getBundles();
-			int size = allBundles.size();
-			if (size == 0) {
-				return (null);
+			if (compositeID >= 0) {
+				allBundles = new ArrayList(allBundles);
+				for (Iterator iBundles = allBundles.iterator(); iBundles.hasNext();) {
+					AbstractBundle bundle = (AbstractBundle) iBundles.next();
+					if (bundle.getBundleId() != 0 && bundle.getCompositeId() != compositeID)
+						iBundles.remove();
+				}
 			}
-			AbstractBundle[] bundlelist = new AbstractBundle[size];
+			AbstractBundle[] bundlelist = new AbstractBundle[allBundles.size()];
 			allBundles.toArray(bundlelist);
 			return (bundlelist);
 		}

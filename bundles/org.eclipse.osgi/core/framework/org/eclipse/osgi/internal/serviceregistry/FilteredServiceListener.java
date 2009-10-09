@@ -11,6 +11,7 @@
 
 package org.eclipse.osgi.internal.serviceregistry;
 
+import org.eclipse.osgi.framework.adaptor.ScopePolicy;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.internal.core.BundleContextImpl;
 import org.eclipse.osgi.framework.internal.core.FilterImpl;
@@ -116,20 +117,29 @@ class FilteredServiceListener implements ServiceListener, ListenerHook.ListenerI
 		boolean modified = delivered.getType() == ServiceEvent.MODIFIED;
 		ServiceEvent event = modified ? ((ModifiedServiceEvent) delivered).getModifiedEvent() : delivered;
 		if (filter == null) {
-			return event;
+			// check sharing policy
+			return checkSharingPolicy(event);
 		}
 		ServiceReference reference = event.getServiceReference();
 		if (filter.match(reference)) {
-			return event;
+			// check sharing policy
+			return checkSharingPolicy(event);
 		}
 		if (modified) {
 			ModifiedServiceEvent modifiedServiceEvent = (ModifiedServiceEvent) delivered;
 			if (modifiedServiceEvent.matchPreviousProperties(filter)) {
-				return modifiedServiceEvent.getModifiedEndMatchEvent();
+				// check sharing policy
+				// TODO we have an issue with dynamically changing sharing policies here, unless we force all constituents to stop/restart on update of policy
+				return checkSharingPolicy(modifiedServiceEvent.getModifiedEndMatchEvent());
 			}
 		}
 		// does not match and did not match previous properties; do not send event
 		return null;
+	}
+
+	private ServiceEvent checkSharingPolicy(ServiceEvent event) {
+		ScopePolicy scopePolicy = context.getFramework().getCompositeSupport().getCompositePolicy();
+		return scopePolicy.isVisible(context.getBundle(), event.getServiceReference()) ? event : null;
 	}
 
 	/**
