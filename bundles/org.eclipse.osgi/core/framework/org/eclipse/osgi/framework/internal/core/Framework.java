@@ -1178,7 +1178,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	/**
 	 * Check for specific AdminPermission (RFC 73)
 	 */
-	protected void checkAdminPermission(Bundle bundle, String action) {
+	public void checkAdminPermission(Bundle bundle, String action) {
 		SecurityManager sm = System.getSecurityManager();
 		if (sm != null)
 			sm.checkPermission(getAdminPermission(bundle, action));

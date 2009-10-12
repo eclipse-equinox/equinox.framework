@@ -195,7 +195,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	public Bundle[] getBundles() {
 		long compositeID = getCompositeId();
 		if (compositeID == 0 && getBundle().getBundleId() == 0)
-			compositeID = -1;
+			compositeID = -1; // the root system bundle sees all
 		return framework.getBundles(compositeID);
 	}
 
@@ -902,8 +902,8 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 						BundleEvent event = (BundleEvent) object;
 						AbstractBundle source = (AbstractBundle) event.getBundle();
-						if (source.getCompositeId() != getCompositeId() && source.getBundleId() != 0 && getBundle().getBundleId() != 0)
-							break; // Do not deliver event if the composite is different and the system bundle is not the source or client
+						if (source.getCompositeId() != getCompositeId() && (getBundle().getBundleId() != 0 || getCompositeId() == 0))
+							break; // Do not deliver event if the composite is different and the system bundle is not client
 						switch (event.getType()) {
 							case Framework.BATCHEVENT_BEGIN : {
 								if (listener instanceof BatchBundleListener)
