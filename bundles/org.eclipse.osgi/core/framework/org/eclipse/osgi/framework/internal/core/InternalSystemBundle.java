@@ -18,6 +18,7 @@ import java.security.Permission;
 import java.security.ProtectionDomain;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.osgi.framework.*;
 
@@ -86,7 +87,11 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 	 * @param framework Framework this bundle is running in
 	 */
 	protected InternalSystemBundle(Framework framework) throws BundleException {
-		super(framework.adaptor.createSystemBundleData(), framework); // startlevel=0 means framework stopped
+		this(framework.adaptor.createSystemBundleData(), framework);
+	}
+
+	protected InternalSystemBundle(BundleData bundleData, Framework framework) throws BundleException {
+		super(bundleData, framework);
 		Constants.setInternalSymbolicName(bundledata.getSymbolicName());
 		state = Bundle.RESOLVED;
 		context = createContext();
@@ -180,13 +185,14 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 	/**
 	 * Start this bundle.
 	 * This methods overrides the Bundle method and does nothing.
+	 * @throws BundleException 
 	 *
 	 */
-	public void start() {
+	public void start() throws BundleException {
 		framework.checkAdminPermission(this, AdminPermission.EXECUTE);
 	}
 
-	public void start(int options) {
+	public void start(int options) throws BundleException {
 		framework.checkAdminPermission(this, AdminPermission.EXECUTE);
 	}
 
@@ -196,16 +202,17 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 	 *
 	 */
 	protected void resume() {
+		StartLevelManager startLevel = framework.startLevelFactory.getStartLevelManager(this);
 		/* initialize the startlevel service */
-		framework.startLevelManager.initialize();
+		startLevel.initialize();
 
 		/* Load all installed bundles */
-		loadInstalledBundles(framework.startLevelManager.getInstalledBundles(framework.bundles, false));
+		loadInstalledBundles(StartLevelManager.getInstalledBundles(false, framework));
 		/* Start the system bundle */
 		try {
-			framework.systemBundle.state = Bundle.STARTING;
-			framework.systemBundle.context.start();
-			framework.publishBundleEvent(BundleEvent.STARTING, framework.systemBundle);
+			state = Bundle.STARTING;
+			context.start();
+			framework.publishBundleEvent(BundleEvent.STARTING, this);
 		} catch (BundleException be) {
 			if (Debug.DEBUG && Debug.DEBUG_STARTLEVEL) {
 				Debug.println("SLL: Bundle resume exception: " + be.getMessage()); //$NON-NLS-1$
@@ -231,9 +238,10 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 	/**
 	 * Stop the framework.
 	 * This method spawns a thread which will call framework.shutdown.
+	 * @throws BundleException 
 	 *
 	 */
-	public void stop() {
+	public void stop() throws BundleException {
 		framework.checkAdminPermission(this, AdminPermission.EXECUTE);
 
 		if ((state & (ACTIVE | STARTING)) != 0) {
@@ -252,7 +260,7 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 		}
 	}
 
-	public void stop(int options) {
+	public void stop(int options) throws BundleException {
 		stop();
 	}
 
@@ -262,9 +270,9 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 	 *
 	 */
 	protected void suspend() {
-
-		framework.startLevelManager.shutdown();
-		framework.startLevelManager.cleanup();
+		StartLevelManager rootStartLevel = framework.startLevelFactory.getStartLevelManager(framework.systemBundle);
+		rootStartLevel.shutdown();
+		rootStartLevel.cleanup();
 
 		/* clean up the exporting loaders */
 		framework.packageAdmin.cleanup();
@@ -285,20 +293,22 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 	 * Update this bundle.
 	 * This method spawns a thread which will call framework.shutdown
 	 * followed by framework.launch.
+	 * @throws BundleException 
 	 *
 	 */
-	public void update() {
+	public void update() throws BundleException {
 		framework.checkAdminPermission(this, AdminPermission.LIFECYCLE);
 
 		if ((state & (ACTIVE | STARTING)) != 0) {
 			Thread restart = framework.secureAction.createThread(new Runnable() {
 				public void run() {
-					int sl = framework.startLevelManager.getStartLevel();
+					StartLevelManager rootStartLevel = framework.startLevelFactory.getStartLevelManager(framework.systemBundle);
+					int sl = rootStartLevel.getStartLevel();
 					FrameworkProperties.setProperty(Constants.PROP_OSGI_RELAUNCH, ""); //$NON-NLS-1$
 					framework.shutdown(FrameworkEvent.STOPPED_UPDATE);
 					framework.launch();
 					if (sl > 0)
-						framework.startLevelManager.doSetStartLevel(sl);
+						rootStartLevel.doSetStartLevel(sl);
 					FrameworkProperties.clearProperty(Constants.PROP_OSGI_RELAUNCH);
 				}
 			}, "System Bundle Update", framework.getContextFinder()); //$NON-NLS-1$
@@ -312,8 +322,9 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 	 * This methods overrides the Bundle method and does nothing.
 	 *
 	 * @param in The InputStream from which to read the new bundle.
+	 * @throws BundleException 
 	 */
-	public void update(InputStream in) {
+	public void update(InputStream in) throws BundleException {
 		update();
 
 		try {

@@ -74,7 +74,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	/** PermissionAdmin and ConditionalPermissionAdmin impl. This object manages the bundle permissions. */
 	protected SecurityAdmin securityAdmin;
 	/** Startlevel object. This object manages the framework and bundle startlevels */
-	protected StartLevelManager startLevelManager;
+	protected StartLevelFactory startLevelFactory;
 	/** CompositeAdmin impl used to manage composites */
 	CompositeSupport compositeSupport;
 	/** The ServiceRegistry */
@@ -210,7 +210,9 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
-		startLevelManager = new StartLevelManager(this);
+		/* create the system bundle */
+		createSystemBundle();
+		startLevelFactory = new StartLevelFactory(new StartLevelManager(this, 0, systemBundle), this);
 		compositeSupport = new CompositeSupport(this);
 		/* create the event manager and top level event dispatchers */
 		eventManager = new EventManager("Framework Event Dispatcher"); //$NON-NLS-1$
@@ -221,8 +223,6 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 			Profile.logTime("Framework.initialze()", "done new EventManager"); //$NON-NLS-1$ //$NON-NLS-2$
 		/* create the service registry */
 		serviceRegistry = new ServiceRegistry(this);
-		/* create the system bundle */
-		createSystemBundle();
 		loadVMProfile(); // load VM profile after the system bundle has been created
 		setBootDelegation(); //set boot delegation property after system exports have been set
 		if (Profile.PROFILE && Profile.STARTUP)

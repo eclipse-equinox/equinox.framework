@@ -11,10 +11,9 @@
 
 package org.eclipse.osgi.internal.composite;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.*;
+import java.util.Dictionary;
+import java.util.Map;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Framework;
@@ -27,13 +26,15 @@ import org.osgi.service.composite.CompositeConstants;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle {
 	static final CompositeInfo rootInfo = new CompositeInfo(null, null, null, null, null, null);
-	final Bundle compositeSystemBundle;
+	final BundleHost compositeSystemBundle;
 	final CompositeInfo compositeInfo;
+	final StartLevelManager startLevelManager;
 
 	public CompositeImpl(BundleData bundledata, Framework framework) throws BundleException {
 		super(bundledata, framework);
-		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0));
+		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0), framework);
 		compositeInfo = createCompositeInfo();
+		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
 	}
 
 	CompositeInfo getCompositeInfo() {
@@ -114,18 +115,18 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	}
 
 	protected void startHook() {
-		// TODO increment start-level for the composite framework
+		startLevelManager.initialize();
+		startLevelManager.doSetStartLevel(1);
 	}
 
 	protected void stopHook() {
-		// TODO decrement start-level for the composite framework
+		startLevelManager.shutdown();
+		startLevelManager.cleanup();
 	}
 
 	public void uninstallWorkerPrivileged() throws BundleException {
-		// first do the work to uninstall the composite
-		super.uninstallWorkerPrivileged();
-		// uninstall all the constituents
 		Bundle[] bundles = compositeSystemBundle.getBundleContext().getBundles();
+		// uninstall all the constituents first
 		for (int i = 0; i < bundles.length; i++)
 			if (bundles[i].getBundleId() != 0) // not the system bundle
 				try {
@@ -133,6 +134,9 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 				} catch (BundleException e) {
 					framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundles[i], e);
 				}
+		// now uninstall the composite
+		super.uninstallWorkerPrivileged();
+
 	}
 
 	protected void close() {
@@ -141,92 +145,26 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		compositeInfo.getParent().removeChild(compositeInfo);
 	}
 
-	public class CompositeSystemBundle implements Bundle {
-		private final BundleHost systemBundle;
-		private final BundleContext systemContext;
+	public class CompositeSystemBundle extends InternalSystemBundle {
+		private final BundleHost rootSystemBundle;
 
-		public CompositeSystemBundle(BundleHost systemBundle) {
-			this.systemBundle = systemBundle;
-			this.systemContext = new CompositeContext(systemBundle);
+		public CompositeSystemBundle(BundleHost systemBundle, Framework framework) throws BundleException {
+			super(systemBundle.getBundleData(), framework);
+			this.rootSystemBundle = systemBundle;
+			this.state = Bundle.STARTING; // Initial state must be STARTING for composite system bundle
 		}
 
-		public Enumeration findEntries(String path, String filePattern, boolean recurse) {
-			return systemBundle.findEntries(path, filePattern, recurse);
-		}
-
-		public BundleContext getBundleContext() {
-			framework.checkAdminPermission(compositeSystemBundle, AdminPermission.CONTEXT);
-			return systemContext;
-		}
-
-		public long getBundleId() {
-			return systemBundle.getBundleId();
-		}
-
-		public URL getEntry(String path) {
-			return systemBundle.getEntry(path);
-		}
-
-		public Enumeration getEntryPaths(String path) {
-			return systemBundle.getEntryPaths(path);
-		}
-
-		public Dictionary getHeaders() {
-			return systemBundle.getHeaders();
-		}
-
-		public Dictionary getHeaders(String locale) {
-			return systemBundle.getHeaders(locale);
-		}
-
-		public long getLastModified() {
-			return systemBundle.getLastModified();
-		}
-
-		public String getLocation() {
-			return systemBundle.getLocation();
+		protected BundleContextImpl createContext() {
+			return new CompositeContext(this);
 		}
 
 		public ServiceReference[] getRegisteredServices() {
 			// TODO this is not scoped; do we care?
-			return systemBundle.getRegisteredServices();
-		}
-
-		public URL getResource(String name) {
-			return systemBundle.getResource(name);
-		}
-
-		public Enumeration getResources(String name) throws IOException {
-			return systemBundle.getResources(name);
+			return rootSystemBundle.getRegisteredServices();
 		}
 
 		public ServiceReference[] getServicesInUse() {
-			return systemBundle.getServicesInUse();
-		}
-
-		public Map getSignerCertificates(int signersType) {
-			return systemBundle.getSignerCertificates(signersType);
-		}
-
-		public int getState() {
-			// TODO Need to do the right thing according to Composite state
-			return systemBundle.getState();
-		}
-
-		public String getSymbolicName() {
-			return systemBundle.getSymbolicName();
-		}
-
-		public Version getVersion() {
-			return systemBundle.getVersion();
-		}
-
-		public boolean hasPermission(Object permission) {
-			return systemBundle.hasPermission(permission);
-		}
-
-		public Class loadClass(String name) throws ClassNotFoundException {
-			return systemBundle.loadClass(name);
+			return rootSystemBundle.getServicesInUse();
 		}
 
 		public void start(int options) throws BundleException {
@@ -257,6 +195,10 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			update(null);
 		}
 
+		public long getCompositeId() {
+			return CompositeImpl.this.getBundleId();
+		}
+
 	}
 
 	public class CompositeContext extends BundleContextImpl {
@@ -266,7 +208,15 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		}
 
 		protected long getCompositeId() {
-			return getBundleId();
+			return CompositeImpl.this.getBundleId();
 		}
+	}
+
+	public StartLevelManager getStartLevelService() {
+		return startLevelManager;
+	}
+
+	public BundleHost getSystemBundle() {
+		return compositeSystemBundle;
 	}
 }

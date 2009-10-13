@@ -167,7 +167,11 @@ public class PackageAdminImpl implements PackageAdmin {
 		if (synchronously) {
 			doResolveBundles(copy, true);
 			if (framework.isForcedRestart())
-				framework.systemBundle.stop();
+				try {
+					framework.systemBundle.stop();
+				} catch (BundleException e) {
+					// do nothing
+				}
 		} else {
 			Thread refresh = framework.secureAction.createThread(new Runnable() {
 				public void run() {
@@ -423,7 +427,7 @@ public class PackageAdminImpl implements PackageAdmin {
 		// first sort by id/start-level order
 		Util.sort(refresh);
 		// then sort by dependency order
-		framework.startLevelManager.sortByDependency(refresh);
+		StartLevelManager.sortByDependency(refresh, framework);
 		boolean[] previouslyResolved = new boolean[refresh.length];
 		int[] previousStates = new int[refresh.length];
 		try {

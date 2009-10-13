@@ -19,6 +19,7 @@ import org.eclipse.osgi.event.BatchBundleListener;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.eventmgr.CopyOnWriteIdentityMap;
 import org.eclipse.osgi.framework.eventmgr.EventDispatcher;
+import org.eclipse.osgi.internal.composite.CompositeImpl;
 import org.eclipse.osgi.internal.profile.Profile;
 import org.eclipse.osgi.internal.serviceregistry.*;
 import org.eclipse.osgi.util.NLS;
@@ -179,8 +180,15 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * if the identifier doesn't match any installed bundle.
 	 */
 	public Bundle getBundle(long id) {
+		long compositeId = getCompositeId();
+		if (id == 0 && compositeId > 0)
+			return ((CompositeImpl) framework.getBundle(compositeId)).getSystemBundle();
 		AbstractBundle result = framework.getBundle(id);
-		return id == 0 || result.getCompositeId() == getCompositeId() ? result : null;
+		if (result == null)
+			return null;
+		if (compositeId == 0 && getBundle().getBundleId() == 0 || result.getCompositeId() == compositeId)
+			return result; // allow the root system bundle to see all
+		return null;
 	}
 
 	/**
@@ -193,10 +201,14 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * object per installed bundle.
 	 */
 	public Bundle[] getBundles() {
-		long compositeID = getCompositeId();
-		if (compositeID == 0 && getBundle().getBundleId() == 0)
-			compositeID = -1; // the root system bundle sees all
-		return framework.getBundles(compositeID);
+		long compositeId = getCompositeId();
+		if (compositeId == 0 && getBundle().getBundleId() == 0)
+			compositeId = -1; // the root system bundle sees all
+		Bundle[] result = framework.getBundles(compositeId);
+		// we are guaranteed to at least have a system bundle here
+		if (compositeId > 0)
+			result[0] = getBundle(0); // replace system bundle with composite specific one
+		return result;
 	}
 
 	/**
@@ -904,8 +916,8 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 						BundleEvent event = (BundleEvent) object;
 						AbstractBundle source = (AbstractBundle) event.getBundle();
-						if (source.getCompositeId() != getCompositeId() && (getBundle().getBundleId() != 0 || getCompositeId() == 0))
-							break; // Do not deliver event if the composite is different and the system bundle is not client
+						if (source.getCompositeId() != getCompositeId() && (getBundle().getBundleId() != 0 || getCompositeId() != 0))
+							break; // Do not deliver event if the composite is different and the root system bundle is not client
 						switch (event.getType()) {
 							case Framework.BATCHEVENT_BEGIN : {
 								if (listener instanceof BatchBundleListener)

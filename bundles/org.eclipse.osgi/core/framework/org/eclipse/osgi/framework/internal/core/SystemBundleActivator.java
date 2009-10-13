@@ -45,8 +45,8 @@ public class SystemBundleActivator implements BundleActivator {
 			packageAdmin = register(new String[] {Constants.OSGI_PACKAGEADMIN_NAME}, framework.packageAdmin, null);
 		if (framework.securityAdmin != null)
 			securityAdmin = register(new String[] {Constants.OSGI_PERMISSIONADMIN_NAME, ConditionalPermissionAdmin.class.getName()}, framework.securityAdmin, null);
-		if (framework.startLevelManager != null)
-			startLevel = register(new String[] {Constants.OSGI_STARTLEVEL_NAME}, framework.startLevelManager, null);
+		if (framework.startLevelFactory != null)
+			startLevel = register(new String[] {Constants.OSGI_STARTLEVEL_NAME}, framework.startLevelFactory, null);
 		if (framework.compositeSupport != null)
 			compositeAdmin = register(new String[] {CompositeAdmin.class.getName()}, framework.compositeSupport, null);
 		FrameworkDebugOptions dbgOptions = null;
