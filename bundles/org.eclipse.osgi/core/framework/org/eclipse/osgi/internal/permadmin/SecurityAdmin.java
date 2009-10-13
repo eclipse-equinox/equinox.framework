@@ -19,6 +19,7 @@ import java.util.*;
 import org.eclipse.osgi.framework.adaptor.PermissionStorage;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Constants;
+import org.eclipse.osgi.framework.internal.core.Framework;
 import org.osgi.framework.*;
 import org.osgi.service.condpermadmin.*;
 import org.osgi.service.permissionadmin.PermissionAdmin;

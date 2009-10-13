@@ -27,19 +27,19 @@ import org.osgi.framework.*;
  * @ThreadSafe
  */
 
-public class ServiceUse {
+public class ServiceUse<S> {
 	/** ServiceFactory object if the service instance represents a factory,
 	 null otherwise */
-	final ServiceFactory factory;
+	final ServiceFactory<S> factory;
 	/** BundleContext associated with this service use */
 	final BundleContextImpl context;
 	/** ServiceDescription of the registered service */
-	final ServiceRegistrationImpl registration;
+	final ServiceRegistrationImpl<S> registration;
 
 	/** Service object either registered or that returned by
 	 ServiceFactory.getService() */
 	/* @GuardedBy("this") */
-	private Object cachedService;
+	private S cachedService;
 	/** bundle's use count for this service */
 	/* @GuardedBy("this") */
 	private int useCount;
@@ -54,11 +54,13 @@ public class ServiceUse {
 	 * @param   context bundle getting the service
 	 * @param   registration ServiceRegistration of the service
 	 */
-	ServiceUse(BundleContextImpl context, ServiceRegistrationImpl registration) {
+	ServiceUse(BundleContextImpl context, ServiceRegistrationImpl<S> registration) {
 		this.useCount = 0;
-		Object service = registration.getServiceObject();
-		if (service instanceof ServiceFactory) {
-			this.factory = (ServiceFactory) service;
+		S service = registration.getServiceObject();
+		if (service instanceof ServiceFactory<?>) {
+			@SuppressWarnings("unchecked")
+			ServiceFactory<S> f = (ServiceFactory<S>) service;
+			this.factory = f;
 			this.cachedService = null;
 		} else {
 			this.factory = null;
@@ -104,7 +106,7 @@ public class ServiceUse {
 	 * reference.
 	 */
 	/* @GuardedBy("this") */
-	Object getService() {
+	S getService() {
 		if ((useCount > 0) || (factory == null)) {
 			useCount++;
 			return cachedService;
@@ -113,10 +115,10 @@ public class ServiceUse {
 		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
 			Debug.println("getService[factory=" + registration.getBundle() + "](" + context.getBundleImpl() + "," + registration + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
-		final Object service;
+		final S service;
 		try {
-			service = AccessController.doPrivileged(new PrivilegedAction() {
-				public Object run() {
+			service = AccessController.doPrivileged(new PrivilegedAction<S>() {
+				public S run() {
 					return factory.getService(context.getBundleImpl(), registration);
 				}
 			});
@@ -202,15 +204,15 @@ public class ServiceUse {
 			return true;
 		}
 
-		final Object service = cachedService;
+		final S service = cachedService;
 		cachedService = null;
 
 		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
 			Debug.println("ungetService[factory=" + registration.getBundle() + "](" + context.getBundleImpl() + "," + registration + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		try {
-			AccessController.doPrivileged(new PrivilegedAction() {
-				public Object run() {
+			AccessController.doPrivileged(new PrivilegedAction<S>() {
+				public S run() {
 					factory.ungetService(context.getBundleImpl(), registration, service);
 					return null;
 				}
@@ -242,7 +244,7 @@ public class ServiceUse {
 		if ((useCount == 0) || (factory == null)) {
 			return;
 		}
-		final Object service = cachedService;
+		final S service = cachedService;
 		cachedService = null;
 		useCount = 0;
 
@@ -250,8 +252,8 @@ public class ServiceUse {
 			Debug.println("releaseService[factory=" + registration.getBundle() + "](" + context.getBundleImpl() + "," + registration + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		try {
-			AccessController.doPrivileged(new PrivilegedAction() {
-				public Object run() {
+			AccessController.doPrivileged(new PrivilegedAction<S>() {
+				public S run() {
 					factory.ungetService(context.getBundleImpl(), registration, service);
 					return null;
 				}

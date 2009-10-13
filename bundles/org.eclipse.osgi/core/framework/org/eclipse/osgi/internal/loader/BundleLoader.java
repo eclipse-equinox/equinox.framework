@@ -21,6 +21,7 @@ import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Constants;
+import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.framework.util.KeyedHashSet;
 import org.eclipse.osgi.internal.loader.buddy.PolicyHandler;
 import org.eclipse.osgi.service.resolver.*;

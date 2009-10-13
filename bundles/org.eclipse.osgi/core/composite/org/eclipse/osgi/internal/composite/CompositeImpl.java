@@ -17,6 +17,7 @@ import java.net.URL;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.internal.core.*;
+import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.framework.util.Headers;
 import org.eclipse.osgi.service.resolver.*;
 import org.osgi.framework.*;

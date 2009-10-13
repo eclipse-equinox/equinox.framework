@@ -20,10 +20,10 @@ import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.eventmgr.CopyOnWriteIdentityMap;
 import org.eclipse.osgi.framework.eventmgr.EventDispatcher;
 import org.eclipse.osgi.internal.profile.Profile;
-import org.eclipse.osgi.internal.serviceregistry.ServiceReferenceImpl;
-import org.eclipse.osgi.internal.serviceregistry.ServiceRegistry;
+import org.eclipse.osgi.internal.serviceregistry.*;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
+import org.osgi.framework.Constants;
 
 /**
  * Bundle's execution context.
@@ -49,16 +49,16 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	/** Services that bundle is using. Key is ServiceRegistrationImpl,
 	 Value is ServiceUse */
 	/* @GuardedBy("contextLock") */
-	private HashMap/*<ServiceRegistrationImpl, ServiceUse>*/servicesInUse;
+	private HashMap<ServiceRegistrationImpl<?>, ServiceUse<?>> servicesInUse;
 
 	/** Listener list for bundle's BundleListeners */
-	protected Map bundleEvent;
+	protected Map<BundleListener, BundleListener> bundleEvent;
 
 	/** Listener list for bundle's SynchronousBundleListeners */
-	protected Map bundleEventSync;
+	protected Map<BundleListener, BundleListener> bundleEventSync;
 
 	/** Listener list for bundle's FrameworkListeners */
-	protected Map frameworkEvent;
+	protected Map<FrameworkListener, FrameworkListener> frameworkEvent;
 
 	/** The current instantiation of the activator. */
 	protected BundleActivator activator;
@@ -311,7 +311,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 			synchronized (framework.bundleEventSync) {
 				checkValid();
 				if (bundleEventSync == null) {
-					bundleEventSync = new CopyOnWriteIdentityMap();
+					bundleEventSync = new CopyOnWriteIdentityMap<BundleListener, BundleListener>();
 					framework.bundleEventSync.put(this, this);
 				}
 
@@ -321,7 +321,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 			synchronized (framework.bundleEvent) {
 				checkValid();
 				if (bundleEvent == null) {
-					bundleEvent = new CopyOnWriteIdentityMap();
+					bundleEvent = new CopyOnWriteIdentityMap<BundleListener, BundleListener>();
 					framework.bundleEvent.put(this, this);
 				}
 
@@ -398,7 +398,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		synchronized (framework.frameworkEvent) {
 			checkValid();
 			if (frameworkEvent == null) {
-				frameworkEvent = new CopyOnWriteIdentityMap();
+				frameworkEvent = new CopyOnWriteIdentityMap<FrameworkListener, FrameworkListener>();
 				framework.frameworkEvent.put(this, this);
 			}
 
@@ -498,7 +498,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * @see ServiceRegistration
 	 * @see ServiceFactory
 	 */
-	public ServiceRegistration registerService(String[] clazzes, Object service, Dictionary properties) {
+	public ServiceRegistration<?> registerService(String[] clazzes, Object service, Dictionary<String, Object> properties) {
 		checkValid();
 
 		return framework.getServiceRegistry().registerService(this, clazzes, service, properties);
@@ -516,7 +516,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 *
 	 * @see #registerService(java.lang.String[], java.lang.Object, java.util.Dictionary)
 	 */
-	public ServiceRegistration registerService(String clazz, Object service, Dictionary properties) {
+	public ServiceRegistration<?> registerService(String clazz, Object service, Dictionary<String, Object> properties) {
 		String[] clazzes = new String[] {clazz};
 
 		return registerService(clazzes, service, properties);
@@ -565,12 +565,12 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * @exception InvalidSyntaxException If <tt>filter</tt> contains
 	 * an invalid filter string which cannot be parsed.
 	 */
-	public ServiceReference[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
+	public ServiceReference<?>[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
 		checkValid();
 		return framework.getServiceRegistry().getServiceReferences(this, clazz, filter, false);
 	}
 
-	public ServiceReference[] getAllServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
+	public ServiceReference<?>[] getAllServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
 		checkValid();
 		return framework.getServiceRegistry().getServiceReferences(this, clazz, filter, true);
 	}
@@ -595,7 +595,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * if no services are registered which implement the named class.
 	 * @see #getServiceReferences
 	 */
-	public ServiceReference getServiceReference(String clazz) {
+	public ServiceReference<?> getServiceReference(String clazz) {
 		checkValid();
 
 		return framework.getServiceRegistry().getServiceReference(this, clazz);
@@ -651,17 +651,19 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * @see #ungetService
 	 * @see ServiceFactory
 	 */
-	public Object getService(ServiceReference reference) {
+	public <S> S getService(ServiceReference<S> reference) {
 		checkValid();
 		if (reference == null)
 			throw new NullPointerException("A null service reference is not allowed."); //$NON-NLS-1$
 		synchronized (contextLock) {
 			if (servicesInUse == null)
 				// Cannot predict how many services a bundle will use, start with a small table.
-				servicesInUse = new HashMap(10);
+				servicesInUse = new HashMap<ServiceRegistrationImpl<?>, ServiceUse<?>>(10);
 		}
 
-		return framework.getServiceRegistry().getService(this, (ServiceReferenceImpl) reference);
+		@SuppressWarnings("unchecked")
+		S service = (S) framework.getServiceRegistry().getService(this, (ServiceReferenceImpl<S>) reference);
+		return service;
 	}
 
 	/**
@@ -699,10 +701,10 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * @see #getService
 	 * @see ServiceFactory
 	 */
-	public boolean ungetService(ServiceReference reference) {
+	public boolean ungetService(ServiceReference<?> reference) {
 		checkValid();
 
-		return framework.getServiceRegistry().ungetService(this, (ServiceReferenceImpl) reference);
+		return framework.getServiceRegistry().ungetService(this, (ServiceReferenceImpl<?>) reference);
 	}
 
 	/**
@@ -768,7 +770,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		if (Profile.PROFILE && Profile.STARTUP)
 			Profile.logEnter("BundleContextImpl.startActivator()", null); //$NON-NLS-1$
 		try {
-			AccessController.doPrivileged(new PrivilegedExceptionAction() {
+			AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
 				public Object run() throws Exception {
 					if (bundleActivator != null) {
 						if (Profile.PROFILE && Profile.STARTUP)
@@ -830,7 +832,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 */
 	protected void stop() throws BundleException {
 		try {
-			AccessController.doPrivileged(new PrivilegedExceptionAction() {
+			AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
 				public Object run() throws Exception {
 					if (activator != null) {
 						// make sure the context class loader is set correctly
@@ -869,7 +871,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * @return A map of ServiceRegistrationImpl to ServiceUse for services in use by 
 	 * this context.
 	 */
-	public Map getServicesInUseMap() {
+	public Map<ServiceRegistrationImpl<?>, ServiceUse<?>> getServicesInUseMap() {
 		synchronized (contextLock) {
 			return servicesInUse;
 		}
@@ -1015,5 +1017,26 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 	public Framework getFramework() {
 		return framework;
+	}
+
+	public <S> ServiceRegistration<S> registerService(Class<S> clazz, Object service, Dictionary<String, Object> properties) {
+		// TODO Auto-generated method stub
+		@SuppressWarnings("unchecked")
+		ServiceRegistration<S> registration = (ServiceRegistration<S>) registerService(clazz.getName(), service, properties);
+		return registration;
+	}
+
+	public <S> ServiceReference<S> getServiceReference(Class<S> clazz) {
+		// TODO Auto-generated method stub
+		@SuppressWarnings("unchecked")
+		ServiceReference<S> reference = (ServiceReference<S>) getServiceReference(clazz.getName());
+		return reference;
+	}
+
+	public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter) throws InvalidSyntaxException {
+		// TODO Auto-generated method stub
+		@SuppressWarnings("unchecked")
+		ServiceReference<S>[] refs = (ServiceReference<S>[]) getServiceReferences(clazz.getName(), filter);
+		return Arrays.asList(refs);
 	}
 }

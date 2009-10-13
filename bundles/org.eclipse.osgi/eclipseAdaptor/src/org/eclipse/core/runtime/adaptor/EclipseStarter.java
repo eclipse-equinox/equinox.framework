@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.internal.adaptor.*;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Constants;
+import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.framework.log.FrameworkLog;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
 import org.eclipse.osgi.internal.profile.Profile;

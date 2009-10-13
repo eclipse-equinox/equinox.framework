@@ -70,7 +70,7 @@ class FilteredServiceListener implements ServiceListener, ListenerHook.ListenerI
 	 * @param event The <code>ServiceEvent</code> object.
 	 */
 	public void serviceChanged(ServiceEvent event) {
-		ServiceReferenceImpl reference = (ServiceReferenceImpl) event.getServiceReference();
+		ServiceReferenceImpl<?> reference = (ServiceReferenceImpl<?>) event.getServiceReference();
 
 		// first check if we can short circuit the filter match if the required objectClass does not match the event
 		objectClassCheck: if (objectClass != null) {
@@ -120,7 +120,7 @@ class FilteredServiceListener implements ServiceListener, ListenerHook.ListenerI
 			// check sharing policy
 			return checkSharingPolicy(event);
 		}
-		ServiceReference reference = event.getServiceReference();
+		ServiceReference<?> reference = event.getServiceReference();
 		if (filter.match(reference)) {
 			// check sharing policy
 			return checkSharingPolicy(event);
