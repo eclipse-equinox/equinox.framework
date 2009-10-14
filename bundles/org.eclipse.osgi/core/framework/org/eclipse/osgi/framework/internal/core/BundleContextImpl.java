@@ -916,8 +916,11 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 						BundleEvent event = (BundleEvent) object;
 						AbstractBundle source = (AbstractBundle) event.getBundle();
-						if (source.getCompositeId() != getCompositeId() && (getBundle().getBundleId() != 0 || getCompositeId() != 0))
-							break; // Do not deliver event if the composite is different and the root system bundle is not client
+						if (source != null && source.getCompositeId() != getCompositeId() && (getBundle().getBundleId() != 0 || getCompositeId() != 0)) {
+							if (Debug.DEBUG && Debug.DEBUG_EVENTS)
+								Debug.println("dispatchBundleEvent ignoring event from another composite: source=" + source.getCompositeId() + " target=" + getCompositeId()); //$NON-NLS-1$ //$NON-NLS-2$
+							break; // Do not deliver event if the composite is different
+						}
 						switch (event.getType()) {
 							case Framework.BATCHEVENT_BEGIN : {
 								if (listener instanceof BatchBundleListener)
@@ -951,13 +954,20 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 					case Framework.FRAMEWORKEVENT : {
 						FrameworkListener listener = (FrameworkListener) l;
+						FrameworkEvent event = (FrameworkEvent) object;
 
 						if (Debug.DEBUG && Debug.DEBUG_EVENTS) {
 							String listenerName = listener.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(listener)); //$NON-NLS-1$
 							Debug.println("dispatchFrameworkEvent[" + tmpBundle + "](" + listenerName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 						}
 
-						listener.frameworkEvent((FrameworkEvent) object);
+						AbstractBundle source = (AbstractBundle) event.getBundle();
+						if (source != null && source.getCompositeId() != getCompositeId()) {
+							if (Debug.DEBUG && Debug.DEBUG_EVENTS)
+								Debug.println("dispatchFrameworkEvent ignoring event from another composite: source=" + source.getCompositeId() + " target=" + getCompositeId()); //$NON-NLS-1$ //$NON-NLS-2$
+							break; // Do not deliver event if the composite is different
+						}
+						listener.frameworkEvent(event);
 						break;
 					}
 					default : {
