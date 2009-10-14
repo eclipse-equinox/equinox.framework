@@ -591,21 +591,22 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 	 *  Stop the system bundle
 	 */
 	private void stopSystemBundle() {
-		if (systemBundle.getCompositeId() == 0) {
-			try {
-				systemBundle.context.stop();
-			} catch (BundleException sbe) {
-				if (Debug.DEBUG && Debug.DEBUG_STARTLEVEL) {
-					Debug.println("SLL: Bundle suspend exception: " + sbe.getMessage()); //$NON-NLS-1$
-					Debug.printStackTrace(sbe.getNestedException() == null ? sbe : sbe.getNestedException());
-				}
-				framework.publishFrameworkEvent(FrameworkEvent.ERROR, systemBundle, sbe);
+		try {
+			systemBundle.context.stop();
+		} catch (BundleException sbe) {
+			if (Debug.DEBUG && Debug.DEBUG_STARTLEVEL) {
+				Debug.println("SLL: Bundle suspend exception: " + sbe.getMessage()); //$NON-NLS-1$
+				Debug.printStackTrace(sbe.getNestedException() == null ? sbe : sbe.getNestedException());
 			}
+			framework.publishFrameworkEvent(FrameworkEvent.ERROR, systemBundle, sbe);
 		}
 
 		systemBundle.state = Bundle.RESOLVED;
 		framework.publishBundleEvent(BundleEvent.STOPPED, systemBundle);
 		if (systemBundle.getCompositeId() > 0) {
+			// TODO warning this is hacky should encapsulate this in CompositeImpl somehow
+			systemBundle.close();
+			systemBundle.context = null;
 			systemBundle.state = Bundle.STARTING;
 			framework.publishBundleEvent(BundleEvent.STARTING, systemBundle);
 		}

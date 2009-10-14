@@ -210,6 +210,14 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		protected long getCompositeId() {
 			return CompositeImpl.this.getBundleId();
 		}
+
+		protected void start() {
+			// nothing;
+		}
+
+		protected void stop() {
+			// nothing
+		}
 	}
 
 	public StartLevelManager getStartLevelService() {
