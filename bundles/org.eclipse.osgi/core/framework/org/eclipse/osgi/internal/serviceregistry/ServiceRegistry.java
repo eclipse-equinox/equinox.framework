@@ -785,7 +785,7 @@ public class ServiceRegistry {
 	 */
 	synchronized long getNextServiceId() {
 		long id = serviceid;
-		serviceid++;
+		serviceid = id + 1;
 		return id;
 	}
 
