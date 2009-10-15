@@ -13,7 +13,6 @@ package org.eclipse.osgi.framework.internal.core;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.security.Permission;
 import java.security.ProtectionDomain;
 import java.util.Dictionary;
@@ -164,14 +163,6 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 			checkValid();
 		}
 		return (Class.forName(name));
-	}
-
-	/**
-	 * Find the specified resource in this bundle.
-	 * This methods returns null for the system bundle.
-	 */
-	public URL getResource(String name) {
-		return (null);
 	}
 
 	/**
