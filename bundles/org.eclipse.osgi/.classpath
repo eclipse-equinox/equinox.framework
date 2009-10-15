@@ -4,6 +4,7 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.osgi.framework"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.osgi.util.tracker"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.osgi.service.composite"/>
 	<classpathentry kind="src" path="osgi/src"/>
 	<classpathentry kind="src" path="supplement/src"/>
 	<classpathentry kind="src" path="core/adaptor"/>
