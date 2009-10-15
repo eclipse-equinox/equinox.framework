@@ -18,6 +18,7 @@ import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.framework.util.Headers;
+import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.service.resolver.*;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
@@ -199,6 +200,9 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			return CompositeImpl.this.getBundleId();
 		}
 
+		public BundleLoaderProxy getLoaderProxy() {
+			return rootSystemBundle.getLoaderProxy();
+		}
 	}
 
 	public class CompositeContext extends BundleContextImpl {
