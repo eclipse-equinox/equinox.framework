@@ -38,4 +38,20 @@ public interface ScopePolicy {
 	 * @return true if the client has visibility according to this scope policy; false otherwise
 	 */
 	boolean isVisible(BundleDescription client, BaseDescription constraintProvider);
+
+	/**
+	 * Determines if the specified bundles are in the same scope.
+	 * @param b1 a bundle
+	 * @param b2 a bundle
+	 * @return true if the two bundles are in the same scope.
+	 */
+	boolean sameScope(Bundle b1, Bundle b2);
+
+	/**
+	 * Determines if the specified descriptions are in the same scope.
+	 * @param d1 a description
+	 * @param d2 a description
+	 * @return true if the two descriptions are in the same scope.
+	 */
+	boolean sameScope(BaseDescription d1, BaseDescription d2);
 }

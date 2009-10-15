@@ -74,14 +74,14 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		BundleDescription desc = factory.createBundleDescription(null, builderManifest, "", 0); //$NON-NLS-1$
 		if (importPackage != null)
 			imports = desc.getImportPackages();
-		if (exportPackage != null)
+		if (requireBundle != null)
 			requires = desc.getRequiredBundles();
 
-		if (exportPackage == null)
+		if (exportPackage != null) {
 			builderManifest.put(Constants.IMPORT_PACKAGE, exportPackage);
-		desc = factory.createBundleDescription(null, builderManifest, "", 0); //$NON-NLS-1$
-		if (exportPackage != null)
+			desc = factory.createBundleDescription(null, builderManifest, "", 0); //$NON-NLS-1$
 			exports = desc.getImportPackages();
+		}
 
 		// set the parent info
 		CompositeInfo parentInfo;

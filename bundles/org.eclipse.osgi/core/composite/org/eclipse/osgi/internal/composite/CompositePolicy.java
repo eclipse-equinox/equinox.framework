@@ -51,11 +51,34 @@ public class CompositePolicy implements ScopePolicy {
 		long providerCompID = providerBundle.getCompositeId();
 		if (clientCompID == providerCompID)
 			return true; // in the same composite
-		CompositeInfo clientInfo = ((CompositeImpl) framework.getBundle(clientCompID)).getCompositeInfo();
-		CompositeInfo providerInfo = providerCompID == 0 ? CompositeImpl.rootInfo : ((CompositeImpl) framework.getBundle(providerCompID)).getCompositeInfo();
+		CompositeInfo clientInfo = getCompositeInfo(clientCompID);
+		CompositeInfo providerInfo = getCompositeInfo(providerCompID);
 		if (providerInfo == null || clientInfo == providerInfo)
 			return true;
 		return clientInfo.isVisible(serviceProvider != null ? (Object) serviceProvider : (Object) constraintProvider, clientInfo, providerInfo);
 	}
 
+	private CompositeInfo getCompositeInfo(long compositeId) {
+		return (compositeId == 0) ? CompositeImpl.rootInfo : ((CompositeImpl) framework.getBundle(compositeId)).getCompositeInfo();
+	}
+
+	public boolean sameScope(Bundle b1, Bundle b2) {
+		if (b1 == null || b2 == null)
+			return false;
+		long b1CompId = ((AbstractBundle) b1).getCompositeId();
+		long b2CompId = ((AbstractBundle) b2).getCompositeId();
+		if (b1CompId == b2CompId)
+			return true;
+		if ((b1CompId == 0 && b1.getBundleId() == 0) || (b2CompId == 0 && b2CompId == 0))
+			return true; // the root system bundle belongs to every scope
+		return false;
+	}
+
+	public boolean sameScope(BaseDescription d1, BaseDescription d2) {
+		if (d1 == null || d2 == null)
+			return false;
+		Bundle b1 = framework.getBundle(d1.getSupplier().getBundleId());
+		Bundle b2 = framework.getBundle(d2.getSupplier().getBundleId());
+		return sameScope(b1, b2);
+	}
 }
