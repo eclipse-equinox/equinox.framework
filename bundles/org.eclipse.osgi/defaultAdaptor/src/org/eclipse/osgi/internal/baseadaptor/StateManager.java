@@ -296,7 +296,7 @@ public class StateManager implements PlatformAdmin, Runnable {
 	}
 
 	private Resolver createSystemResolver(boolean checkPermissions) {
-		Resolver resolver = createResolver(false);
+		Resolver resolver = createResolver(checkPermissions);
 		// TODO need a better way to do this
 		ScopePolicy policy = ((BundleContextImpl) context).getFramework().getCompositeSupport().getCompositePolicy();
 		resolver.setScopePolicy(policy);
