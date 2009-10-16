@@ -289,18 +289,20 @@ public class ServiceRegistry {
 			Debug.println((allservices ? "getAllServiceReferences(" : "getServiceReferences(") + clazz + ", \"" + filterstring + "\")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		Filter filter = (filterstring == null) ? null : context.createFilter(filterstring);
-		List<ServiceReferenceImpl<?>> references = referencesFromRegistrations(lookupServiceRegistrations(clazz, filter));
-		for (Iterator<ServiceReferenceImpl<?>> iter = references.iterator(); iter.hasNext();) {
-			ServiceReferenceImpl<?> reference = iter.next();
+		List<ServiceRegistrationImpl<?>> registrations = lookupServiceRegistrations(clazz, filter);
+		List<ServiceReferenceImpl<?>> references = new ArrayList<ServiceReferenceImpl<?>>(registrations.size());
+		for (ServiceRegistrationImpl<?> registration : registrations) {
+			ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
 			if (isInScope(context, reference) && (allservices || isAssignableTo(context, reference))) {
 				try { /* test for permission to get the service */
 					checkGetServicePermission(reference);
 				} catch (SecurityException se) {
-					iter.remove();
+					continue; // don't return reference
 				}
 			} else {
-				iter.remove();
+				continue; // don't return reference
 			}
+			references.add(reference);
 		}
 
 		final Collection<ServiceReference<?>> shrinkable = new ShrinkableCollection<ServiceReference<?>>(references);
@@ -503,14 +505,16 @@ public class ServiceRegistry {
 	 * @see ServicePermission
 	 */
 	public ServiceReferenceImpl<?>[] getRegisteredServices(BundleContextImpl context) {
-		List<ServiceReferenceImpl<?>> references = referencesFromRegistrations(lookupServiceRegistrations(context, false));
-		for (Iterator<ServiceReferenceImpl<?>> iter = references.iterator(); iter.hasNext();) {
-			ServiceReferenceImpl<?> reference = iter.next();
+		List<ServiceRegistrationImpl<?>> registrations = lookupServiceRegistrations(context);
+		List<ServiceReferenceImpl<?>> references = new ArrayList<ServiceReferenceImpl<?>>(registrations.size());
+		for (ServiceRegistrationImpl<?> registration : registrations) {
+			ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
 			try { /* test for permission to get the service */
 				checkGetServicePermission(reference);
 			} catch (SecurityException se) {
-				iter.remove();
+				continue; // don't return reference
 			}
+			references.add(reference);
 		}
 
 		int size = references.size();
@@ -551,20 +555,22 @@ public class ServiceRegistry {
 			return null;
 		}
 
-		List<ServiceReferenceImpl<?>> references;
+		List<ServiceRegistrationImpl<?>> registrations;
 		synchronized (servicesInUse) {
-			if (servicesInUse.size() == 0) {
+			if (servicesInUse.isEmpty()) {
 				return null;
 			}
-			references = referencesFromRegistrations(new ArrayList<ServiceRegistrationImpl<?>>(servicesInUse.keySet()));
+			registrations = new ArrayList<ServiceRegistrationImpl<?>>(servicesInUse.keySet());
 		}
-		for (Iterator<ServiceReferenceImpl<?>> iter = references.iterator(); iter.hasNext();) {
-			ServiceReferenceImpl<?> reference = iter.next();
+		List<ServiceReferenceImpl<?>> references = new ArrayList<ServiceReferenceImpl<?>>(registrations.size());
+		for (ServiceRegistrationImpl<?> registration : registrations) {
+			ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
 			try { /* test for permission to get the service */
 				checkGetServicePermission(reference);
 			} catch (SecurityException se) {
-				iter.remove();
+				continue; // don't return reference
 			}
+			references.add(reference);
 		}
 
 		int size = references.size();
@@ -581,15 +587,14 @@ public class ServiceRegistry {
 	 * @param context The BundleContext of the closing bundle.
 	 */
 	public void unregisterServices(BundleContextImpl context) {
-		List<ServiceRegistrationImpl<?>> registrations = lookupServiceRegistrations(context, true);
-		for (Iterator<ServiceRegistrationImpl<?>> iter = registrations.iterator(); iter.hasNext();) {
-			ServiceRegistrationImpl<?> registration = iter.next();
+		for (ServiceRegistrationImpl<?> registration : lookupServiceRegistrations(context)) {
 			try {
 				registration.unregister();
 			} catch (IllegalStateException e) {
 				/* already unregistered */
 			}
 		}
+		removeServiceRegistrations(context); // remove empty list
 	}
 
 	/**
@@ -605,7 +610,7 @@ public class ServiceRegistry {
 		}
 		List<ServiceRegistrationImpl<?>> registrations;
 		synchronized (servicesInUse) {
-			if (servicesInUse.size() == 0) {
+			if (servicesInUse.isEmpty()) {
 				return;
 			}
 			registrations = new ArrayList<ServiceRegistrationImpl<?>>(servicesInUse.keySet());
@@ -613,8 +618,7 @@ public class ServiceRegistry {
 		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
 			Debug.println("Releasing services"); //$NON-NLS-1$
 		}
-		for (Iterator<ServiceRegistrationImpl<?>> iter = registrations.iterator(); iter.hasNext();) {
-			ServiceRegistrationImpl<?> registration = iter.next();
+		for (ServiceRegistrationImpl<?> registration : registrations) {
 			registration.releaseService(context);
 		}
 	}
@@ -693,7 +697,7 @@ public class ServiceRegistry {
 		synchronized (serviceEventListeners) {
 			removedListenersMap = serviceEventListeners.remove(context);
 		}
-		if ((removedListenersMap == null) || (removedListenersMap.size() == 0)) {
+		if ((removedListenersMap == null) || removedListenersMap.isEmpty()) {
 			return;
 		}
 		Collection<FilteredServiceListener> removedListeners = removedListenersMap.values();
@@ -738,10 +742,9 @@ public class ServiceRegistry {
 		synchronized (serviceEventListeners) {
 			listenerSnapshot = new HashMap<BundleContextImpl, Set<Map.Entry<ServiceListener, FilteredServiceListener>>>(serviceEventListeners.size());
 			for (Map.Entry<BundleContextImpl, Map<ServiceListener, FilteredServiceListener>> entry : serviceEventListeners.entrySet()) {
-				BundleContextImpl context = entry.getKey();
 				Map<ServiceListener, FilteredServiceListener> listeners = entry.getValue();
 				if (!listeners.isEmpty()) {
-					listenerSnapshot.put(context, listeners.entrySet());
+					listenerSnapshot.put(entry.getKey(), listeners.entrySet());
 				}
 			}
 		}
@@ -882,6 +885,9 @@ public class ServiceRegistry {
 			String clazz = clazzes[i];
 			List<ServiceRegistrationImpl<?>> services = publishedServicesByClass.get(clazz);
 			services.remove(registration);
+			if (services.isEmpty()) { // remove empty list
+				publishedServicesByClass.remove(clazz);
+			}
 		}
 
 		// Remove the ServiceRegistrationImpl from the list of all published Services.
@@ -906,7 +912,7 @@ public class ServiceRegistry {
 				result = publishedServicesByClass.get(clazz);
 			}
 
-			if ((result == null) || (result.size() == 0)) {
+			if ((result == null) || result.isEmpty()) {
 				@SuppressWarnings("unchecked")
 				List<ServiceRegistrationImpl<?>> empty = Collections.EMPTY_LIST;
 				return empty;
@@ -932,13 +938,12 @@ public class ServiceRegistry {
 	 * Lookup Service Registrations in the data structure by BundleContext.
 	 * 
 	 * @param context The BundleContext for which to return Service Registrations.
-	 * @param remove Indicates that the list of registrations for the context should be removed
 	 * @return List<ServiceRegistrationImpl>
 	 */
-	private synchronized List<ServiceRegistrationImpl<?>> lookupServiceRegistrations(BundleContextImpl context, boolean remove) {
-		List<ServiceRegistrationImpl<?>> result = remove ? publishedServicesByContext.remove(context) : publishedServicesByContext.get(context);
+	private synchronized List<ServiceRegistrationImpl<?>> lookupServiceRegistrations(BundleContextImpl context) {
+		List<ServiceRegistrationImpl<?>> result = publishedServicesByContext.get(context);
 
-		if ((result == null) || (result.size() == 0)) {
+		if ((result == null) || result.isEmpty()) {
 			@SuppressWarnings("unchecked")
 			List<ServiceRegistrationImpl<?>> empty = Collections.EMPTY_LIST;
 			return empty;
@@ -948,17 +953,12 @@ public class ServiceRegistry {
 	}
 
 	/**
-	 * Modify a List<ServiceRegistrationImpl> in place to a List<ServiceReferenceImpl>.
+	 * Remove Service Registrations in the data structure by BundleContext.
 	 * 
-	 * @param result The input List<ServiceRegistrationImpl>.
-	 * @return result which has been changed to List<ServiceReferenceImpl>
+	 * @param context The BundleContext for which to remove Service Registrations.
 	 */
-	private static List<ServiceReferenceImpl<?>> referencesFromRegistrations(List<ServiceRegistrationImpl<?>> registrations) {
-		List<ServiceReferenceImpl<?>> result = new ArrayList<ServiceReferenceImpl<?>>(registrations.size());
-		for (ServiceRegistrationImpl<?> registration : registrations) {
-			result.add(registration.getReferenceImpl());
-		}
-		return result;
+	private synchronized void removeServiceRegistrations(BundleContextImpl context) {
+		publishedServicesByContext.remove(context);
 	}
 
 	/**
