@@ -54,4 +54,12 @@ public interface ScopePolicy {
 	 * @return true if the two descriptions are in the same scope.
 	 */
 	boolean sameScope(BaseDescription d1, BaseDescription d2);
+
+	/**
+	 * Determines if the specified bundle represents a scope and returns
+	 * all bundles contained within that scope.
+	 * @return all bundles contained with in the specified bundle scope.
+	 */
+	//TODO need a better name
+	BundleDescription[] getScopeContent(BundleDescription bundle);
 }

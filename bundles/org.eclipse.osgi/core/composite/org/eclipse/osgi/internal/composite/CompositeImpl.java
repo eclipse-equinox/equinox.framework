@@ -11,10 +11,12 @@
 
 package org.eclipse.osgi.internal.composite;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Dictionary;
-import java.util.Map;
+import java.net.URL;
+import java.util.*;
 import org.eclipse.osgi.framework.adaptor.BundleData;
+import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.framework.util.Headers;
@@ -25,24 +27,25 @@ import org.osgi.framework.Constants;
 import org.osgi.service.composite.CompositeBundle;
 import org.osgi.service.composite.CompositeConstants;
 
-public class CompositeImpl extends BundleHost implements CompositeBundle {
-	static final CompositeInfo rootInfo = new CompositeInfo(null, null, null, null, null, null);
+public class CompositeImpl extends BundleHost implements CompositeBundle, SynchronousBundleListener {
 	final BundleHost compositeSystemBundle;
 	final CompositeInfo compositeInfo;
 	final StartLevelManager startLevelManager;
+	final List<BundleDescription> constituents = new ArrayList<BundleDescription>(0);
 
 	public CompositeImpl(BundleData bundledata, Framework framework) throws BundleException {
 		super(bundledata, framework);
 		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0), framework);
-		compositeInfo = createCompositeInfo();
+		compositeInfo = createCompositeInfo(framework);
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
+		compositeSystemBundle.getBundleContext(); // need to create the context to add the bundle listener
 	}
 
 	CompositeInfo getCompositeInfo() {
 		return compositeInfo;
 	}
 
-	private CompositeInfo createCompositeInfo() throws BundleException {
+	private CompositeInfo createCompositeInfo(Framework framework) throws BundleException {
 		Dictionary manifest = bundledata.getManifest();
 		String importPackage = (String) manifest.get(CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY);
 		String exportPackage = (String) manifest.get(CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY);
@@ -64,9 +67,9 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		}
 
 		StateObjectFactory factory = StateObjectFactory.defaultFactory;
-		Headers builderManifest = new Headers(4);
+		Headers<String, String> builderManifest = new Headers<String, String>(4);
 		builderManifest.put(Constants.BUNDLE_MANIFESTVERSION, "2"); //$NON-NLS-1$
-		builderManifest.put(Constants.BUNDLE_SYMBOLICNAME, manifest.get(Constants.BUNDLE_SYMBOLICNAME));
+		builderManifest.put(Constants.BUNDLE_SYMBOLICNAME, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME));
 		if (importPackage != null)
 			builderManifest.put(Constants.IMPORT_PACKAGE, importPackage);
 		if (requireBundle != null)
@@ -87,7 +90,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		CompositeInfo parentInfo;
 		long compositeID = bundledata.getCompositeID();
 		if (compositeID == 0) // this is the root framework
-			parentInfo = rootInfo;
+			parentInfo = framework.getCompositeSupport().compositPolicy.getRootCompositeInfo();
 		else
 			parentInfo = ((CompositeImpl) framework.getBundle(bundledata.getCompositeID())).getCompositeInfo();
 		CompositeInfo result = new CompositeInfo(parentInfo, imports, exports, requires, importServiceFilter, exportServiceFilter);
@@ -110,9 +113,27 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		update();
 	}
 
-	public void update(Map compositeManifest) throws BundleException {
-		// TODO Auto-generated method stub
-
+	public void update(Map<String, String> compositeManifest) throws BundleException {
+		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+			Debug.println("update location " + bundledata.getLocation()); //$NON-NLS-1$
+			Debug.println("   from: " + compositeManifest); //$NON-NLS-1$
+		}
+		framework.checkAdminPermission(this, AdminPermission.LIFECYCLE);
+		// make a local copy of the manifest first
+		compositeManifest = new HashMap<String, String>(compositeManifest);
+		// make sure the manifest is valid
+		CompositeSupport.validateCompositeManifest(compositeManifest);
+		try {
+			URL configURL = bundledata.getEntry(CompositeSupport.COMPOSITE_CONFIGURATION);
+			Properties configuration = new Properties();
+			configuration.load(configURL.openStream());
+			// get an in memory input stream to jar content of the composite we want to install
+			InputStream content = CompositeSupport.getCompositeInput(configuration, compositeManifest);
+			// update with the new content
+			super.update(content);
+		} catch (IOException e) {
+			throw new BundleException("Error creating composite bundle", e); //$NON-NLS-1$
+		}
 	}
 
 	protected void startHook() {
@@ -126,8 +147,10 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	}
 
 	public void uninstallWorkerPrivileged() throws BundleException {
-		Bundle[] bundles = compositeSystemBundle.getBundleContext().getBundles();
-		// uninstall all the constituents first
+		// uninstall the composite first to invalidate the context
+		super.uninstallWorkerPrivileged();
+		Bundle[] bundles = framework.getBundles(getBundleId());
+		// uninstall all the constituents 
 		for (int i = 0; i < bundles.length; i++)
 			if (bundles[i].getBundleId() != 0) // not the system bundle
 				try {
@@ -135,9 +158,6 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 				} catch (BundleException e) {
 					framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundles[i], e);
 				}
-		// now uninstall the composite
-		super.uninstallWorkerPrivileged();
-
 	}
 
 	protected void close() {
@@ -156,7 +176,9 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		}
 
 		protected BundleContextImpl createContext() {
-			return new CompositeContext(this);
+			CompositeContext compositeContext = new CompositeContext(this);
+			compositeContext.addBundleListener(CompositeImpl.this);
+			return compositeContext;
 		}
 
 		public ServiceReference[] getRegisteredServices() {
@@ -230,5 +252,48 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 
 	public BundleHost getSystemBundle() {
 		return compositeSystemBundle;
+	}
+
+	@Override
+	protected void load() {
+		super.load();
+		loadConstituents();
+	}
+
+	@Override
+	protected void refresh() {
+		super.refresh();
+		loadConstituents();
+	}
+
+	private void loadConstituents() {
+		synchronized (constituents) {
+			constituents.clear();
+			AbstractBundle[] bundles = framework.getBundles(getBundleId());
+			for (int i = 0; i < bundles.length; i++) {
+				if (bundles[i].getBundleId() == 0)
+					continue;
+				BundleDescription constituent = bundles[i].getBundleDescription();
+				if (constituent != null)
+					constituents.add(constituent);
+			}
+		}
+	}
+
+	public void bundleChanged(BundleEvent event) {
+		if (event.getType() != BundleEvent.INSTALLED)
+			return;
+		synchronized (constituents) {
+			AbstractBundle bundle = (AbstractBundle) event.getBundle();
+			BundleDescription desc = bundle.getBundleDescription();
+			if (desc != null)
+				constituents.add(desc);
+		}
+	}
+
+	BundleDescription[] getConstituentDescriptions() {
+		synchronized (constituents) {
+			return constituents.toArray(new BundleDescription[constituents.size()]);
+		}
 	}
 }

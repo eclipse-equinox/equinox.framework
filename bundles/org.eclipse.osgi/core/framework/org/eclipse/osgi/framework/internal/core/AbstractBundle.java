@@ -37,7 +37,7 @@ import org.osgi.framework.*;
  */
 public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement {
 	/** The Framework this bundle is part of */
-	protected Framework framework;
+	protected final Framework framework;
 	/** The state of the bundle. */
 	protected volatile int state;
 	/** A flag to denote whether a bundle state change is in progress */
@@ -45,7 +45,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	/** Bundle's BundleData object */
 	protected BundleData bundledata;
 	/** Internal object used for state change synchronization */
-	protected Object statechangeLock = new Object();
+	protected final Object statechangeLock = new Object();
 	/** ProtectionDomain for the bundle */
 	protected EquinoxProtectionDomain domain;
 

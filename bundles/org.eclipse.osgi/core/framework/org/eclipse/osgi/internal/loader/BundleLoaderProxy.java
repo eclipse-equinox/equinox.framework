@@ -183,7 +183,7 @@ public class BundleLoaderProxy implements RequiredBundle {
 	}
 
 	public boolean inUse() {
-		return (description.getDependents().length > 0);
+		return (description.getDependents().length > 0) || bundle.getFramework().getCompositeSupport().getCompositePolicy().getScopeContent(description).length > 0;
 	}
 
 	boolean forceSourceCreation(ExportPackageDescription export) {

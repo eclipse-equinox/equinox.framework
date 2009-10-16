@@ -76,7 +76,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	/** Startlevel object. This object manages the framework and bundle startlevels */
 	protected StartLevelFactory startLevelFactory;
 	/** CompositeAdmin impl used to manage composites */
-	CompositeSupport compositeSupport;
+	final CompositeSupport compositeSupport;
 	/** The ServiceRegistry */
 	private ServiceRegistry serviceRegistry;
 
@@ -161,6 +161,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	 *  
 	 */
 	public Framework(FrameworkAdaptor adaptor) {
+		compositeSupport = new CompositeSupport(this);
 		initialize(adaptor);
 	}
 
@@ -213,7 +214,6 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 		/* create the system bundle */
 		createSystemBundle();
 		startLevelFactory = new StartLevelFactory(new StartLevelManager(this, 0, systemBundle), this);
-		compositeSupport = new CompositeSupport(this);
 		/* create the event manager and top level event dispatchers */
 		eventManager = new EventManager("Framework Event Dispatcher"); //$NON-NLS-1$
 		bundleEvent = new CopyOnWriteIdentityMap();
@@ -1040,7 +1040,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 		return getBundles(-1);
 	}
 
-	AbstractBundle[] getBundles(long compositeID) {
+	public AbstractBundle[] getBundles(long compositeID) {
 		synchronized (bundles) {
 			List allBundles = bundles.getBundles();
 			if (compositeID >= 0) {

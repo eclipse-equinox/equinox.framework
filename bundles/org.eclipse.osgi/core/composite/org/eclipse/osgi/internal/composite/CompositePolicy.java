@@ -13,13 +13,16 @@ package org.eclipse.osgi.internal.composite;
 import org.eclipse.osgi.framework.adaptor.ScopePolicy;
 import org.eclipse.osgi.framework.internal.core.AbstractBundle;
 import org.eclipse.osgi.framework.internal.core.Framework;
+import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.service.resolver.BaseDescription;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 
 public class CompositePolicy implements ScopePolicy {
+	private final static BundleDescription[] EMPTY_DESCRIPTIONS = new BundleDescription[0];
 	private final Framework framework;
+	private final CompositeInfo rootCompositeInfo = new CompositeInfo(null, null, null, null, null, null);
 
 	public CompositePolicy(Framework framework) {
 		this.framework = framework;
@@ -59,7 +62,7 @@ public class CompositePolicy implements ScopePolicy {
 	}
 
 	private CompositeInfo getCompositeInfo(long compositeId) {
-		return (compositeId == 0) ? CompositeImpl.rootInfo : ((CompositeImpl) framework.getBundle(compositeId)).getCompositeInfo();
+		return (compositeId == 0) ? getRootCompositeInfo() : ((CompositeImpl) framework.getBundle(compositeId)).getCompositeInfo();
 	}
 
 	public boolean sameScope(Bundle b1, Bundle b2) {
@@ -80,5 +83,20 @@ public class CompositePolicy implements ScopePolicy {
 		Bundle b1 = framework.getBundle(d1.getSupplier().getBundleId());
 		Bundle b2 = framework.getBundle(d2.getSupplier().getBundleId());
 		return sameScope(b1, b2);
+	}
+
+	public BundleDescription[] getScopeContent(BundleDescription desc) {
+		Object user = desc.getUserObject();
+		if (!(user instanceof BundleLoaderProxy))
+			return EMPTY_DESCRIPTIONS;
+		AbstractBundle bundle = ((BundleLoaderProxy) user).getBundleHost();
+		if (!(bundle instanceof CompositeImpl))
+			return EMPTY_DESCRIPTIONS;
+		// found a composite
+		return ((CompositeImpl) bundle).getConstituentDescriptions();
+	}
+
+	CompositeInfo getRootCompositeInfo() {
+		return rootCompositeInfo;
 	}
 }

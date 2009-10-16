@@ -13,7 +13,6 @@ package org.eclipse.osgi.internal.composite;
 import java.io.*;
 import java.security.AllPermission;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.jar.*;
 import org.eclipse.osgi.framework.adaptor.ScopePolicy;
 import org.eclipse.osgi.framework.internal.core.BundleHost;
@@ -67,13 +66,13 @@ public class CompositeSupport implements ServiceFactory {
 			return (CompositeBundle) composite;
 		}
 
-		public CompositeBundle installCompositeBundle(String location, Map compositeManifest, Map configuration) throws BundleException {
+		public CompositeBundle installCompositeBundle(String location, Map<String, String> compositeManifest, Map<String, String> configuration) throws BundleException {
 			SecurityManager sm = System.getSecurityManager();
 			if (sm != null)
 				// must have AllPermission to do this
 				sm.checkPermission(new AllPermission());
 			// make a local copy of the manifest first
-			compositeManifest = new HashMap(compositeManifest);
+			compositeManifest = new HashMap<String, String>(compositeManifest);
 			// make sure the manifest is valid
 			CompositeSupport.validateCompositeManifest(compositeManifest);
 			try {
@@ -89,7 +88,7 @@ public class CompositeSupport implements ServiceFactory {
 		}
 	}
 
-	static InputStream getCompositeInput(Map frameworkConfig, Map compositeManifest) throws IOException {
+	static InputStream getCompositeInput(Map<?, ?> frameworkConfig, Map<String, String> compositeManifest) throws IOException {
 		// use an in memory stream to store the content
 		ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
 		// the composite bundles only consist of a manifest describing the packages they import and export
@@ -116,28 +115,27 @@ public class CompositeSupport implements ServiceFactory {
 		return new ByteArrayInputStream(bytesOut.toByteArray());
 	}
 
-	private static Manifest getCompositeManifest(Map compositeManifest) {
+	private static Manifest getCompositeManifest(Map<String, String> compositeManifest) {
 		Manifest manifest = new Manifest();
 		Attributes attributes = manifest.getMainAttributes();
 		attributes.putValue("Manifest-Version", "1.0"); //$NON-NLS-1$//$NON-NLS-2$
 		// get the common headers Bundle-ManifestVersion, Bundle-SymbolicName and Bundle-Version
 		// get the manifest version from the map
-		String manifestVersion = (String) compositeManifest.remove(Constants.BUNDLE_MANIFESTVERSION);
+		String manifestVersion = compositeManifest.remove(Constants.BUNDLE_MANIFESTVERSION);
 		// here we assume the validation got the correct version for us
 		attributes.putValue(Constants.BUNDLE_MANIFESTVERSION, manifestVersion);
-		for (Iterator entries = compositeManifest.entrySet().iterator(); entries.hasNext();) {
-			Map.Entry entry = (Entry) entries.next();
-			if (entry.getKey() instanceof String && entry.getValue() instanceof String)
-				attributes.putValue((String) entry.getKey(), (String) entry.getValue());
+		for (Iterator<Map.Entry<String, String>> entries = compositeManifest.entrySet().iterator(); entries.hasNext();) {
+			Map.Entry<String, String> entry = entries.next();
+			attributes.putValue(entry.getKey(), entry.getValue());
 		}
 		return manifest;
 	}
 
-	static void validateCompositeManifest(Map compositeManifest) throws BundleException {
+	static void validateCompositeManifest(Map<String, String> compositeManifest) throws BundleException {
 		if (compositeManifest == null)
 			throw new BundleException("The composite manifest cannot be null.", BundleException.MANIFEST_ERROR); //$NON-NLS-1$
 		// check for symbolic name
-		String bsn = (String) compositeManifest.get(Constants.BUNDLE_SYMBOLICNAME);
+		String bsn = compositeManifest.get(Constants.BUNDLE_SYMBOLICNAME);
 		if (bsn == null)
 			throw new BundleException("The composite manifest must contain a Bundle-SymbolicName header.", BundleException.MANIFEST_ERROR); //$NON-NLS-1$
 		ManifestElement[] bsnElements = ManifestElement.parseHeader(Constants.BUNDLE_SYMBOLICNAME, bsn);
@@ -151,7 +149,7 @@ public class CompositeSupport implements ServiceFactory {
 			if (compositeManifest.get(INVALID_COMPOSITE_HEADERS[i]) != null)
 				throw new BundleException("The composite manifest must not contain the header " + INVALID_COMPOSITE_HEADERS[i], BundleException.MANIFEST_ERROR); //$NON-NLS-1$
 		// validate manifest version
-		String manifestVersion = (String) compositeManifest.get(Constants.BUNDLE_MANIFESTVERSION);
+		String manifestVersion = compositeManifest.get(Constants.BUNDLE_MANIFESTVERSION);
 		if (manifestVersion == null) {
 			compositeManifest.put(Constants.BUNDLE_MANIFESTVERSION, "2"); //$NON-NLS-1$
 		} else {

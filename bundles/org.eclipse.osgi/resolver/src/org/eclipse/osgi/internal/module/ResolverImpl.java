@@ -1654,10 +1654,18 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 		setBundleUnresolved(bundle, removed, false);
 		// Get bundles dependent on 'bundle'
 		BundleDescription[] dependents = bundle.getBundle().getDependents();
+		BundleDescription[] constituents = null;
+		ScopePolicy currentScopePolicy = getScopePolicy();
+		if (currentScopePolicy != null)
+			constituents = currentScopePolicy.getScopeContent(bundle.getBundle());
 		state.resolveBundle(bundle.getBundle(), false, null, null, null, null, null);
 		// Unresolve dependents of 'bundle'
 		for (int i = 0; i < dependents.length; i++)
 			unresolveBundle((ResolverBundle) bundleMapping.get(dependents[i]), false);
+		if (constituents != null)
+			for (int i = 0; i < constituents.length; i++)
+				unresolveBundle((ResolverBundle) bundleMapping.get(constituents[i]), false);
+
 	}
 
 	public void bundleUpdated(BundleDescription newDescription, BundleDescription existingDescription, boolean pending) {
