@@ -194,7 +194,7 @@ public class ServiceReferenceImpl<S> implements ServiceReference<S> {
 	 *         greater than the specified <code>ServiceReference</code>.
 	 * @since 1.4
 	 */
-	public int compareTo(ServiceReference<?> object) {
+	public int compareTo(Object object) {
 		ServiceRegistrationImpl<?> other = ((ServiceReferenceImpl<?>) object).registration;
 
 		final int thisRanking = registration.getRanking();
