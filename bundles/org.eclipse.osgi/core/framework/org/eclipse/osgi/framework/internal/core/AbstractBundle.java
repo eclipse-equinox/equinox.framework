@@ -65,7 +65,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		if ((bundledata.getType() & BundleData.TYPE_FRAGMENT) > 0)
 			result = new BundleFragment(bundledata, framework);
 		else if ((bundledata.getType() & BundleData.TYPE_COMPOSITEBUNDLE) > 0)
-			result = new CompositeImpl(bundledata, framework);
+			result = new CompositeImpl(bundledata, framework, setBundle);
 		else
 			result = new BundleHost(bundledata, framework);
 		if (setBundle)

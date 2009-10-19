@@ -14,6 +14,8 @@ package org.eclipse.osgi.internal.composite;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
+import java.security.AccessControlContext;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.debug.Debug;
@@ -28,24 +30,25 @@ import org.osgi.service.composite.CompositeBundle;
 import org.osgi.service.composite.CompositeConstants;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle, SynchronousBundleListener {
-	final BundleHost compositeSystemBundle;
+	final CompositeSystemBundle compositeSystemBundle;
 	final CompositeInfo compositeInfo;
 	final StartLevelManager startLevelManager;
 	final List<BundleDescription> constituents = new ArrayList<BundleDescription>(0);
+	final boolean setCompositeParent;
 
-	public CompositeImpl(BundleData bundledata, Framework framework) throws BundleException {
+	public CompositeImpl(BundleData bundledata, Framework framework, boolean setCompositeParent) throws BundleException {
 		super(bundledata, framework);
+		this.setCompositeParent = setCompositeParent;
 		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0), framework);
-		compositeInfo = createCompositeInfo(framework);
+		compositeInfo = createCompositeInfo(setCompositeParent);
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
-		compositeSystemBundle.getBundleContext(); // need to create the context to add the bundle listener
 	}
 
 	CompositeInfo getCompositeInfo() {
 		return compositeInfo;
 	}
 
-	private CompositeInfo createCompositeInfo(Framework framework) throws BundleException {
+	private CompositeInfo createCompositeInfo(boolean setParent) throws BundleException {
 		Dictionary manifest = bundledata.getManifest();
 		String importPackage = (String) manifest.get(CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY);
 		String exportPackage = (String) manifest.get(CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY);
@@ -87,15 +90,19 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		}
 
 		// set the parent info
-		CompositeInfo parentInfo;
-		long compositeID = bundledata.getCompositeID();
-		if (compositeID == 0) // this is the root framework
-			parentInfo = framework.getCompositeSupport().compositPolicy.getRootCompositeInfo();
-		else
-			parentInfo = ((CompositeImpl) framework.getBundle(bundledata.getCompositeID())).getCompositeInfo();
+		CompositeInfo parentInfo = null;
+		if (setParent) {
+			long compositeID = bundledata.getCompositeID();
+			if (compositeID == 0) // this is the root framework
+				parentInfo = framework.getCompositeSupport().compositPolicy.getRootCompositeInfo();
+			else
+				parentInfo = ((CompositeImpl) framework.getBundle(bundledata.getCompositeID())).getCompositeInfo();
+		}
 		CompositeInfo result = new CompositeInfo(parentInfo, imports, exports, requires, importServiceFilter, exportServiceFilter);
-		// add the the composite info as a child of the parent.
-		parentInfo.addChild(result);
+		if (setParent) {
+			// add the the composite info as a child of the parent.
+			parentInfo.addChild(result);
+		}
 		return result;
 	}
 
@@ -136,6 +143,14 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		}
 	}
 
+	@Override
+	protected void updateWorkerPrivileged(URLConnection source, AccessControlContext callerContext) throws BundleException {
+		super.updateWorkerPrivileged(source, callerContext);
+		// update the composite info with the new data.
+		CompositeInfo updatedInfo = createCompositeInfo(false);
+		compositeInfo.update(updatedInfo);
+	}
+
 	protected void startHook() {
 		startLevelManager.initialize();
 		startLevelManager.doSetStartLevel(1);
@@ -164,6 +179,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		super.close();
 		// remove the composite info from the parent
 		compositeInfo.getParent().removeChild(compositeInfo);
+		compositeSystemBundle.close();
 	}
 
 	public class CompositeSystemBundle extends InternalSystemBundle {
@@ -177,7 +193,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 
 		protected BundleContextImpl createContext() {
 			CompositeContext compositeContext = new CompositeContext(this);
-			compositeContext.addBundleListener(CompositeImpl.this);
+			if (setCompositeParent)
+				compositeContext.addBundleListener(CompositeImpl.this);
 			return compositeContext;
 		}
 
@@ -225,6 +242,12 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		public BundleLoaderProxy getLoaderProxy() {
 			return rootSystemBundle.getLoaderProxy();
 		}
+
+		@Override
+		public void close() {
+			super.close();
+		}
+
 	}
 
 	public class CompositeContext extends BundleContextImpl {

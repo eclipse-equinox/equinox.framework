@@ -17,12 +17,12 @@ import org.osgi.framework.ServiceReference;
 
 class CompositeInfo {
 	private final CompositeInfo parent;
-	private final List children = new ArrayList(0);
-	private final ImportPackageSpecification[] importPackagePolicy;
-	private final ImportPackageSpecification[] exportPackagePolicy;
-	private final BundleSpecification[] requireBundlePolicy;
-	private final Filter importServicePolicy;
-	private final Filter exportServicePolicy;
+	private final List<CompositeInfo> children = Collections.synchronizedList(new ArrayList<CompositeInfo>(0));
+	private ImportPackageSpecification[] importPackagePolicy;
+	private ImportPackageSpecification[] exportPackagePolicy;
+	private BundleSpecification[] requireBundlePolicy;
+	private Filter importServicePolicy;
+	private Filter exportServicePolicy;
 
 	CompositeInfo(CompositeInfo parent, ImportPackageSpecification[] importPackagePolicy, ImportPackageSpecification[] exportPackagePolicy, BundleSpecification[] requireBundlePolicy, Filter importServicePolicy, Filter exportServicePolicy) {
 		this.parent = parent;
@@ -48,16 +48,17 @@ class CompositeInfo {
 			}
 		}
 		// not able to import from parent; check the children now
-		for (Iterator iChildren = children.iterator(); iChildren.hasNext();) {
-			CompositeInfo child = (CompositeInfo) iChildren.next();
-			if (origin != child) {
+		// get a snap shot of the children
+		CompositeInfo[] currentChildren = children.toArray(new CompositeInfo[children.size()]);
+		for (int i = 0; i < currentChildren.length; i++) {
+			if (origin != currentChildren[i]) {
 				// this request did not come from the child
-				if (child.matchExportPolicy(provider)) {
+				if (currentChildren[i].matchExportPolicy(provider)) {
 					// the child policy allows the provider to be exported from the child.
-					if (providerComposite == child)
+					if (providerComposite == currentChildren[i])
 						// the child actually provides this
 						return true;
-					else if (child.isVisible(provider, this, providerComposite))
+					else if (currentChildren[i].isVisible(provider, this, providerComposite))
 						return true;
 				}
 			}
@@ -66,7 +67,7 @@ class CompositeInfo {
 		return false;
 	}
 
-	private boolean matchImportPolicy(Object provider) {
+	private synchronized boolean matchImportPolicy(Object provider) {
 		if (provider instanceof ServiceReference)
 			return importServicePolicy != null && importServicePolicy.match((ServiceReference) provider);
 		if (provider instanceof ExportPackageDescription) {
@@ -85,7 +86,7 @@ class CompositeInfo {
 		return false;
 	}
 
-	private boolean matchExportPolicy(Object provider) {
+	private synchronized boolean matchExportPolicy(Object provider) {
 		if (provider instanceof ServiceReference)
 			return exportServicePolicy != null && exportServicePolicy.match((ServiceReference) provider);
 		if (provider instanceof ExportPackageDescription) {
@@ -106,11 +107,15 @@ class CompositeInfo {
 		children.remove(child);
 	}
 
-	List getChildren() {
-		return children;
-	}
-
 	CompositeInfo getParent() {
 		return parent;
+	}
+
+	synchronized void update(CompositeInfo updatedInfo) {
+		this.importPackagePolicy = updatedInfo.importPackagePolicy;
+		this.exportPackagePolicy = updatedInfo.exportPackagePolicy;
+		this.requireBundlePolicy = updatedInfo.requireBundlePolicy;
+		this.importServicePolicy = updatedInfo.importServicePolicy;
+		this.exportServicePolicy = updatedInfo.exportServicePolicy;
 	}
 }
