@@ -244,8 +244,9 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		}
 
 		@Override
-		public void close() {
+		protected void close() {
 			super.close();
+			this.state = Bundle.UNINSTALLED;
 		}
 
 	}
