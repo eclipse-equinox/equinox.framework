@@ -605,8 +605,6 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 		framework.publishBundleEvent(BundleEvent.STOPPED, systemBundle);
 		if (systemBundle.getCompositeId() > 0) {
 			// TODO warning this is hacky should encapsulate this in CompositeImpl somehow
-			systemBundle.close();
-			systemBundle.context = systemBundle.createContext();
 			systemBundle.state = Bundle.STARTING;
 			framework.publishBundleEvent(BundleEvent.STARTING, systemBundle);
 		}
