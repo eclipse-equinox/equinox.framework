@@ -29,11 +29,15 @@ public class CompositePolicy implements ScopePolicy {
 	}
 
 	public boolean isVisible(Bundle client, ServiceReference serviceProvider) {
-		return isVisible0((AbstractBundle) client, serviceProvider, null);
+		return noComposites() || isVisible0((AbstractBundle) client, serviceProvider, null);
 	}
 
 	public boolean isVisible(BundleDescription client, BaseDescription constraintProvider) {
-		return isVisible0(framework.getBundle(client.getBundleId()), null, constraintProvider);
+		return noComposites() || isVisible0(framework.getBundle(client.getBundleId()), null, constraintProvider);
+	}
+
+	private boolean noComposites() {
+		return rootCompositeInfo.noChildren();
 	}
 
 	private boolean isVisible0(AbstractBundle client, ServiceReference serviceProvider, BaseDescription constraintProvider) {

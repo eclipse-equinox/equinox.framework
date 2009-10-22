@@ -178,7 +178,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 	protected void close() {
 		super.close();
 		// remove the composite info from the parent
-		compositeInfo.getParent().removeChild(compositeInfo);
+		compositeInfo.orphaned();
 		compositeSystemBundle.close();
 	}
 

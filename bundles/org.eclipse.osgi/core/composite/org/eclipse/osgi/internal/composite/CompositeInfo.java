@@ -103,12 +103,16 @@ class CompositeInfo {
 		children.add(child);
 	}
 
-	void removeChild(CompositeInfo child) {
+	private void removeChild(CompositeInfo child) {
 		children.remove(child);
 	}
 
-	CompositeInfo getParent() {
-		return parent;
+	void orphaned() {
+		parent.removeChild(this);
+	}
+
+	boolean noChildren() {
+		return children.isEmpty();
 	}
 
 	synchronized void update(CompositeInfo updatedInfo) {
