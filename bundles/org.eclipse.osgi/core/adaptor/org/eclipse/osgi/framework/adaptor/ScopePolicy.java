@@ -62,4 +62,14 @@ public interface ScopePolicy {
 	 */
 	//TODO need a better name
 	BundleDescription[] getScopeContent(BundleDescription bundle);
+
+	/**
+	 * Returns true if there are no scopes defined by this scope policy.
+	 * This method is useful to optimize cases where there are no scopes
+	 * defined and therefore no reason to consult the scope policy for 
+	 * visibility.
+	 * @return true if one or more scopes are defined by this scope policy;
+	 * otherwise false is returned.
+	 */
+	boolean noScopes();
 }
