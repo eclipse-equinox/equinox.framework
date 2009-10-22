@@ -431,7 +431,8 @@ public class ServiceRegistry {
 		/* test for permission to get the service */
 		checkGetServicePermission(reference);
 		if (!isInScope(context, reference))
-			// TODO is this really needed?  It would mean a bundle got their hands on a reference outside of their scope
+			// Must throw an illegal argument exception here.
+			// This is required according to the specification.
 			throw new IllegalArgumentException("The service reference is not visible."); //$NON-NLS-1$
 		return reference.getRegistration().getService(context);
 	}
