@@ -112,7 +112,7 @@ public final class PermissionInfoCollection extends PermissionCollection {
 						}
 					}
 				}
-				collection.add((Permission) constructor.newInstance(args));
+				collection.add((Permission) constructor.newInstance((Object[]) args));
 			}
 		}
 	}
