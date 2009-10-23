@@ -71,6 +71,8 @@ public class ContentHandlerProxy extends ContentHandler implements ServiceTracke
 	public Object addingService(ServiceReference reference) {
 		//check to see if our contentType is being registered by another service
 		Object prop = reference.getProperty(URLConstants.URL_CONTENT_MIMETYPE);
+		if (prop instanceof String)
+			prop = new String[] {(String) prop};
 		if (!(prop instanceof String[]))
 			return null;
 		String[] contentTypes = (String[]) prop;

@@ -21,6 +21,7 @@ import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Framework;
+import org.eclipse.osgi.framework.internal.protocol.StreamHandlerFactory;
 import org.eclipse.osgi.framework.util.Headers;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.service.resolver.*;
@@ -30,10 +31,11 @@ import org.osgi.service.composite.CompositeBundle;
 import org.osgi.service.composite.CompositeConstants;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle, SynchronousBundleListener {
-	final CompositeSystemBundle compositeSystemBundle;
-	final CompositeInfo compositeInfo;
-	final StartLevelManager startLevelManager;
-	final List<BundleDescription> constituents = new ArrayList<BundleDescription>(0);
+	private final CompositeSystemBundle compositeSystemBundle;
+	private final CompositeInfo compositeInfo;
+	private final StartLevelManager startLevelManager;
+	private final StreamHandlerFactory streamHandlerFactory;
+	private final List<BundleDescription> constituents = new ArrayList<BundleDescription>(0);
 	final boolean setCompositeParent;
 
 	public CompositeImpl(BundleData bundledata, Framework framework, boolean setCompositeParent) throws BundleException {
@@ -42,6 +44,12 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0), framework);
 		compositeInfo = createCompositeInfo(setCompositeParent);
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
+		if (setCompositeParent) {
+			streamHandlerFactory = new StreamHandlerFactory(compositeSystemBundle.getBundleContext(), framework.getAdaptor());
+			framework.getStreamHandlerFactory().registerComposite(streamHandlerFactory);
+		} else {
+			streamHandlerFactory = null;
+		}
 	}
 
 	CompositeInfo getCompositeInfo() {
@@ -179,6 +187,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		super.close();
 		// remove the composite info from the parent
 		compositeInfo.orphaned();
+		// unregister the composite factory before closing the system bundle
+		getFramework().getStreamHandlerFactory().unregisterComposite(streamHandlerFactory);
 		compositeSystemBundle.close();
 	}
 
@@ -245,6 +255,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 
 		@Override
 		protected void close() {
+
 			super.close();
 			this.state = Bundle.UNINSTALLED;
 		}

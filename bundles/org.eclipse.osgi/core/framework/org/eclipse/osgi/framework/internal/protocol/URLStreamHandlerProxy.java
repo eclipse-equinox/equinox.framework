@@ -153,6 +153,8 @@ public class URLStreamHandlerProxy extends URLStreamHandler implements ServiceTr
 	public Object addingService(ServiceReference reference) {
 		//check to see if our protocol is being registered by another service
 		Object prop = reference.getProperty(URLConstants.URL_HANDLER_PROTOCOL);
+		if (prop instanceof String)
+			prop = new String[] {(String) prop};
 		if (!(prop instanceof String[]))
 			return null;
 		String[] protocols = (String[]) prop;

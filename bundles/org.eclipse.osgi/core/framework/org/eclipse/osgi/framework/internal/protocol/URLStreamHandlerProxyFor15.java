@@ -18,9 +18,9 @@ import java.net.*;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-public class URLStreamHandlerFactoryProxyFor15 extends URLStreamHandlerProxy {
+public class URLStreamHandlerProxyFor15 extends URLStreamHandlerProxy {
 
-	public URLStreamHandlerFactoryProxyFor15(String protocol, ServiceReference reference, BundleContext context) {
+	public URLStreamHandlerProxyFor15(String protocol, ServiceReference reference, BundleContext context) {
 		super(protocol, reference, context);
 	}
 

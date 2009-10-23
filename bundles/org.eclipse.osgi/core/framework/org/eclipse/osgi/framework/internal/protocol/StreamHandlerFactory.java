@@ -16,12 +16,12 @@ import java.net.*;
 import java.security.AccessController;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.FrameworkAdaptor;
-import org.eclipse.osgi.framework.internal.core.Constants;
-import org.eclipse.osgi.framework.internal.core.Msg;
+import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
 import org.eclipse.osgi.framework.util.SecureAction;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.url.URLConstants;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -48,7 +48,7 @@ public class StreamHandlerFactory extends MultiplexingFactory implements URLStre
 		}
 		useNetProxy = clazz != null;
 	}
-	private Hashtable proxies;
+	private final Hashtable proxies;
 	private URLStreamHandlerFactory parentFactory;
 
 	/**
@@ -58,7 +58,6 @@ public class StreamHandlerFactory extends MultiplexingFactory implements URLStre
 	 */
 	public StreamHandlerFactory(BundleContext context, FrameworkAdaptor adaptor) {
 		super(context, adaptor);
-
 		proxies = new Hashtable(15);
 		handlerTracker = new ServiceTracker(context, URLSTREAMHANDLERCLASS, null);
 		handlerTracker.open();
@@ -122,48 +121,55 @@ public class StreamHandlerFactory extends MultiplexingFactory implements URLStre
 		internalHandlerPkgs = internalHandlerPkgs == null ? INTERNAL_PROTOCOL_HANDLER_PKG : internalHandlerPkgs + '|' + INTERNAL_PROTOCOL_HANDLER_PKG;
 		Class clazz = getBuiltIn(protocol, internalHandlerPkgs, true);
 
-		if (clazz == null) {
-			//Now we check the service registry
-			//first check to see if the handler is in the cache
-			URLStreamHandlerProxy handler = (URLStreamHandlerProxy) proxies.get(protocol);
-			if (handler != null)
-				return (handler);
-			//look through the service registry for a URLStramHandler registered for this protocol
-			org.osgi.framework.ServiceReference[] serviceReferences = handlerTracker.getServiceReferences();
-			if (serviceReferences == null)
+		if (clazz != null) {
+			// must be a built-in handler
+			try {
+				URLStreamHandler handler = (URLStreamHandler) clazz.newInstance();
+				if (handler instanceof ProtocolActivator)
+					((ProtocolActivator) handler).start(context, adaptor);
+
+				return handler;
+			} catch (Exception e) {
 				return null;
-			for (int i = 0; i < serviceReferences.length; i++) {
-				Object prop = serviceReferences[i].getProperty(URLConstants.URL_HANDLER_PROTOCOL);
-				if (prop instanceof String)
-					prop = new String[] {(String) prop}; // TODO should this be a warning?
-				if (!(prop instanceof String[])) {
-					String message = NLS.bind(Msg.URL_HANDLER_INCORRECT_TYPE, new Object[] {URLConstants.URL_HANDLER_PROTOCOL, URLSTREAMHANDLERCLASS, serviceReferences[i].getBundle()});
-					adaptor.getFrameworkLog().log(new FrameworkLogEntry(FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME, FrameworkLogEntry.WARNING, 0, message, 0, null, null));
+			}
+		}
+
+		//Now we check the service registry
+		//first check to see if the handler is in the cache
+		URLStreamHandlerProxy handler = (URLStreamHandlerProxy) proxies.get(protocol);
+		if (handler != null)
+			return (handler);
+		//look through the service registry for a URLStramHandler registered for this protocol
+		ServiceReference[] serviceReferences = handlerTracker.getServiceReferences();
+		if (serviceReferences == null)
+			return null;
+		long compositeId = getCompositeId();
+		for (int i = 0; i < serviceReferences.length; i++) {
+			if (compositeId == 0) {
+				// need to do extra work to filter out services from other composites
+				// this is because the root system context sees all services (it is like a god).
+				// TODO this currently does not take into account the export policy of composites.
+				if (((AbstractBundle) serviceReferences[i].getBundle()).getCompositeId() != compositeId)
 					continue;
+			}
+			Object prop = serviceReferences[i].getProperty(URLConstants.URL_HANDLER_PROTOCOL);
+			if (prop instanceof String)
+				prop = new String[] {(String) prop}; // TODO should this be a warning?
+			if (!(prop instanceof String[])) {
+				String message = NLS.bind(Msg.URL_HANDLER_INCORRECT_TYPE, new Object[] {URLConstants.URL_HANDLER_PROTOCOL, URLSTREAMHANDLERCLASS, serviceReferences[i].getBundle()});
+				adaptor.getFrameworkLog().log(new FrameworkLogEntry(FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME, FrameworkLogEntry.WARNING, 0, message, 0, null, null));
+				continue;
+			}
+			String[] protocols = (String[]) prop;
+			for (int j = 0; j < protocols.length; j++)
+				if (protocols[j].equals(protocol)) {
+					handler = useNetProxy ? new URLStreamHandlerProxyFor15(protocol, serviceReferences[i], context) : new URLStreamHandlerProxy(protocol, serviceReferences[i], context);
+					proxies.put(protocol, handler);
+					return (handler);
 				}
-				String[] protocols = (String[]) prop;
-				for (int j = 0; j < protocols.length; j++)
-					if (protocols[j].equals(protocol)) {
-						handler = useNetProxy ? new URLStreamHandlerFactoryProxyFor15(protocol, serviceReferences[i], context) : new URLStreamHandlerProxy(protocol, serviceReferences[i], context);
-						proxies.put(protocol, handler);
-						return (handler);
-					}
-			}
-			return null;
 		}
+		return null;
 
-		// must be a built-in handler
-		try {
-			URLStreamHandler handler = (URLStreamHandler) clazz.newInstance();
-
-			if (handler instanceof ProtocolActivator) {
-				((ProtocolActivator) handler).start(context, adaptor);
-			}
-
-			return handler;
-		} catch (Exception e) {
-			return null;
-		}
 	}
 
 	protected URLStreamHandler findAuthorizedURLStreamHandler(String protocol) {

@@ -11,7 +11,10 @@ package org.eclipse.osgi.framework.internal.protocol;
 import java.lang.reflect.Method;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.FrameworkAdaptor;
+import org.eclipse.osgi.framework.internal.core.AbstractBundle;
+import org.eclipse.osgi.framework.internal.core.BundleContextImpl;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -23,10 +26,12 @@ import org.osgi.util.tracker.ServiceTracker;
 public abstract class MultiplexingFactory {
 
 	protected static final String PACKAGEADMINCLASS = "org.osgi.service.packageadmin.PackageAdmin"; //$NON-NLS-1$
-	protected BundleContext context;
-	protected FrameworkAdaptor adaptor;
+	protected final BundleContext context;
+	protected final FrameworkAdaptor adaptor;
 	private List factories; // list of multiplexed factories
-	private ServiceTracker packageAdminTracker;
+	private List<MultiplexingFactory> composites; // list of composite factories
+	private final ServiceTracker packageAdminTracker;
+	private final long compositeId;
 
 	// used to get access to the protected SecurityManager#getClassContext method
 	private static class InternalSecurityManager extends SecurityManager {
@@ -42,6 +47,7 @@ public abstract class MultiplexingFactory {
 		this.adaptor = adaptor;
 		packageAdminTracker = new ServiceTracker(context, PACKAGEADMINCLASS, null);
 		packageAdminTracker.open();
+		compositeId = ((AbstractBundle) context.getBundle()).getCompositeId();
 	}
 
 	abstract public void setParentFactory(Object parentFactory);
@@ -49,7 +55,27 @@ public abstract class MultiplexingFactory {
 	abstract public Object getParentFactory();
 
 	public synchronized boolean isMultiplexing() {
-		return factories != null;
+		return factories != null || composites != null;
+	}
+
+	public synchronized void registerComposite(MultiplexingFactory compositeFactory) {
+		if (composites == null)
+			composites = new LinkedList<MultiplexingFactory>();
+		compositeFactory.setParentFactory(getParentFactory());
+		composites.add(compositeFactory);
+		// always reset the handers so we can force in multiplexing ones
+		try {
+			((BundleContextImpl) context).getFramework().resetURLStreamHandlers();
+		} catch (IllegalAccessException e) {
+			// TODO log
+		}
+	}
+
+	public synchronized void unregisterComposite(MultiplexingFactory compositeFactory) {
+		composites.remove(compositeFactory);
+		if (composites.isEmpty())
+			composites = null;
+		compositeFactory.closePackageAdminTracker();
 	}
 
 	public synchronized void register(Object factory) {
@@ -66,6 +92,12 @@ public abstract class MultiplexingFactory {
 			throw new RuntimeException(e.getMessage());
 		}
 		factories.add(factory);
+		// always reset the handers so we can force in multiplexing ones
+		try {
+			((BundleContextImpl) context).getFramework().resetURLStreamHandlers();
+		} catch (IllegalAccessException e) {
+			// TODO log
+		}
 	}
 
 	public synchronized void unregister(Object factory) {
@@ -117,29 +149,54 @@ public abstract class MultiplexingFactory {
 				continue;
 			if (hasAuthority(clazz))
 				return this;
-			if (factories == null)
-				continue;
-			for (Iterator it = factories.iterator(); it.hasNext();) {
-				Object factory = it.next();
-				try {
-					Method hasAuthorityMethod = factory.getClass().getMethod("hasAuthority", new Class[] {Class.class}); //$NON-NLS-1$
-					if (((Boolean) hasAuthorityMethod.invoke(factory, new Object[] {clazz})).booleanValue()) {
-						return factory;
-					}
-				} catch (Exception e) {
-					adaptor.getFrameworkLog().log(new FrameworkLogEntry(MultiplexingFactory.class.getName(), FrameworkLogEntry.ERROR, 0, "findAuthorizedURLStreamHandler-loop", FrameworkLogEntry.ERROR, e, null)); //$NON-NLS-1$
-					throw new RuntimeException(e.getMessage());
+			if (composites != null)
+				for (Iterator<MultiplexingFactory> iComposites = composites.iterator(); iComposites.hasNext();) {
+					MultiplexingFactory composite = iComposites.next();
+					if (composite.hasAuthority(clazz))
+						return composite;
 				}
-			}
+			if (factories != null)
+				for (Iterator it = factories.iterator(); it.hasNext();) {
+					Object factory = it.next();
+					try {
+						Method hasAuthorityMethod = factory.getClass().getMethod("hasAuthority", new Class[] {Class.class}); //$NON-NLS-1$
+						if (((Boolean) hasAuthorityMethod.invoke(factory, new Object[] {clazz})).booleanValue()) {
+							return factory;
+						}
+					} catch (Exception e) {
+						adaptor.getFrameworkLog().log(new FrameworkLogEntry(MultiplexingFactory.class.getName(), FrameworkLogEntry.ERROR, 0, "findAuthorizedURLStreamHandler-loop", FrameworkLogEntry.ERROR, e, null)); //$NON-NLS-1$
+						throw new RuntimeException(e.getMessage());
+					}
+				}
 		}
 		return null;
 	}
 
-	public boolean hasAuthority(Class clazz) {
+	private Bundle getBundle(Class clazz) {
 		PackageAdmin packageAdminService = (PackageAdmin) packageAdminTracker.getService();
-		if (packageAdminService != null) {
-			return packageAdminService.getBundle(clazz) != null;
-		}
-		return false;
+		if (packageAdminService != null)
+			return packageAdminService.getBundle(clazz);
+		return null;
+	}
+
+	public boolean hasAuthority(Class clazz) {
+		Bundle b = getBundle(clazz);
+		return isConstituent(b);
+	}
+
+	private boolean isConstituent(Bundle b) {
+		if (b == null)
+			return false;
+		long currentId = getCompositeId();
+		return currentId == -1 || currentId == ((AbstractBundle) b).getCompositeId();
+	}
+
+	/**
+	 * Returns the composite id for this factory.  If this is not part of any composites -1 is returned.
+	 * @return the composite id for this factory
+	 */
+	protected synchronized long getCompositeId() {
+		return (composites == null && compositeId == 0) ? -1 : compositeId;
+
 	}
 }
