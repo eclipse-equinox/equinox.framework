@@ -197,4 +197,13 @@ public class StreamHandlerFactory extends MultiplexingFactory implements URLStre
 		if (this.parentFactory == null) // only allow it to be set once
 			this.parentFactory = (URLStreamHandlerFactory) parentFactory;
 	}
+
+	@Override
+	protected void resetHandlers() {
+		try {
+			((BundleContextImpl) context).getFramework().resetURLStreamHandlers();
+		} catch (IllegalAccessException e) {
+			// TODO log
+		}
+	}
 }

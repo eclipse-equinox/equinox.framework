@@ -21,6 +21,7 @@ import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Framework;
+import org.eclipse.osgi.framework.internal.protocol.ContentHandlerFactory;
 import org.eclipse.osgi.framework.internal.protocol.StreamHandlerFactory;
 import org.eclipse.osgi.framework.util.Headers;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
@@ -35,6 +36,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 	private final CompositeInfo compositeInfo;
 	private final StartLevelManager startLevelManager;
 	private final StreamHandlerFactory streamHandlerFactory;
+	private final ContentHandlerFactory contentHandlerFactory;
 	private final List<BundleDescription> constituents = new ArrayList<BundleDescription>(0);
 	final boolean setCompositeParent;
 
@@ -46,9 +48,12 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
 		if (setCompositeParent) {
 			streamHandlerFactory = new StreamHandlerFactory(compositeSystemBundle.getBundleContext(), framework.getAdaptor());
+			contentHandlerFactory = new ContentHandlerFactory(compositeSystemBundle.getBundleContext(), framework.getAdaptor());
 			framework.getStreamHandlerFactory().registerComposite(streamHandlerFactory);
+			framework.getContentHandlerFactory().registerComposite(contentHandlerFactory);
 		} else {
 			streamHandlerFactory = null;
+			contentHandlerFactory = null;
 		}
 	}
 
@@ -189,6 +194,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		compositeInfo.orphaned();
 		// unregister the composite factory before closing the system bundle
 		getFramework().getStreamHandlerFactory().unregisterComposite(streamHandlerFactory);
+		getFramework().getContentHandlerFactory().unregisterComposite(contentHandlerFactory);
 		compositeSystemBundle.close();
 	}
 

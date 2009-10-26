@@ -1020,6 +1020,10 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 		return streamHandlerFactory;
 	}
 
+	public ContentHandlerFactory getContentHandlerFactory() {
+		return contentHandlerFactory;
+	}
+
 	/**
 	 * Retrieve the BundleRepository of all installed bundles. The list is
 	 * valid at the time of the call to getBundles, but the framework is a very
@@ -1545,7 +1549,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 		}
 	}
 
-	private static void resetContentHandlers() throws IllegalAccessException {
+	public static void resetContentHandlers() throws IllegalAccessException {
 		Field handlersField = getField(URLConnection.class, Hashtable.class, false);
 		if (handlersField != null) {
 			Hashtable handlers = (Hashtable) handlersField.get(null);

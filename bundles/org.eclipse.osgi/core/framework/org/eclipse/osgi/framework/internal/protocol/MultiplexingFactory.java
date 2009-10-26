@@ -64,12 +64,10 @@ public abstract class MultiplexingFactory {
 		compositeFactory.setParentFactory(getParentFactory());
 		composites.add(compositeFactory);
 		// always reset the handers so we can force in multiplexing ones
-		try {
-			((BundleContextImpl) context).getFramework().resetURLStreamHandlers();
-		} catch (IllegalAccessException e) {
-			// TODO log
-		}
+		resetHandlers();
 	}
+
+	protected abstract void resetHandlers();
 
 	public synchronized void unregisterComposite(MultiplexingFactory compositeFactory) {
 		composites.remove(compositeFactory);
