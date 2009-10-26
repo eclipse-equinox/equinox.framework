@@ -297,15 +297,13 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 	 * <tt>false</tt> if the bundle is not persistently marked to be started.
 	 * @exception java.lang.IllegalArgumentException If the specified bundle has been uninstalled.
 	 */
-	public boolean isBundlePersistentlyStarted(org.osgi.framework.Bundle bundle) {
-		if (bundle.getState() == Bundle.UNINSTALLED)
-			throw new IllegalArgumentException(NLS.bind(Msg.BUNDLE_UNINSTALLED_EXCEPTION, ((AbstractBundle) bundle).getBundleData().getLocation()));
+	public boolean isBundlePersistentlyStarted(Bundle bundle) {
+		checkValid(bundle);
 		return (((AbstractBundle) bundle).getBundleData().getStatus() & Constants.BUNDLE_STARTED) != 0;
 	}
 
 	public boolean isBundleActivationPolicyUsed(Bundle bundle) {
-		if (bundle.getState() == Bundle.UNINSTALLED)
-			throw new IllegalArgumentException(NLS.bind(Msg.BUNDLE_UNINSTALLED_EXCEPTION, ((AbstractBundle) bundle).getBundleData().getLocation()));
+		checkValid(bundle);
 		return (((AbstractBundle) bundle).getBundleData().getStatus() & Constants.BUNDLE_ACTIVATION_POLICY) != 0;
 	}
 
@@ -316,11 +314,8 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 	 * @return The start level value of the specified Bundle.
 	 * @exception java.lang.IllegalArgumentException If the specified bundle has been uninstalled.
 	 */
-	public int getBundleStartLevel(org.osgi.framework.Bundle bundle) {
-
-		if (bundle.getState() == Bundle.UNINSTALLED) {
-			throw new IllegalArgumentException(NLS.bind(Msg.BUNDLE_UNINSTALLED_EXCEPTION, ((AbstractBundle) bundle).getBundleData().getLocation()));
-		}
+	public int getBundleStartLevel(Bundle bundle) {
+		checkValid(bundle);
 		return ((AbstractBundle) bundle).getStartLevel();
 	}
 
@@ -352,13 +347,11 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 	 * <tt>AdminPermission</tt> and the Java runtime environment supports
 	 * permissions.
 	 */
-	public void setBundleStartLevel(org.osgi.framework.Bundle bundle, int newSL) {
-
+	public void setBundleStartLevel(Bundle bundle, int newSL) {
+		checkValid(bundle);
 		String exceptionText = null;
 		if (bundle.getBundleId() == 0) { // system bundle has id=0
 			exceptionText = Msg.STARTLEVEL_CANT_CHANGE_SYSTEMBUNDLE_STARTLEVEL;
-		} else if (bundle.getState() == Bundle.UNINSTALLED) {
-			exceptionText = NLS.bind(Msg.BUNDLE_UNINSTALLED_EXCEPTION, ((AbstractBundle) bundle).getBundleData().getLocation());
 		} else if (newSL <= 0) {
 			exceptionText = NLS.bind(Msg.STARTLEVEL_EXCEPTION_INVALID_REQUESTED_STARTLEVEL, "" + newSL); //$NON-NLS-1$ 
 		}
@@ -391,6 +384,13 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 			framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundle, e);
 		}
 
+	}
+
+	private void checkValid(Bundle bundle) {
+		if (bundle.getState() == Bundle.UNINSTALLED)
+			throw new IllegalArgumentException(NLS.bind(Msg.BUNDLE_UNINSTALLED_EXCEPTION, ((AbstractBundle) bundle).getBundleData().getLocation()));
+		if (!(bundle instanceof AbstractBundle) || ((AbstractBundle) bundle).getCompositeId() != compositeId)
+			throw new IllegalArgumentException("The bundle is installed in this framework: " + bundle); //$NON-NLS-1$
 	}
 
 	/**
