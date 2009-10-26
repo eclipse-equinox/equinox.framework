@@ -108,7 +108,7 @@ public class BaseStorage implements SynchronousBundleListener {
 	private String[] configuredExtensions;
 
 	private long timeStamp = 0;
-	private int initialBundleStartLevel = 1;
+	private Map<Long, Integer> initialBundleStartLevels = new HashMap<Long, Integer>();
 
 	private final Object nextIdMonitor = new Object();
 	private volatile long nextId = 1;
@@ -350,7 +350,12 @@ public class BaseStorage implements SynchronousBundleListener {
 				if (version != BUNDLEDATA_VERSION)
 					return null;
 				timeStamp = in.readLong();
-				initialBundleStartLevel = in.readInt();
+				int numInitStartLevels = in.readInt();
+				for (int i = 0; i < numInitStartLevels; i++) {
+					long scopeId = in.readLong();
+					int initStartLevel = in.readInt();
+					initialBundleStartLevels.put(new Long(scopeId), new Integer(initStartLevel));
+				}
 				nextId = in.readLong();
 
 				int numStorageHooks = in.readInt();
@@ -545,7 +550,12 @@ public class BaseStorage implements SynchronousBundleListener {
 			try {
 				out.writeByte(BUNDLEDATA_VERSION);
 				out.writeLong(stateManager.getSystemState().getTimeStamp());
-				out.writeInt(initialBundleStartLevel);
+				out.writeInt(initialBundleStartLevels.size());
+				for (Iterator<Map.Entry<Long, Integer>> iInitStartLevels = initialBundleStartLevels.entrySet().iterator(); iInitStartLevels.hasNext();) {
+					Map.Entry<Long, Integer> entry = iInitStartLevels.next();
+					out.writeLong(entry.getKey().longValue());
+					out.writeInt(entry.getValue().intValue());
+				}
 				out.writeLong(nextId);
 
 				StorageHook[] storageHooks = adaptor.getHookRegistry().getStorageHooks();
@@ -622,12 +632,13 @@ public class BaseStorage implements SynchronousBundleListener {
 		return permissionStorage;
 	}
 
-	public int getInitialBundleStartLevel() {
-		return initialBundleStartLevel;
+	public int getInitialBundleStartLevel(long scopeId) {
+		Integer level = initialBundleStartLevels.get(new Long(scopeId));
+		return level == null ? 1 : level.intValue();
 	}
 
-	public void setInitialBundleStartLevel(int value) {
-		this.initialBundleStartLevel = value;
+	public void setInitialBundleStartLevel(long scopeId, int value) {
+		initialBundleStartLevels.put(new Long(scopeId), new Integer(value));
 		requestSave();
 	}
 

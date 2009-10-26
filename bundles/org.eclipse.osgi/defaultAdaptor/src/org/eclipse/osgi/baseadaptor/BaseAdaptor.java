@@ -277,17 +277,17 @@ public class BaseAdaptor implements FrameworkAdaptor {
 	}
 
 	/**
-	 * @see FrameworkAdaptor#getInitialBundleStartLevel()
+	 * @see FrameworkAdaptor#getInitialBundleStartLevel(long)
 	 */
-	public int getInitialBundleStartLevel() {
-		return storage.getInitialBundleStartLevel();
+	public int getInitialBundleStartLevel(long scopeId) {
+		return storage.getInitialBundleStartLevel(scopeId);
 	}
 
 	/**
-	 * @see FrameworkAdaptor#setInitialBundleStartLevel(int)
+	 * @see FrameworkAdaptor#setInitialBundleStartLevel(long, int)
 	 */
-	public void setInitialBundleStartLevel(int value) {
-		storage.setInitialBundleStartLevel(value);
+	public void setInitialBundleStartLevel(long scopeId, int value) {
+		storage.setInitialBundleStartLevel(scopeId, value);
 	}
 
 	/**

@@ -57,7 +57,7 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 	}
 
 	public void initialize() {
-		initialBundleStartLevel = framework.adaptor.getInitialBundleStartLevel();
+		initialBundleStartLevel = framework.adaptor.getInitialBundleStartLevel(compositeId);
 
 		// create an event manager and a start level listener
 		// note that we do not pass the ContextFinder because it is set each time doSetStartLevel is called
@@ -116,7 +116,7 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 			throw new IllegalArgumentException();
 		}
 		initialBundleStartLevel = startlevel;
-		framework.adaptor.setInitialBundleStartLevel(startlevel);
+		framework.adaptor.setInitialBundleStartLevel(compositeId, startlevel);
 	}
 
 	/**

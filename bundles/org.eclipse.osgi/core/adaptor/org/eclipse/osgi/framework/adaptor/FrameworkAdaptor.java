@@ -209,15 +209,17 @@ public interface FrameworkAdaptor {
 
 	/**
 	 * Returns the initial bundle start level as maintained by this adaptor
+	 * @param scopeId the scope id to return the initial bundle start level for.
 	 * @return the initial bundle start level
 	 */
-	public int getInitialBundleStartLevel();
+	public int getInitialBundleStartLevel(long scopeId);
 
 	/**
 	 * Sets the initial bundle start level 
+	 * @param scopeId the scope id to set the initial bundle start level for.
 	 * @param value the initial bundle start level
 	 */
-	public void setInitialBundleStartLevel(int value);
+	public void setInitialBundleStartLevel(long scopeId, int value);
 
 	/**
 	 * Returns the FrameworkLog for the FrameworkAdaptor.  The FrameworkLog

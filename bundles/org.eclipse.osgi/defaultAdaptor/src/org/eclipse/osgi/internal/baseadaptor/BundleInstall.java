@@ -15,7 +15,7 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Dictionary;
-import org.eclipse.osgi.baseadaptor.*;
+import org.eclipse.osgi.baseadaptor.BaseData;
 import org.eclipse.osgi.baseadaptor.hooks.StorageHook;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.adaptor.BundleOperation;
@@ -46,7 +46,7 @@ public class BundleInstall implements BundleOperation {
 			InputStream in = null;
 			try {
 				data.setLastModified(System.currentTimeMillis());
-				data.setStartLevel(storage.getInitialBundleStartLevel());
+				data.setStartLevel(storage.getInitialBundleStartLevel(data.getCompositeID()));
 				StorageHook[] storageHooks = data.getAdaptor().getHookRegistry().getStorageHooks();
 				StorageHook[] instanceHooks = new StorageHook[storageHooks.length];
 				for (int i = 0; i < storageHooks.length; i++)

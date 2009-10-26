@@ -38,6 +38,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 	private final StreamHandlerFactory streamHandlerFactory;
 	private final ContentHandlerFactory contentHandlerFactory;
 	private final List<BundleDescription> constituents = new ArrayList<BundleDescription>(0);
+	private final int beginningStartLevel;
 	final boolean setCompositeParent;
 
 	public CompositeImpl(BundleData bundledata, Framework framework, boolean setCompositeParent) throws BundleException {
@@ -46,6 +47,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0), framework);
 		compositeInfo = createCompositeInfo(setCompositeParent);
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
+		Properties configuration = loadCompositeConfiguration();
+		beginningStartLevel = loadBeginningStartLevel(configuration);
 		if (setCompositeParent) {
 			streamHandlerFactory = new StreamHandlerFactory(compositeSystemBundle.getBundleContext(), framework.getAdaptor());
 			contentHandlerFactory = new ContentHandlerFactory(compositeSystemBundle.getBundleContext(), framework.getAdaptor());
@@ -55,6 +58,26 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 			streamHandlerFactory = null;
 			contentHandlerFactory = null;
 		}
+	}
+
+	private int loadBeginningStartLevel(Properties configuration) {
+		String level = configuration.getProperty(Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
+		if (level == null)
+			return 1;
+		return Integer.parseInt(level);
+	}
+
+	private Properties loadCompositeConfiguration() throws BundleException {
+		Properties result = new Properties();
+		URL configuration = bundledata.getEntry(CompositeSupport.COMPOSITE_CONFIGURATION);
+		if (configuration == null)
+			return result;
+		try {
+			result.load(configuration.openStream());
+		} catch (IOException e) {
+			throw new BundleException("Error loading composite configuration: " + configuration, e);
+		}
+		return result;
 	}
 
 	CompositeInfo getCompositeInfo() {
