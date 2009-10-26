@@ -56,6 +56,9 @@
 	</target>
 
 	<target name="pre.@dot">
+		<copydir dest="osgi/src2" src="../org.osgi.framework/src"></copydir>
+		<copydir dest="osgi/src2" src="../org.osgi.service.composite/src"></copydir>
+		<copydir dest="osgi/src2" src="../org.osgi.util.tracker/src"></copydir>
 	</target>
 
 	<!-- ===================================================================== -->
@@ -72,14 +75,7 @@
 	</target>
 
 	<target name="post.compile.@dot">
-		<delete>
-			<fileset dir="osgi/src2/org/">
-
-			</fileset>
-		</delete>
-		<copydir dest="osgi/src2" src="../org.osgi.framework/src"></copydir>
-		<copydir dest="osgi/src2" src="../org.osgi.service.composite/src"></copydir>
-		<copydir dest="osgi/src2" src="../org.osgi.util.tracker/src"></copydir>
+		<deltree dir="osgi/src2/org/"/>
 	</target>
 	
 	<!-- ===================================================================== -->
