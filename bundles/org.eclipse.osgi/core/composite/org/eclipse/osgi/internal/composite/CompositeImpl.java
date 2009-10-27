@@ -72,10 +72,19 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		URL configuration = bundledata.getEntry(CompositeSupport.COMPOSITE_CONFIGURATION);
 		if (configuration == null)
 			return result;
+		InputStream in = null;
 		try {
+			in = configuration.openStream();
 			result.load(configuration.openStream());
 		} catch (IOException e) {
 			throw new BundleException("Error loading composite configuration: " + configuration, e);
+		} finally {
+			if (in != null)
+				try {
+					in.close();
+				} catch (IOException e) {
+					// nothing
+				}
 		}
 		return result;
 	}
