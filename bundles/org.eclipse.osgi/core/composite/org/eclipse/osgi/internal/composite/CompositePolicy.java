@@ -19,6 +19,7 @@ import org.eclipse.osgi.service.resolver.BaseDescription;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.hooks.service.*;
 import org.osgi.service.url.URLStreamHandlerService;
 
 public class CompositePolicy implements ScopePolicy {
@@ -29,7 +30,7 @@ public class CompositePolicy implements ScopePolicy {
 
 	public CompositePolicy(Framework framework) {
 		this.framework = framework;
-		scopedSystemServices = new String[] {URLStreamHandlerService.class.getName().intern(), ContentHandler.class.getName().intern()};
+		scopedSystemServices = new String[] {URLStreamHandlerService.class.getName().intern(), ContentHandler.class.getName().intern(), EventHook.class.getName(), FindHook.class.getName(), ListenerHook.class.getName()};
 	}
 
 	public boolean isVisible(Bundle client, ServiceReference serviceProvider, String[] clazzes) {

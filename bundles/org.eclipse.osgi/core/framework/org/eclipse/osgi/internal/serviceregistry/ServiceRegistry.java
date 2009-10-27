@@ -293,7 +293,7 @@ public class ServiceRegistry {
 		List<ServiceReferenceImpl<?>> references = new ArrayList<ServiceReferenceImpl<?>>(registrations.size());
 		for (ServiceRegistrationImpl<?> registration : registrations) {
 			ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
-			if (isInScope(context, reference) && (allservices || isAssignableTo(context, reference))) {
+			if (isInScope(context.getBundle(), reference) && (allservices || isAssignableTo(context, reference))) {
 				try { /* test for permission to get the service */
 					checkGetServicePermission(reference);
 				} catch (SecurityException se) {
@@ -430,7 +430,7 @@ public class ServiceRegistry {
 	public Object getService(BundleContextImpl context, ServiceReferenceImpl<?> reference) {
 		/* test for permission to get the service */
 		checkGetServicePermission(reference);
-		if (!isInScope(context, reference))
+		if (!isInScope(context.getBundle(), reference))
 			// Must throw an illegal argument exception here.
 			// This is required according to the specification.
 			throw new IllegalArgumentException("The service reference is not visible."); //$NON-NLS-1$
@@ -1049,8 +1049,8 @@ public class ServiceRegistry {
 		return true;
 	}
 
-	boolean isInScope(BundleContextImpl context, ServiceReferenceImpl<?> reference) {
-		return framework.getCompositeSupport().getCompositePolicy().isVisible(context.getBundle(), reference, reference.getClasses());
+	boolean isInScope(Bundle bundle, ServiceReferenceImpl<?> reference) {
+		return framework.getCompositeSupport().getCompositePolicy().isVisible(bundle, reference, reference.getClasses());
 	}
 
 	/**
@@ -1098,7 +1098,9 @@ public class ServiceRegistry {
 			}
 			try {
 				if (findHook instanceof FindHook) { // if the hook is usable
-					((FindHook) findHook).find(context, clazz, filterstring, allservices, result);
+					// only allow hooks that are visible to the context's bundle
+					if (isInScope(context.getBundle(), registration.getReferenceImpl()))
+						((FindHook) findHook).find(context, clazz, filterstring, allservices, result);
 				}
 			} catch (Throwable t) {
 				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
@@ -1144,7 +1146,9 @@ public class ServiceRegistry {
 			}
 			try {
 				if (eventHook instanceof EventHook) { // if the hook is usable
-					((EventHook) eventHook).event(event, result);
+					// only allow hooks that have visibility to the service event
+					if (isInScope(event.getServiceReference().getBundle(), registration.getReferenceImpl()))
+						((EventHook) eventHook).event(event, result);
 				}
 			} catch (Throwable t) {
 				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
@@ -1193,9 +1197,11 @@ public class ServiceRegistry {
 
 		Collection<ListenerInfo> addedListeners = new ArrayList<ListenerInfo>(initialCapacity);
 		synchronized (serviceEventListeners) {
-			for (Map<ServiceListener, FilteredServiceListener> listeners : serviceEventListeners.values()) {
-				if (!listeners.isEmpty()) {
-					addedListeners.addAll(listeners.values());
+			for (Map.Entry<BundleContextImpl, Map<ServiceListener, FilteredServiceListener>> entry : serviceEventListeners.entrySet()) {
+				if (isInScope(entry.getKey().getBundle(), registration.getReferenceImpl())) {
+					if (!entry.getValue().isEmpty()) {
+						addedListeners.addAll(entry.getValue().values());
+					}
 				}
 			}
 		}
@@ -1267,10 +1273,15 @@ public class ServiceRegistry {
 			}
 			try {
 				if (listenerHook instanceof ListenerHook) { // if the hook is usable
-					if (added) {
-						((ListenerHook) listenerHook).added(listeners);
-					} else {
-						((ListenerHook) listenerHook).removed(listeners);
+					// We assume all listener here are from the same context and there is at least one
+					// TODO is that valid?
+					Bundle listenerBundle = listeners.iterator().next().getBundleContext().getBundle();
+					if (isInScope(listenerBundle, registration.getReferenceImpl())) {
+						if (added) {
+							((ListenerHook) listenerHook).added(listeners);
+						} else {
+							((ListenerHook) listenerHook).removed(listeners);
+						}
 					}
 				}
 			} catch (Throwable t) {
