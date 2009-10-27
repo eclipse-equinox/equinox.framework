@@ -92,7 +92,7 @@ class FilteredServiceListener implements ServiceListener, ListenerHook.ListenerI
 			Debug.println("filterServiceEvent(" + listenerName + ", \"" + getFilter() + "\", " + reference.getRegistration().getProperties() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 
-		event = filterMatch(event);
+		event = filterMatch(event, reference);
 		if (event == null) {
 			return;
 		}
@@ -113,33 +113,32 @@ class FilteredServiceListener implements ServiceListener, ListenerHook.ListenerI
 	 * @param delivered The service event delivered by the framework.
 	 * @return The event to be delivered or null if no event is to be delivered to the listener.
 	 */
-	private ServiceEvent filterMatch(ServiceEvent delivered) {
+	private ServiceEvent filterMatch(ServiceEvent delivered, ServiceReferenceImpl<?> reference) {
 		boolean modified = delivered.getType() == ServiceEvent.MODIFIED;
 		ServiceEvent event = modified ? ((ModifiedServiceEvent) delivered).getModifiedEvent() : delivered;
 		if (filter == null) {
 			// check sharing policy
-			return checkSharingPolicy(event);
+			return checkSharingPolicy(event, reference);
 		}
-		ServiceReference<?> reference = event.getServiceReference();
 		if (filter.match(reference)) {
 			// check sharing policy
-			return checkSharingPolicy(event);
+			return checkSharingPolicy(event, reference);
 		}
 		if (modified) {
 			ModifiedServiceEvent modifiedServiceEvent = (ModifiedServiceEvent) delivered;
 			if (modifiedServiceEvent.matchPreviousProperties(filter)) {
 				// check sharing policy
 				// TODO we have an issue with dynamically changing sharing policies here, unless we force all constituents to stop/restart on update of policy
-				return checkSharingPolicy(modifiedServiceEvent.getModifiedEndMatchEvent());
+				return checkSharingPolicy(modifiedServiceEvent.getModifiedEndMatchEvent(), reference);
 			}
 		}
 		// does not match and did not match previous properties; do not send event
 		return null;
 	}
 
-	private ServiceEvent checkSharingPolicy(ServiceEvent event) {
+	private ServiceEvent checkSharingPolicy(ServiceEvent event, ServiceReferenceImpl<?> reference) {
 		ScopePolicy scopePolicy = context.getFramework().getCompositeSupport().getCompositePolicy();
-		return scopePolicy.isVisible(context.getBundle(), event.getServiceReference()) ? event : null;
+		return scopePolicy.isVisible(context.getBundle(), event.getServiceReference(), reference.getClasses()) ? event : null;
 	}
 
 	/**

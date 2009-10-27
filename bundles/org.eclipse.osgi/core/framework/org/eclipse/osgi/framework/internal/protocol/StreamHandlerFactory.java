@@ -143,15 +143,7 @@ public class StreamHandlerFactory extends MultiplexingFactory implements URLStre
 		ServiceReference[] serviceReferences = handlerTracker.getServiceReferences();
 		if (serviceReferences == null)
 			return null;
-		long compositeId = getCompositeId();
 		for (int i = 0; i < serviceReferences.length; i++) {
-			if (compositeId == 0) {
-				// need to do extra work to filter out services from other composites
-				// this is because the root system context sees all services (it is like a god).
-				// TODO this currently does not take into account the export policy of composites.
-				if (((AbstractBundle) serviceReferences[i].getBundle()).getCompositeId() != compositeId)
-					continue;
-			}
 			Object prop = serviceReferences[i].getProperty(URLConstants.URL_HANDLER_PROTOCOL);
 			if (prop instanceof String)
 				prop = new String[] {(String) prop}; // TODO should this be a warning?

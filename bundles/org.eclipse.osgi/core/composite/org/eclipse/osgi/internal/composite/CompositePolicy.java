@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.osgi.internal.composite;
 
+import java.net.ContentHandler;
 import org.eclipse.osgi.framework.adaptor.ScopePolicy;
 import org.eclipse.osgi.framework.internal.core.AbstractBundle;
 import org.eclipse.osgi.framework.internal.core.Framework;
@@ -18,40 +19,43 @@ import org.eclipse.osgi.service.resolver.BaseDescription;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.url.URLStreamHandlerService;
 
 public class CompositePolicy implements ScopePolicy {
 	private final static BundleDescription[] EMPTY_DESCRIPTIONS = new BundleDescription[0];
 	private final Framework framework;
 	private final CompositeInfo rootCompositeInfo = new CompositeInfo(null, null, null, null, null, null);
+	private static String[] scopedSystemServices;
 
 	public CompositePolicy(Framework framework) {
 		this.framework = framework;
+		scopedSystemServices = new String[] {URLStreamHandlerService.class.getName().intern(), ContentHandler.class.getName().intern()};
 	}
 
-	public boolean isVisible(Bundle client, ServiceReference serviceProvider) {
-		return noScopes() || isVisible0((AbstractBundle) client, serviceProvider, null);
+	public boolean isVisible(Bundle client, ServiceReference serviceProvider, String[] clazzes) {
+		return noScopes() || isVisible0((AbstractBundle) client, serviceProvider, clazzes, null);
 	}
 
 	public boolean isVisible(BundleDescription client, BaseDescription constraintProvider) {
-		return noScopes() || isVisible0(framework.getBundle(client.getBundleId()), null, constraintProvider);
+		return noScopes() || isVisible0(framework.getBundle(client.getBundleId()), null, null, constraintProvider);
 	}
 
 	public boolean noScopes() {
 		return rootCompositeInfo.noChildren();
 	}
 
-	private boolean isVisible0(AbstractBundle client, ServiceReference serviceProvider, BaseDescription constraintProvider) {
+	private boolean isVisible0(AbstractBundle client, ServiceReference serviceProvider, String[] clazzes, BaseDescription constraintProvider) {
 		if (client == null)
 			throw new IllegalArgumentException("Client cannot be null"); //$NON-NLS-1$
 		if (serviceProvider == null && constraintProvider == null)
 			throw new IllegalArgumentException("Provider cannot be null"); //$NON-NLS-1$
-		if (client.getBundleId() == 0 && client.getCompositeId() == 0)
+		if (client.getBundleId() == 0 && client.getCompositeId() == 0 && !scopedSystemService(clazzes))
 			// root system bundle sees everything
 			return true;
 		AbstractBundle providerBundle = serviceProvider != null ? (AbstractBundle) serviceProvider.getBundle() : framework.getBundle(constraintProvider.getSupplier().getBundleId());
 		if (providerBundle == null)
 			return false; // we assume the bundle is uninstalled and should not be visible
-		if (providerBundle.getBundleId() == 0 && providerBundle.getCompositeId() == 0)
+		if (providerBundle.getBundleId() == 0 && providerBundle.getCompositeId() == 0 && !scopedSystemService(clazzes))
 			// Everyone sees the root system bundle
 			return true;
 		long clientCompID = client.getCompositeId();
@@ -63,6 +67,17 @@ public class CompositePolicy implements ScopePolicy {
 		if (providerInfo == null || clientInfo == providerInfo)
 			return true;
 		return clientInfo.isVisible(serviceProvider != null ? (Object) serviceProvider : (Object) constraintProvider, clientInfo, providerInfo);
+	}
+
+	private boolean scopedSystemService(String[] clazzes) {
+		if (clazzes == null)
+			return false;
+		for (int i = 0; i < clazzes.length; i++)
+			for (int j = 0; j < scopedSystemServices.length; j++)
+				// we assume the strings are interned
+				if (clazzes[i] == scopedSystemServices[j])
+					return true;
+		return false;
 	}
 
 	private CompositeInfo getCompositeInfo(long compositeId) {

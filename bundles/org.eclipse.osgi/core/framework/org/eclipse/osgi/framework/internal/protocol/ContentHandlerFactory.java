@@ -16,7 +16,8 @@ import java.net.ContentHandler;
 import java.net.URLConnection;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.FrameworkAdaptor;
-import org.eclipse.osgi.framework.internal.core.*;
+import org.eclipse.osgi.framework.internal.core.BundleContextImpl;
+import org.eclipse.osgi.framework.internal.core.Msg;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleContext;
@@ -103,15 +104,7 @@ public class ContentHandlerFactory extends MultiplexingFactory implements java.n
 		}
 		ServiceReference[] serviceReferences = contentHandlerTracker.getServiceReferences();
 		if (serviceReferences != null) {
-			long compositeId = getCompositeId();
 			for (int i = 0; i < serviceReferences.length; i++) {
-				if (compositeId == 0) {
-					// need to do extra work to filter out services from other composites
-					// this is because the root system context sees all services (it is like a god).
-					// TODO this currently does not take into account the export policy of composites.
-					if (((AbstractBundle) serviceReferences[i].getBundle()).getCompositeId() != compositeId)
-						continue;
-				}
 				Object prop = serviceReferences[i].getProperty(URLConstants.URL_CONTENT_MIMETYPE);
 				if (prop instanceof String)
 					prop = new String[] {(String) prop}; // TODO should this be a warning?
