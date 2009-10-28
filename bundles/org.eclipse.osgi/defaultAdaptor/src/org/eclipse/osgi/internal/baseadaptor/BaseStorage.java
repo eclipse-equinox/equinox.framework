@@ -961,6 +961,8 @@ public class BaseStorage implements SynchronousBundleListener {
 	 * @throws BundleException if the extension bundle metadata is invalid
 	 */
 	private void validateExtension(BundleData bundleData) throws BundleException {
+		if (bundleData.getCompositeID() != 0)
+			throw new BundleException("Extension bundles cannot be installed into a composite bundles.", BundleException.INVALID_OPERATION); //$NON-NLS-1$
 		Dictionary extensionManifest = bundleData.getManifest();
 		if (extensionManifest.get(Constants.IMPORT_PACKAGE) != null)
 			throw new BundleException(NLS.bind(AdaptorMsg.ADAPTOR_EXTENSION_IMPORT_ERROR, bundleData.getLocation()), BundleException.MANIFEST_ERROR);
