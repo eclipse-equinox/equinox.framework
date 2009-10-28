@@ -52,11 +52,6 @@ public class CompositeSupport implements ServiceFactory {
 			this.bundle = bundle;
 		}
 
-		public String getFrameworkUUID() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
 		public CompositeBundle getParentCompositeBundle() {
 			if (bundle.getCompositeId() == 0)
 				return null;
