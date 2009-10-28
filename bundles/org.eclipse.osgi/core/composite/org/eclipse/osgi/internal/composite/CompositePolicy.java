@@ -86,18 +86,22 @@ public class CompositePolicy implements ScopePolicy {
 	}
 
 	public boolean sameScope(Bundle b1, Bundle b2) {
+		if (noScopes())
+			return true;
 		if (b1 == null || b2 == null)
 			return false;
 		long b1CompId = ((AbstractBundle) b1).getCompositeId();
 		long b2CompId = ((AbstractBundle) b2).getCompositeId();
 		if (b1CompId == b2CompId)
 			return true;
-		if ((b1CompId == 0 && b1.getBundleId() == 0) || (b2CompId == 0 && b2CompId == 0))
+		if ((b1CompId == 0 && b1.getBundleId() == 0) || (b2CompId == 0 && b2.getBundleId() == 0))
 			return true; // the root system bundle belongs to every scope
 		return false;
 	}
 
 	public boolean sameScope(BaseDescription d1, BaseDescription d2) {
+		if (noScopes())
+			return true;
 		if (d1 == null || d2 == null)
 			return false;
 		Bundle b1 = framework.getBundle(d1.getSupplier().getBundleId());
@@ -106,6 +110,8 @@ public class CompositePolicy implements ScopePolicy {
 	}
 
 	public BundleDescription[] getScopeContent(BundleDescription desc) {
+		if (noScopes())
+			return EMPTY_DESCRIPTIONS;
 		Object user = desc.getUserObject();
 		if (!(user instanceof BundleLoaderProxy))
 			return EMPTY_DESCRIPTIONS;
