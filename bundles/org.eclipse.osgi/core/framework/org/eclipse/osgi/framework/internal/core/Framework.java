@@ -838,7 +838,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 			Debug.println("install from inputstream: " + location + ", " + in); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		final AccessControlContext callerContext = AccessController.getContext();
-		return installWorker(location, new PrivilegedExceptionAction() {
+		return installWorker(location, compositeID, new PrivilegedExceptionAction() {
 			public Object run() throws BundleException {
 				/* Map the InputStream or location to a URLConnection */
 				URLConnection source = in != null ? new BundleSource(in) : adaptor.mapLocationToURLConnection(location);
@@ -854,19 +854,22 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	 * 
 	 * @param location
 	 *            The location identifier of the bundle to install.
+	 * @param compositeID 
 	 * @param action
 	 *            A PrivilegedExceptionAction which calls the real worker.
 	 * @return The {@link AbstractBundle}of the installed bundle.
 	 * @exception BundleException
 	 *                If the action throws an error.
 	 */
-	protected AbstractBundle installWorker(String location, PrivilegedExceptionAction action) throws BundleException {
+	protected AbstractBundle installWorker(String location, long compositeID, PrivilegedExceptionAction action) throws BundleException {
 		synchronized (installLock) {
 			while (true) {
 				/* Check that the bundle is not already installed. */
 				AbstractBundle bundle = getBundleByLocation(location);
 				/* If already installed, return bundle object */
 				if (bundle != null) {
+					if (compositeID != bundle.getCompositeId())
+						throw new BundleException("A bundle is already installed with the location \"" + location + "\" in another composite.");
 					return bundle;
 				}
 				Thread current = Thread.currentThread();
