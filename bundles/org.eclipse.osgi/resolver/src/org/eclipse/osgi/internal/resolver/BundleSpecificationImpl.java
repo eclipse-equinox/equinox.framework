@@ -47,7 +47,13 @@ public class BundleSpecificationImpl extends VersionConstraintImpl implements Bu
 		BundleDescription candidate = (BundleDescription) supplier;
 		if (candidate.getHost() != null)
 			return false;
-		if (getName() != null && getName().equals(candidate.getSymbolicName()) && (getVersionRange() == null || getVersionRange().isIncluded(candidate.getVersion())))
+		String name = getName();
+		String candidateName = candidate.getSymbolicName();
+		// shortcut '*'
+		// NOTE: wildcards are supported only in cases where a composite is doing * requires
+		if (name != null && candidateName != null && !"*".equals(name) && !(name.endsWith(".*") && candidateName.startsWith(name.substring(0, name.length() - 1))) && !name.equals(candidateName)) //$NON-NLS-1$ //$NON-NLS-2$
+			return false;
+		if (getVersionRange() == null || getVersionRange().isIncluded(candidate.getVersion()))
 			return true;
 		return false;
 	}
