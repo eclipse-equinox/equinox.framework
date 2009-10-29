@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.AccessControlContext;
+import java.security.AllPermission;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.debug.Debug;
@@ -170,7 +171,10 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 			Debug.println("update location " + bundledata.getLocation()); //$NON-NLS-1$
 			Debug.println("   from: " + compositeManifest); //$NON-NLS-1$
 		}
-		framework.checkAdminPermission(this, AdminPermission.LIFECYCLE);
+		SecurityManager sm = System.getSecurityManager();
+		if (sm != null)
+			// must have AllPermission to do this
+			sm.checkPermission(new AllPermission());
 		// make a local copy of the manifest first
 		compositeManifest = new HashMap<String, String>(compositeManifest);
 		// make sure the manifest is valid
