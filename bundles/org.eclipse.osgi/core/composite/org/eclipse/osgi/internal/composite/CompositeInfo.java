@@ -21,10 +21,10 @@ class CompositeInfo {
 	private ImportPackageSpecification[] importPackagePolicy;
 	private ImportPackageSpecification[] exportPackagePolicy;
 	private BundleSpecification[] requireBundlePolicy;
-	private Filter importServicePolicy;
-	private Filter exportServicePolicy;
+	private Filter[] importServicePolicy;
+	private Filter[] exportServicePolicy;
 
-	CompositeInfo(CompositeInfo parent, ImportPackageSpecification[] importPackagePolicy, ImportPackageSpecification[] exportPackagePolicy, BundleSpecification[] requireBundlePolicy, Filter importServicePolicy, Filter exportServicePolicy) {
+	CompositeInfo(CompositeInfo parent, ImportPackageSpecification[] importPackagePolicy, ImportPackageSpecification[] exportPackagePolicy, BundleSpecification[] requireBundlePolicy, Filter[] importServicePolicy, Filter[] exportServicePolicy) {
 		this.parent = parent;
 		this.importPackagePolicy = importPackagePolicy;
 		this.exportPackagePolicy = exportPackagePolicy;
@@ -69,33 +69,37 @@ class CompositeInfo {
 
 	private synchronized boolean matchImportPolicy(Object provider) {
 		if (provider instanceof ServiceReference)
-			return importServicePolicy != null && importServicePolicy.match((ServiceReference) provider);
-		if (provider instanceof ExportPackageDescription) {
-			if (importPackagePolicy == null)
-				return false;
-			for (int i = 0; i < importPackagePolicy.length; i++)
-				if (importPackagePolicy[i].isSatisfiedBy((ExportPackageDescription) provider))
-					return true;
-		} else if (provider instanceof BundleDescription) {
-			if (requireBundlePolicy == null)
-				return false;
-			for (int i = 0; i < requireBundlePolicy.length; i++)
-				if (requireBundlePolicy[i].isSatisfiedBy((BundleDescription) provider))
-					return true;
-		}
+			return matchFilters((ServiceReference) provider, importServicePolicy);
+		if (provider instanceof ExportPackageDescription)
+			return matchConstraints((BaseDescription) provider, importPackagePolicy);
+		if (provider instanceof BundleDescription)
+			return matchConstraints((BaseDescription) provider, requireBundlePolicy);
 		return false;
 	}
 
 	private synchronized boolean matchExportPolicy(Object provider) {
 		if (provider instanceof ServiceReference)
-			return exportServicePolicy != null && exportServicePolicy.match((ServiceReference) provider);
-		if (provider instanceof ExportPackageDescription) {
-			if (exportPackagePolicy == null)
-				return false;
-			for (int i = 0; i < exportPackagePolicy.length; i++)
-				if (exportPackagePolicy[i].isSatisfiedBy((ExportPackageDescription) provider))
-					return true;
-		}
+			return matchFilters((ServiceReference) provider, exportServicePolicy);
+		if (provider instanceof ExportPackageDescription)
+			return matchConstraints((BaseDescription) provider, exportPackagePolicy);
+		return false;
+	}
+
+	private static boolean matchFilters(ServiceReference provider, Filter[] filters) {
+		if (filters == null)
+			return false;
+		for (int i = 0; i < filters.length; i++)
+			if (filters[i].match(provider))
+				return true;
+		return false;
+	}
+
+	private static boolean matchConstraints(BaseDescription provider, VersionConstraint[] constraints) {
+		if (constraints == null)
+			return false;
+		for (int i = 0; i < constraints.length; i++)
+			if (constraints[i].isSatisfiedBy(provider))
+				return true;
 		return false;
 	}
 

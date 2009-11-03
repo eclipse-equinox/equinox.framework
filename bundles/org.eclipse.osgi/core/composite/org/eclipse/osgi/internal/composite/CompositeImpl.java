@@ -105,12 +105,13 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		ImportPackageSpecification[] imports = null;
 		ImportPackageSpecification[] exports = null;
 		BundleSpecification[] requires = null;
-		Filter importServiceFilter = null;
-		Filter exportServiceFilter = null;
+		Filter[] importServiceFilter = null;
+		Filter[] exportServiceFilter = null;
 		BundleContext systemContext = compositeSystemBundle.getBundleContext();
+
 		try {
-			importServiceFilter = importService == null ? null : systemContext.createFilter(importService);
-			exportServiceFilter = exportService == null ? null : systemContext.createFilter(exportService);
+			importServiceFilter = importService == null ? null : new Filter[] {systemContext.createFilter(importService)};
+			exportServiceFilter = exportService == null ? null : new Filter[] {systemContext.createFilter(exportService)};
 		} catch (InvalidSyntaxException e) {
 			throw new BundleException("Invalid service sharing policy.", BundleException.MANIFEST_ERROR, e); //$NON-NLS-1$
 		}
@@ -202,7 +203,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 
 	protected void startHook() {
 		startLevelManager.initialize();
-		startLevelManager.doSetStartLevel(1);
+		startLevelManager.doSetStartLevel(beginningStartLevel);
 	}
 
 	protected void stopHook() {
