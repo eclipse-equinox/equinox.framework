@@ -1041,7 +1041,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		return framework;
 	}
 
-	public <S> ServiceRegistration<S> registerService(Class<S> clazz, Object service, Dictionary<String, Object> properties) {
+	public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, Object> properties) {
 		// TODO Auto-generated method stub
 		@SuppressWarnings("unchecked")
 		ServiceRegistration<S> registration = (ServiceRegistration<S>) registerService(clazz.getName(), service, properties);
