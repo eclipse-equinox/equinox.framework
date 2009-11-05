@@ -25,7 +25,7 @@ import org.osgi.service.url.URLStreamHandlerService;
 public class CompositePolicy implements ScopePolicy {
 	private final static BundleDescription[] EMPTY_DESCRIPTIONS = new BundleDescription[0];
 	private final Framework framework;
-	private final CompositeInfo rootCompositeInfo = new CompositeInfo(null, null, null, null, null, null);
+	private final CompositeInfo rootCompositeInfo = new CompositeInfo(null, null, null, null, null, null, null, null);
 	private static String[] scopedSystemServices;
 
 	public CompositePolicy(Framework framework) {

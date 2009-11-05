@@ -24,15 +24,20 @@ import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.framework.internal.protocol.ContentHandlerFactory;
 import org.eclipse.osgi.framework.internal.protocol.StreamHandlerFactory;
-import org.eclipse.osgi.framework.util.Headers;
+import org.eclipse.osgi.internal.composite.CompositeInfo.ClassSpacePolicyInfo;
+import org.eclipse.osgi.internal.composite.CompositeInfo.ServicePolicyInfo;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
+import org.eclipse.osgi.internal.resolver.StateBuilder;
 import org.eclipse.osgi.service.resolver.*;
+import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
 import org.osgi.service.composite.CompositeBundle;
 import org.osgi.service.composite.CompositeConstants;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle, SynchronousBundleListener {
+	private static final String COMPOSITE_AFFINITY_NAME_DIRECTIVE = "composite-symbolic-name-affinity"; //$NON-NLS-1$
+	private static final String COMPOSITE_AFFINITY_VERSION_DIRECTIVE = "composite-version-affinity"; //$NON-NLS-1$
 	private final CompositeSystemBundle compositeSystemBundle;
 	private final CompositeInfo compositeInfo;
 	private final StartLevelManager startLevelManager;
@@ -78,7 +83,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 			in = configuration.openStream();
 			result.load(configuration.openStream());
 		} catch (IOException e) {
-			throw new BundleException("Error loading composite configuration: " + configuration, e);
+			throw new BundleException("Error loading composite configuration: " + configuration, e); //$NON-NLS-1$
 		} finally {
 			if (in != null)
 				try {
@@ -102,40 +107,15 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		String importService = (String) manifest.get(CompositeConstants.COMPOSITE_SERVICE_IMPORT_POLICY);
 		String exportService = (String) manifest.get(CompositeConstants.COMPOSITE_SERVICE_EXPORT_POLICY);
 
-		ImportPackageSpecification[] imports = null;
-		ImportPackageSpecification[] exports = null;
-		BundleSpecification[] requires = null;
-		Filter[] importServiceFilter = null;
-		Filter[] exportServiceFilter = null;
 		BundleContext systemContext = compositeSystemBundle.getBundleContext();
 
-		try {
-			importServiceFilter = importService == null ? null : new Filter[] {systemContext.createFilter(importService)};
-			exportServiceFilter = exportService == null ? null : new Filter[] {systemContext.createFilter(exportService)};
-		} catch (InvalidSyntaxException e) {
-			throw new BundleException("Invalid service sharing policy.", BundleException.MANIFEST_ERROR, e); //$NON-NLS-1$
-		}
-
 		StateObjectFactory factory = StateObjectFactory.defaultFactory;
-		Headers<String, String> builderManifest = new Headers<String, String>(4);
-		builderManifest.put(Constants.BUNDLE_MANIFESTVERSION, "2"); //$NON-NLS-1$
-		builderManifest.put(Constants.BUNDLE_SYMBOLICNAME, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME));
-		if (importPackage != null)
-			builderManifest.put(Constants.IMPORT_PACKAGE, importPackage);
-		if (requireBundle != null)
-			builderManifest.put(Constants.REQUIRE_BUNDLE, requireBundle);
-		BundleDescription desc = factory.createBundleDescription(null, builderManifest, "", 0); //$NON-NLS-1$
-		if (importPackage != null)
-			imports = desc.getImportPackages();
-		if (requireBundle != null)
-			requires = desc.getRequiredBundles();
-
-		if (exportPackage != null) {
-			builderManifest.put(Constants.IMPORT_PACKAGE, exportPackage);
-			desc = factory.createBundleDescription(null, builderManifest, "", 0); //$NON-NLS-1$
-			exports = desc.getImportPackages();
-		}
-
+		BundleDescription desc = factory.createBundleDescription(manifest, bundledata.getLocation(), bundledata.getBundleID());
+		ClassSpacePolicyInfo[] imports = createClassSpacePolicy(importPackage, factory, CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY, desc);
+		ClassSpacePolicyInfo[] exports = createClassSpacePolicy(exportPackage, factory, CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY, desc);
+		ClassSpacePolicyInfo[] requires = createClassSpacePolicy(requireBundle, factory, CompositeConstants.COMPOSITE_BUNDLE_REQUIRE_POLICY, desc);
+		ServicePolicyInfo[] importServiceFilter = createServicePolicyInfo(importService, factory, CompositeConstants.COMPOSITE_SERVICE_IMPORT_POLICY, systemContext);
+		ServicePolicyInfo[] exportServiceFilter = createServicePolicyInfo(exportService, factory, CompositeConstants.COMPOSITE_SERVICE_EXPORT_POLICY, systemContext);
 		// set the parent info
 		CompositeInfo parentInfo = null;
 		if (setParent) {
@@ -145,7 +125,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 			else
 				parentInfo = ((CompositeImpl) framework.getBundle(bundledata.getCompositeID())).getCompositeInfo();
 		}
-		CompositeInfo result = new CompositeInfo(parentInfo, imports, exports, requires, importServiceFilter, exportServiceFilter);
+		CompositeInfo result = new CompositeInfo(bundledata.getSymbolicName(), bundledata.getVersion(), parentInfo, imports, exports, requires, importServiceFilter, exportServiceFilter);
 		if (setParent) {
 			// add the the composite info as a child of the parent.
 			parentInfo.addChild(result);
@@ -160,7 +140,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 	}
 
 	public void update() throws BundleException {
-		throw new BundleException("Must update a composite with the update(Map) method.", BundleException.UNSUPPORTED_OPERATION);
+		throw new BundleException("Must update a composite with the update(Map) method.", BundleException.UNSUPPORTED_OPERATION); //$NON-NLS-1$
 	}
 
 	public void update(InputStream in) throws BundleException {
@@ -373,5 +353,57 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		synchronized (constituents) {
 			return constituents.toArray(new BundleDescription[constituents.size()]);
 		}
+	}
+
+	private static ClassSpacePolicyInfo[] createClassSpacePolicy(String policySpec, StateObjectFactory factory, String header, BundleDescription desc) throws BundleException {
+		ManifestElement[] policy = ManifestElement.parseHeader(header, policySpec);
+		if (policy == null || policy.length == 0)
+			return null;
+		ArrayList<ClassSpacePolicyInfo> result = new ArrayList<ClassSpacePolicyInfo>(policy.length);
+		for (int i = 0; i < policy.length; i++) {
+			String compositeAffinityName = policy[i].getDirective(COMPOSITE_AFFINITY_NAME_DIRECTIVE);
+			VersionRange compositeAffinityVersion = StateBuilder.getVersionRange(policy[i].getDirective(COMPOSITE_AFFINITY_VERSION_DIRECTIVE));
+			if (header == CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY || header == CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY) {
+				VersionRange versionRange = StateBuilder.getVersionRange(policy[i].getAttribute(Constants.VERSION_ATTRIBUTE));
+
+				String bundleSymbolicName = policy[i].getAttribute(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
+				VersionRange bundleVersionRange = StateBuilder.getVersionRange(policy[i].getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE));
+
+				Map attributes = StateBuilder.getAttributes(policy[i], StateBuilder.DEFINED_MATCHING_ATTRS);
+
+				String[] packageNames = policy[i].getValueComponents();
+				for (int j = 0; j < packageNames.length; j++) {
+					ImportPackageSpecification importSpec = factory.createImportPackageSpecification(packageNames[j], versionRange, bundleSymbolicName, bundleVersionRange, null, attributes, desc);
+					result.add(new ClassSpacePolicyInfo(compositeAffinityName, compositeAffinityVersion, importSpec));
+				}
+			} else {
+				String bsn = policy[i].getValue();
+				VersionRange bundleVersion = StateBuilder.getVersionRange(policy[i].getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE));
+				result.add(new ClassSpacePolicyInfo(compositeAffinityName, compositeAffinityVersion, factory.createBundleSpecification(bsn, bundleVersion, false, false)));
+			}
+		}
+		return result.toArray(new ClassSpacePolicyInfo[result.size()]);
+	}
+
+	private static ServicePolicyInfo[] createServicePolicyInfo(String policySpec, StateObjectFactory factory, String header, BundleContext context) throws BundleException {
+		ManifestElement[] policy = ManifestElement.parseHeader(header, policySpec);
+		if (policy == null || policy.length == 0)
+			return null;
+		ArrayList<ServicePolicyInfo> result = new ArrayList<ServicePolicyInfo>(policy.length);
+		for (int i = 0; i < policy.length; i++) {
+			String compositeAffinityName = policy[i].getDirective(COMPOSITE_AFFINITY_NAME_DIRECTIVE);
+			VersionRange compositeAffinityVersion = StateBuilder.getVersionRange(policy[i].getDirective(COMPOSITE_AFFINITY_VERSION_DIRECTIVE));
+			String[] filters = policy[i].getValueComponents();
+			for (int j = 0; j < filters.length; j++) {
+				Filter filter = null;
+				try {
+					filter = context.createFilter(filters[i]);
+				} catch (InvalidSyntaxException e) {
+					throw new BundleException("Invalid service sharing policy: " + filters[i], BundleException.MANIFEST_ERROR, e); //$NON-NLS-1$
+				}
+				result.add(new ServicePolicyInfo(compositeAffinityName, compositeAffinityVersion, filter));
+			}
+		}
+		return result.toArray(new ServicePolicyInfo[result.size()]);
 	}
 }

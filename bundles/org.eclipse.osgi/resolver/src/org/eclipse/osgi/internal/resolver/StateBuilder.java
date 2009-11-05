@@ -23,8 +23,8 @@ import org.osgi.framework.*;
 /**
  * This class builds bundle description objects from manifests
  */
-class StateBuilder {
-	static final String[] DEFINED_MATCHING_ATTRS = {Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, Constants.BUNDLE_VERSION_ATTRIBUTE, Constants.PACKAGE_SPECIFICATION_VERSION, Constants.VERSION_ATTRIBUTE};
+public class StateBuilder {
+	public static final String[] DEFINED_MATCHING_ATTRS = {Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, Constants.BUNDLE_VERSION_ATTRIBUTE, Constants.PACKAGE_SPECIFICATION_VERSION, Constants.VERSION_ATTRIBUTE};
 	static final String[] DEFINED_OSGI_VALIDATE_HEADERS = {Constants.IMPORT_PACKAGE, Constants.DYNAMICIMPORT_PACKAGE, Constants.EXPORT_PACKAGE, Constants.FRAGMENT_HOST, Constants.BUNDLE_SYMBOLICNAME, Constants.REQUIRE_BUNDLE};
 	static final String GENERIC_REQUIRE = "Eclipse-GenericRequire"; //$NON-NLS-1$
 	static final String GENERIC_CAPABILITY = "Eclipse-GenericCapability"; //$NON-NLS-1$
@@ -346,7 +346,7 @@ class StateBuilder {
 		}
 	}
 
-	private static Map getAttributes(ManifestElement exportPackage, String[] definedAttrs) {
+	public static Map getAttributes(ManifestElement exportPackage, String[] definedAttrs) {
 		Enumeration keys = exportPackage.getKeys();
 		Map arbitraryAttrs = null;
 		if (keys == null)
@@ -526,7 +526,7 @@ class StateBuilder {
 		return result;
 	}
 
-	private static VersionRange getVersionRange(String versionRange) {
+	public static VersionRange getVersionRange(String versionRange) {
 		if (versionRange == null)
 			return null;
 		return new VersionRange(versionRange);
