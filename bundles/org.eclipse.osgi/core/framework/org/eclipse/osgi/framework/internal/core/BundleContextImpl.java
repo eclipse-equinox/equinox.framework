@@ -1043,21 +1043,18 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	}
 
 	public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, Object> properties) {
-		// TODO Auto-generated method stub
 		@SuppressWarnings("unchecked")
 		ServiceRegistration<S> registration = (ServiceRegistration<S>) registerService(clazz.getName(), service, properties);
 		return registration;
 	}
 
 	public <S> ServiceReference<S> getServiceReference(Class<S> clazz) {
-		// TODO Auto-generated method stub
 		@SuppressWarnings("unchecked")
 		ServiceReference<S> reference = (ServiceReference<S>) getServiceReference(clazz.getName());
 		return reference;
 	}
 
 	public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter) throws InvalidSyntaxException {
-		// TODO Auto-generated method stub
 		@SuppressWarnings("unchecked")
 		ServiceReference<S>[] refs = (ServiceReference<S>[]) getServiceReferences(clazz.getName(), filter);
 		return Arrays.asList(refs);
@@ -1065,8 +1062,8 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 	public List<Bundle> getBundles(String symbolicName, String versionRange) {
 		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		Bundle[] bundles = framework.getPackageAdmin().getBundles(symbolicName, versionRange);
+		return Arrays.asList(bundles);
 	}
 
 	public Collection<Package> getExportedPackages(String name) {
@@ -1077,14 +1074,12 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 	public int getInitialBundleStartLevel() {
 		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		return bundle.getStartLevelManager().getInitialBundleStartLevel();
 	}
 
 	public int getStartLevel() {
 		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		return bundle.getStartLevelManager().getStartLevel();
 	}
 
 	public void refreshBundles(Bundle... bundles) {
@@ -1101,13 +1096,11 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 	public void setInitialBundleStartLevel(int startlevel) {
 		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		bundle.getStartLevelManager().setInitialBundleStartLevel(startlevel);
 	}
 
 	public void setStartLevel(int startlevel) {
 		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		bundle.getStartLevelManager().setStartLevel(startlevel);
 	}
 }

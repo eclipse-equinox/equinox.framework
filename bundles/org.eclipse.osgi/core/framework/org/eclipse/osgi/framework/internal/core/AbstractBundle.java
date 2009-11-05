@@ -1609,20 +1609,18 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	}
 
 	public void setStartLevel(int startlevel) {
-		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		getStartLevelManager().setBundleStartLevel(this, startlevel);
 	}
 
 	public boolean isPersistentlyStarted() {
-		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		return getStartLevelManager().isBundlePersistentlyStarted(this);
 	}
 
 	public boolean isActivationPolicyUsed() {
-		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		return getStartLevelManager().isBundleActivationPolicyUsed(this);
+	}
+
+	StartLevelManager getStartLevelManager() {
+		return framework.startLevelFactory.getStartLevelManager(this);
 	}
 }
