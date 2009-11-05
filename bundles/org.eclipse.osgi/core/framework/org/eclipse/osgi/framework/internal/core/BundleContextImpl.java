@@ -1087,7 +1087,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		throw new UnsupportedOperationException("to be implemented");
 	}
 
-	public void refreshPackages(Bundle... bundles) {
+	public void refreshBundles(Bundle... bundles) {
 		checkValid();
 		// TODO implement this method
 		throw new UnsupportedOperationException("to be implemented");
