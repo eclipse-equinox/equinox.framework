@@ -25,6 +25,7 @@ import org.eclipse.osgi.internal.serviceregistry.*;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Package;
 
 /**
  * Bundle's execution context.
@@ -1060,5 +1061,53 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		@SuppressWarnings("unchecked")
 		ServiceReference<S>[] refs = (ServiceReference<S>[]) getServiceReferences(clazz.getName(), filter);
 		return Arrays.asList(refs);
+	}
+
+	public List<Bundle> getBundles(String symbolicName, String versionRange) {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
+	}
+
+	public Collection<Package> getExportedPackages(String name) {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
+	}
+
+	public int getInitialBundleStartLevel() {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
+	}
+
+	public int getStartLevel() {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
+	}
+
+	public void refreshPackages(Bundle... bundles) {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
+	}
+
+	public boolean resolveBundles(Bundle... bundles) {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
+	}
+
+	public void setInitialBundleStartLevel(int startlevel) {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
+	}
+
+	public void setStartLevel(int startlevel) {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
 	}
 }

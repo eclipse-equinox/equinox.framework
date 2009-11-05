@@ -13,7 +13,7 @@ package org.eclipse.osgi.framework.internal.core;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
+import java.util.*;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
@@ -304,7 +304,7 @@ public class BundleHost extends AbstractBundle {
 		}
 		if (!framework.active || (state & ACTIVE) != 0)
 			return;
-		if (getStartLevel() > framework.startLevelFactory.getStartLevelManager(this).getStartLevel()) {
+		if (getStartLevel0() > framework.startLevelFactory.getStartLevelManager(this).getStartLevel()) {
 			if ((options & LAZY_TRIGGER) == 0 && (options & START_TRANSIENT) != 0) {
 				// throw exception if this is a transient start
 				String msg = NLS.bind(Msg.BUNDLE_TRANSIENT_START_ERROR, this);
@@ -332,7 +332,7 @@ public class BundleHost extends AbstractBundle {
 		}
 
 		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
-			Debug.println("Bundle: Active sl = " + framework.startLevelFactory.getStartLevelManager(this).getStartLevel() + "; Bundle " + getBundleId() + " sl = " + getStartLevel()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			Debug.println("Bundle: Active sl = " + framework.startLevelFactory.getStartLevelManager(this).getStartLevel() + "; Bundle " + getBundleId() + " sl = " + getStartLevel0()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 		state = STARTING;
@@ -403,7 +403,7 @@ public class BundleHost extends AbstractBundle {
 
 	protected boolean readyToResume() {
 		// Return false if the bundle is not at the correct start-level
-		if (getStartLevel() > framework.startLevelFactory.getStartLevelManager(this).getStartLevel())
+		if (getStartLevel0() > framework.startLevelFactory.getStartLevelManager(this).getStartLevel())
 			return false;
 		int status = bundledata.getStatus();
 		// Return false if the bundle is not persistently marked for start
@@ -566,7 +566,7 @@ public class BundleHost extends AbstractBundle {
 		return context.getFramework().getServiceRegistry().getServicesInUse(context);
 	}
 
-	public BundleFragment[] getFragments() {
+	public BundleFragment[] getBundleFragments() {
 		synchronized (framework.bundles) {
 			if (fragments == null)
 				return null;
@@ -652,4 +652,21 @@ public class BundleHost extends AbstractBundle {
 		BundleClassLoader bcl = loader == null ? null : loader.createClassLoader();
 		return (bcl instanceof ClassLoader) ? (ClassLoader) bcl : null;
 	}
+
+	public Collection<Bundle> getRequiringBundles() {
+		BundleLoaderProxy p = getLoaderProxy();
+		if (p == null) {
+			return Collections.EMPTY_LIST;
+		}
+		Bundle[] bundles = p.getRequiringBundles();
+		if (bundles == null) {
+			return Collections.EMPTY_LIST;
+		}
+		List<Bundle> result = new ArrayList<Bundle>(bundles.length);
+		for (Bundle b : bundles) {
+			result.add(b);
+		}
+		return result;
+	}
+
 }

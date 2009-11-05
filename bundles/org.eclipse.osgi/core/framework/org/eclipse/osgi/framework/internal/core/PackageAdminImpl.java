@@ -600,11 +600,11 @@ public class PackageAdminImpl implements PackageAdmin {
 	}
 
 	public Bundle[] getFragments(Bundle bundle) {
-		return ((AbstractBundle) bundle).getFragments();
+		return ((AbstractBundle) bundle).getBundleFragments();
 	}
 
 	public Bundle[] getHosts(Bundle bundle) {
-		BundleHost[] hosts = ((AbstractBundle) bundle).getHosts();
+		BundleHost[] hosts = ((AbstractBundle) bundle).getBundleHosts();
 		if (hosts == null)
 			return null;
 		// copy the array to protect modification

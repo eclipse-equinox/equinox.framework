@@ -10,16 +10,16 @@
  *******************************************************************************/
 package org.eclipse.osgi.framework.internal.core;
 
+import java.util.*;
 import org.eclipse.osgi.internal.loader.*;
-
-import java.util.ArrayList;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.ExportPackageDescription;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Package;
 import org.osgi.service.packageadmin.ExportedPackage;
 
-public class ExportedPackageImpl implements ExportedPackage {
+public class ExportedPackageImpl implements ExportedPackage, Package {
 
 	private final String specVersion;
 	private final ExportPackageDescription exportedPackage;
@@ -96,5 +96,21 @@ public class ExportedPackageImpl implements ExportedPackage {
 			result.append("=\"").append(specVersion).append("\""); //$NON-NLS-1$//$NON-NLS-2$
 		}
 		return result.toString();
+	}
+
+	public Bundle getExporter() {
+		return getExportingBundle();
+	}
+
+	public Collection<Bundle> getImporters() {
+		Bundle[] importers = getImportingBundles();
+		if (importers == null) {
+			return Collections.EMPTY_LIST;
+		}
+		List<Bundle> list = new ArrayList<Bundle>(importers.length);
+		for (Bundle b : importers) {
+			list.add(b);
+		}
+		return list;
 	}
 }

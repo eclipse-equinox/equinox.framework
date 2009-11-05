@@ -52,7 +52,7 @@ public class SystemBundleLoader extends BundleLoader {
 		}
 		this.classLoader = getClass().getClassLoader();
 		extPackages = new HashSet(0); // not common; start with 0
-		BundleFragment[] fragments = bundle.getFragments();
+		BundleFragment[] fragments = bundle.getBundleFragments();
 		if (fragments != null)
 			for (int i = 0; i < fragments.length; i++)
 				addExtPackages(fragments[i]);

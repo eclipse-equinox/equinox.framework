@@ -316,7 +316,7 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 	 */
 	public int getBundleStartLevel(Bundle bundle) {
 		checkValid(bundle);
-		return ((AbstractBundle) bundle).getStartLevel();
+		return ((AbstractBundle) bundle).getStartLevel0();
 	}
 
 	/**
@@ -361,7 +361,7 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 		framework.checkAdminPermission(bundle, AdminPermission.EXECUTE);
 		try {
 			// if the bundle's startlevel is not already at the requested startlevel
-			if (newSL != ((org.eclipse.osgi.framework.internal.core.AbstractBundle) bundle).getStartLevel()) {
+			if (newSL != ((org.eclipse.osgi.framework.internal.core.AbstractBundle) bundle).getStartLevel0()) {
 				final AbstractBundle b = (AbstractBundle) bundle;
 				b.getBundleData().setStartLevel(newSL);
 				try {
@@ -489,14 +489,14 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 		synchronized (framework.bundles) {
 			if (bundles.length <= 1)
 				return;
-			int currentSL = bundles[0].getStartLevel();
+			int currentSL = bundles[0].getStartLevel0();
 			int currentSLindex = 0;
 			boolean lazy = false;
 			for (int i = 0; i < bundles.length; i++) {
-				if (currentSL != bundles[i].getStartLevel()) {
+				if (currentSL != bundles[i].getStartLevel0()) {
 					if (lazy)
 						sortByDependencies(bundles, currentSLindex, i, framework);
-					currentSL = bundles[i].getStartLevel();
+					currentSL = bundles[i].getStartLevel0();
 					currentSLindex = i;
 					lazy = false;
 				}
@@ -541,7 +541,7 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 		/* Resume all bundles that were previously started and whose startlevel is <= the active startlevel */
 		int fwsl = getStartLevel();
 		for (int i = 0; i < launch.length && !framework.isForcedRestart(); i++) {
-			int bsl = launch[i].getStartLevel();
+			int bsl = launch[i].getStartLevel0();
 			if (bsl < fwsl) {
 				// skip bundles who should have already been started
 				continue;
@@ -571,7 +571,7 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 		// just decrementing the active startlevel - framework is not shutting down
 		// Do not check framework.isForcedRestart here because we want to stop the active bundles regardless.
 		for (int i = shutdown.length - 1; i >= 0; i--) {
-			int bsl = shutdown[i].getStartLevel();
+			int bsl = shutdown[i].getStartLevel0();
 			if (bsl > decToSL + 1)
 				// skip bundles who should have already been stopped
 				continue;

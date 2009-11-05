@@ -22,13 +22,14 @@ import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.util.KeyedElement;
 import org.eclipse.osgi.internal.composite.CompositeImpl;
 import org.eclipse.osgi.internal.loader.BundleLoader;
+import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.internal.permadmin.EquinoxProtectionDomain;
 import org.eclipse.osgi.internal.permadmin.EquinoxSecurityManager;
-import org.eclipse.osgi.service.resolver.BundleDescription;
-import org.eclipse.osgi.service.resolver.ResolverError;
+import org.eclipse.osgi.service.resolver.*;
 import org.eclipse.osgi.signedcontent.*;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
+import org.osgi.framework.Package;
 
 /**
  * This object is given out to bundles and wraps the internal Bundle object. It
@@ -1141,7 +1142,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	 *                comparable with the receiver.
 	 */
 	public int compareTo(Object obj) {
-		int slcomp = getStartLevel() - ((AbstractBundle) obj).getStartLevel();
+		int slcomp = getStartLevel0() - ((AbstractBundle) obj).getStartLevel0();
 		if (slcomp != 0) {
 			return slcomp;
 		}
@@ -1171,7 +1172,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		return domain;
 	}
 
-	protected BundleFragment[] getFragments() {
+	protected BundleFragment[] getBundleFragments() {
 		checkValid();
 		return null;
 	}
@@ -1180,7 +1181,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		return false;
 	}
 
-	BundleHost[] getHosts() {
+	BundleHost[] getBundleHosts() {
 		checkValid();
 		return null;
 	}
@@ -1253,7 +1254,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		return framework.adaptor.getState().getBundle(getBundleId());
 	}
 
-	protected int getStartLevel() {
+	protected int getStartLevel0() {
 		return bundledata.getStartLevel();
 	}
 
@@ -1389,7 +1390,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		// find the local entries of this bundle
 		findLocalEntryPaths(path, patternFilter, patternProps, recurse, pathList);
 		// if this bundle is a host to fragments then search the fragments
-		final BundleFragment[] fragments = getFragments();
+		final BundleFragment[] fragments = getBundleFragments();
 		final int numFragments = fragments == null ? -1 : fragments.length;
 		for (int i = 0; i < numFragments; i++)
 			((AbstractBundle) fragments[i]).findLocalEntryPaths(path, patternFilter, patternProps, recurse, pathList);
@@ -1533,5 +1534,95 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		} catch (Exception e) {
 			return Collections.EMPTY_MAP;
 		}
+	}
+
+	public int getTypes() {
+		return isFragment() ? BUNDLE_TYPE_FRAGMENT : 0;
+	}
+
+	public Collection<Bundle> getFragments() {
+		checkValid();
+		BundleFragment[] fragments = getBundleFragments();
+		if (fragments == null) {
+			return Collections.EMPTY_LIST;
+		}
+		List<Bundle> result = new ArrayList<Bundle>(fragments.length);
+		for (Bundle b : fragments) {
+			result.add(b);
+		}
+		return result;
+	}
+
+	public Collection<Bundle> getHosts() {
+		checkValid();
+		BundleHost[] hosts = getBundleHosts();
+		if (hosts == null) {
+			return Collections.EMPTY_LIST;
+		}
+		List<Bundle> result = new ArrayList<Bundle>(hosts.length);
+		for (Bundle b : hosts) {
+			result.add(b);
+		}
+		return result;
+	}
+
+	public Collection<Package> getExportedPackages() {
+		checkValid();
+		FrameworkAdaptor adaptor = framework.adaptor;
+		if (adaptor == null) {
+			return Collections.EMPTY_LIST;
+		}
+		List<Package> result = new ArrayList<Package>();
+		ExportPackageDescription[] allDescriptions = adaptor.getState().getExportedPackages();
+		for (int i = 0; i < allDescriptions.length; i++) {
+			ExportedPackageImpl exportedPackage = createExportedPackage(allDescriptions[i]);
+			if (exportedPackage == null)
+				continue;
+			if (exportedPackage.getBundle() == this)
+				result.add(exportedPackage);
+		}
+		return result;
+	}
+
+	private ExportedPackageImpl createExportedPackage(ExportPackageDescription description) {
+		BundleDescription exporter = description.getExporter();
+		if (exporter == null || exporter.getHost() != null)
+			return null;
+		BundleLoaderProxy proxy = (BundleLoaderProxy) exporter.getUserObject();
+		if (proxy == null) {
+			BundleHost bundle = (BundleHost) framework.getBundle(exporter.getBundleId());
+			if (bundle == null)
+				return null;
+			proxy = bundle.getLoaderProxy();
+		}
+		return new ExportedPackageImpl(description, proxy);
+	}
+
+	public Collection<Bundle> getRequiringBundles() {
+		checkValid();
+		return Collections.EMPTY_LIST;
+	}
+
+	public int getStartLevel() {
+		checkValid();
+		return getStartLevel0();
+	}
+
+	public void setStartLevel(int startlevel) {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
+	}
+
+	public boolean isPersistentlyStarted() {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
+	}
+
+	public boolean isActivationPolicyUsed() {
+		checkValid();
+		// TODO implement this method
+		throw new UnsupportedOperationException("to be implemented");
 	}
 }

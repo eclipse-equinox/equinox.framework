@@ -21,6 +21,7 @@ import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Constants;
 import org.eclipse.osgi.framework.internal.core.Framework;
 import org.osgi.framework.*;
+import org.osgi.framework.Package;
 import org.osgi.service.condpermadmin.*;
 import org.osgi.service.permissionadmin.PermissionAdmin;
 import org.osgi.service.permissionadmin.PermissionInfo;
@@ -628,6 +629,42 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 		 * @throws BundleException  
 		 */
 		public void update(InputStream in) throws BundleException {
+			throw new IllegalStateException();
+		}
+
+		public int getTypes() {
+			return 0;
+		}
+
+		public Collection<Bundle> getFragments() {
+			throw new IllegalStateException();
+		}
+
+		public Collection<Bundle> getHosts() {
+			throw new IllegalStateException();
+		}
+
+		public Collection<Package> getExportedPackages() {
+			throw new IllegalStateException();
+		}
+
+		public Collection<Bundle> getRequiringBundles() {
+			throw new IllegalStateException();
+		}
+
+		public int getStartLevel() {
+			throw new IllegalStateException();
+		}
+
+		public void setStartLevel(int startlevel) {
+			throw new IllegalStateException();
+		}
+
+		public boolean isActivationPolicyUsed() {
+			throw new IllegalStateException();
+		}
+
+		public boolean isPersistentlyStarted() {
 			throw new IllegalStateException();
 		}
 	}

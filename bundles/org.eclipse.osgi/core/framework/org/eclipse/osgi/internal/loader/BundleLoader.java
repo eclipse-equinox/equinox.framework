@@ -197,7 +197,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 		}
 
 		//This is the fastest way to access to the description for fragments since the hostdescription.getFragments() is slow
-		BundleFragment[] fragmentObjects = bundle.getFragments();
+		BundleFragment[] fragmentObjects = bundle.getBundleFragments();
 		BundleDescription[] fragments = new BundleDescription[fragmentObjects == null ? 0 : fragmentObjects.length];
 		for (int i = 0; i < fragments.length; i++)
 			fragments[i] = fragmentObjects[i].getBundleDescription();
@@ -802,7 +802,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 			return result;
 
 		// look in fragments imports ...
-		BundleFragment[] fragments = bundle.getFragments();
+		BundleFragment[] fragments = bundle.getBundleFragments();
 		if (fragments != null)
 			for (int i = 0; i < fragments.length; i++) {
 				result = fragments[i].getBundleData().findLibrary(name);
@@ -842,7 +842,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 	BundleClassLoader createBCL(final BundleProtectionDomain pd, final String[] cp) {
 		BundleClassLoader bcl = bundle.getBundleData().createClassLoader(BundleLoader.this, pd, cp);
 		// attach existing fragments to classloader
-		BundleFragment[] fragments = bundle.getFragments();
+		BundleFragment[] fragments = bundle.getBundleFragments();
 		if (fragments != null)
 			for (int i = 0; i < fragments.length; i++) {
 				try {

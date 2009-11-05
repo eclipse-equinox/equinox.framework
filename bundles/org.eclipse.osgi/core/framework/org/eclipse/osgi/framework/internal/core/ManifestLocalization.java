@@ -140,9 +140,9 @@ public class ManifestLocalization {
 	private URL findResource(String resource) {
 		AbstractBundle searchBundle = bundle;
 		if (bundle.isResolved()) {
-			if (bundle.isFragment() && bundle.getHosts() != null) {
+			if (bundle.isFragment() && bundle.getBundleHosts() != null) {
 				//if the bundle is a fragment, look in the host first
-				searchBundle = bundle.getHosts()[0];
+				searchBundle = bundle.getBundleHosts()[0];
 				if (searchBundle.getState() == Bundle.UNINSTALLED)
 					searchBundle = bundle;
 			}
@@ -159,7 +159,7 @@ public class ManifestLocalization {
 	}
 
 	private URL findInFragments(String filePath, AbstractBundle searchBundle) {
-		BundleFragment[] fragments = searchBundle.getFragments();
+		BundleFragment[] fragments = searchBundle.getBundleFragments();
 		URL fileURL = null;
 		for (int i = 0; fragments != null && i < fragments.length && fileURL == null; i++) {
 			if (fragments[i].getState() != Bundle.UNINSTALLED)

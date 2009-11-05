@@ -283,7 +283,7 @@ public class BundleFragment extends AbstractBundle {
 		return null;
 	}
 
-	synchronized BundleHost[] getHosts() {
+	synchronized BundleHost[] getBundleHosts() {
 		return hosts;
 	}
 

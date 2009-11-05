@@ -1261,12 +1261,12 @@ public class FrameworkCommandProvider implements CommandProvider, SynchronousBun
 					label = label + "_" + b.getVersion(); //$NON-NLS-1$
 				intp.println(b.getBundleId() + "\t" + getStateName(b) + label); //$NON-NLS-1$ 
 				if (b.isFragment()) {
-					Bundle[] hosts = b.getHosts();
+					Bundle[] hosts = b.getBundleHosts();
 					if (hosts != null)
 						for (int j = 0; j < hosts.length; j++)
 							intp.println("\t            Master=" + hosts[j].getBundleId()); //$NON-NLS-1$
 				} else {
-					Bundle[] fragments = b.getFragments();
+					Bundle[] fragments = b.getBundleFragments();
 					if (fragments != null) {
 						intp.print("\t            Fragments="); //$NON-NLS-1$
 						for (int f = 0; f < fragments.length; f++) {
