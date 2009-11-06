@@ -1537,7 +1537,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	}
 
 	public int getTypes() {
-		return isFragment() ? BUNDLE_TYPE_FRAGMENT : 0;
+		return isFragment() ? TYPE_FRAGMENT : 0;
 	}
 
 	public Collection<Bundle> getFragments() {
