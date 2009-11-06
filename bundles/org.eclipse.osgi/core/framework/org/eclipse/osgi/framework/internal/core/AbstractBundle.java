@@ -1609,14 +1609,17 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	}
 
 	public void setStartLevel(int startlevel) {
+		checkValid();
 		getStartLevelManager().setBundleStartLevel(this, startlevel);
 	}
 
 	public boolean isPersistentlyStarted() {
+		checkValid();
 		return getStartLevelManager().isBundlePersistentlyStarted(this);
 	}
 
 	public boolean isActivationPolicyUsed() {
+		checkValid();
 		return getStartLevelManager().isBundleActivationPolicyUsed(this);
 	}
 

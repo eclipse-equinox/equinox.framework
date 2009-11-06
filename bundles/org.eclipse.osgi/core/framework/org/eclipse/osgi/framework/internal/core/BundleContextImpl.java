@@ -26,6 +26,7 @@ import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Package;
+import org.osgi.service.packageadmin.ExportedPackage;
 
 /**
  * Bundle's execution context.
@@ -1057,19 +1058,40 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter) throws InvalidSyntaxException {
 		@SuppressWarnings("unchecked")
 		ServiceReference<S>[] refs = (ServiceReference<S>[]) getServiceReferences(clazz.getName(), filter);
-		return Arrays.asList(refs);
+		if (refs == null) {
+			return Collections.EMPTY_LIST;
+		}
+		List<ServiceReference<S>> result = new ArrayList<ServiceReference<S>>(refs.length);
+		for (ServiceReference<S> b : refs) {
+			result.add(b);
+		}
+		return result;
 	}
 
 	public List<Bundle> getBundles(String symbolicName, String versionRange) {
 		checkValid();
 		Bundle[] bundles = framework.getPackageAdmin().getBundles(symbolicName, versionRange);
-		return Arrays.asList(bundles);
+		if (bundles == null) {
+			return Collections.EMPTY_LIST;
+		}
+		List<Bundle> result = new ArrayList<Bundle>(bundles.length);
+		for (Bundle b : bundles) {
+			result.add(b);
+		}
+		return result;
 	}
 
 	public Collection<Package> getExportedPackages(String name) {
 		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		ExportedPackage[] packages = framework.getPackageAdmin().getExportedPackages(name);
+		if (packages == null) {
+			return Collections.EMPTY_LIST;
+		}
+		List<Package> result = new ArrayList<Package>(packages.length);
+		for (ExportedPackage b : packages) {
+			result.add((Package) b);
+		}
+		return result;
 	}
 
 	public int getInitialBundleStartLevel() {
@@ -1084,14 +1106,18 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 	public void refreshBundles(Bundle... bundles) {
 		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		if ((bundles != null) && (bundles.length == 0)) {
+			bundles = null;
+		}
+		framework.getPackageAdmin().refreshPackages(bundles);
 	}
 
 	public boolean resolveBundles(Bundle... bundles) {
 		checkValid();
-		// TODO implement this method
-		throw new UnsupportedOperationException("to be implemented");
+		if ((bundles != null) && (bundles.length == 0)) {
+			bundles = null;
+		}
+		return framework.getPackageAdmin().resolveBundles(bundles);
 	}
 
 	public void setInitialBundleStartLevel(int startlevel) {
