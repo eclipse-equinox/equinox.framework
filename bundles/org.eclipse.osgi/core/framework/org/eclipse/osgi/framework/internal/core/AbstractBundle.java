@@ -1578,7 +1578,8 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 			ExportedPackageImpl exportedPackage = createExportedPackage(allDescriptions[i]);
 			if (exportedPackage == null)
 				continue;
-			if (exportedPackage.getBundle() == this)
+			Bundle exporter = exportedPackage.getBundle();
+			if (exporter == this || (getBundleId() == 0 && exporter.getBundleId() == 0))
 				result.add(exportedPackage);
 		}
 		return result;

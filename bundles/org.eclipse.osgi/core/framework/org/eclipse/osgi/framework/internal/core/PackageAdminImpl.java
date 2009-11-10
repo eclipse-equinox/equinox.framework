@@ -87,7 +87,7 @@ public class PackageAdminImpl implements PackageAdmin {
 	}
 
 	public ExportedPackage[] getExportedPackages(Bundle bundle) {
-		ArrayList allExports = new ArrayList();
+		ArrayList<ExportedPackage> allExports = new ArrayList<ExportedPackage>();
 		FrameworkAdaptor adaptor = framework.adaptor;
 		if (adaptor == null)
 			return null;
@@ -96,10 +96,11 @@ public class PackageAdminImpl implements PackageAdmin {
 			ExportedPackageImpl exportedPackage = createExportedPackage(allDescriptions[i]);
 			if (exportedPackage == null)
 				continue;
-			if (bundle == null || exportedPackage.getBundle() == bundle)
+			Bundle exporter = exportedPackage.getBundle();
+			if (bundle == null || exporter == bundle || (bundle.getBundleId() == 0 && exporter.getBundleId() == 0))
 				allExports.add(exportedPackage);
 		}
-		return (ExportedPackage[]) (allExports.size() == 0 ? null : allExports.toArray(new ExportedPackage[allExports.size()]));
+		return (allExports.size() == 0 ? null : allExports.toArray(new ExportedPackage[allExports.size()]));
 	}
 
 	private ExportedPackageImpl createExportedPackage(ExportPackageDescription description) {
