@@ -76,6 +76,10 @@ class CompositeInfo {
 		return false;
 	}
 
+	synchronized boolean hasRequireEquivalent(BundleDescription singleton) {
+		return matchConstraints(singleton, requireBundlePolicy, this, null) != null;
+	}
+
 	private synchronized PolicyInfo<?, ?> matchImportPolicy(Object provider) {
 		if (provider instanceof ServiceReference<?>)
 			return matchFilters((ServiceReference<?>) provider, importServicePolicy, this, null);

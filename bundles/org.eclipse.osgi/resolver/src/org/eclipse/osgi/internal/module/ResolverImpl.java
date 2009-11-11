@@ -966,36 +966,40 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 			BundleDescription bundleDesc = bundles[i].getBundle();
 			if (!bundleDesc.isSingleton() || !bundleDesc.isResolved() || rejectedSingletons.contains(bundleDesc))
 				continue;
-			Object[] sameName = resolverBundles.get(bundleDesc.getName());
-			if (sameName.length > 1) { // Need to make a selection based off of num dependents
-				for (int j = 0; j < sameName.length; j++) {
-					BundleDescription sameNameDesc = ((VersionSupplier) sameName[j]).getBundle();
+			if (policy != null && policy.hasRequireEquivalent(bundleDesc)) {
+				if (!rejectedSingletons.contains(bundleDesc))
+					rejectedSingletons.add(bundleDesc);
+			} else {
+				Object[] sameName = resolverBundles.get(bundleDesc.getName());
+				if (sameName.length > 1) { // Need to make a selection based off of num dependents
+					for (int j = 0; j < sameName.length; j++) {
+						BundleDescription sameNameDesc = ((VersionSupplier) sameName[j]).getBundle();
 
-					ResolverBundle sameNameBundle = (ResolverBundle) sameName[j];
-					if (sameName[j] == bundles[i] || !sameNameDesc.isSingleton() || !sameNameDesc.isResolved() || rejectedSingletons.contains(sameNameDesc))
-						continue; // Ignore the bundle we are selecting, non-singletons, and non-resolved
+						ResolverBundle sameNameBundle = (ResolverBundle) sameName[j];
+						if (sameName[j] == bundles[i] || !sameNameDesc.isSingleton() || !sameNameDesc.isResolved() || rejectedSingletons.contains(sameNameDesc))
+							continue; // Ignore the bundle we are selecting, non-singletons, and non-resolved
 
-					boolean visibleTo = policy == null ? true : policy.isVisible(bundleDesc, sameNameDesc);
-					if (!visibleTo)
-						continue; // Ignore the bundles that are not visible to the current bundleDesc
-					boolean visibleFrom = policy == null ? true : policy.isVisible(sameNameDesc, bundleDesc);
+						boolean visibleTo = policy == null ? true : policy.isVisible(bundleDesc, sameNameDesc);
+						if (!visibleTo)
+							continue; // Ignore the bundles that are not visible to the current bundleDesc
 
-					result = true;
-					boolean rejectedPolicy = selectionPolicy != null ? selectionPolicy.compare(sameNameDesc, bundleDesc) < 0 : sameNameDesc.getVersion().compareTo(bundleDesc.getVersion()) > 0;
-					int sameNameRefs = sameNameBundle.getRefs();
-					int curRefs = bundles[i].getRefs();
-					// a bundle is always rejected if it is not visible from another bundle which is visibleTo it or 
-					// another bundle has more references to it;
-					// otherwise a bundle is rejected based on the selection policy (version) only if the number of references are equal
-					if (!visibleFrom || (sameNameRefs == curRefs && rejectedPolicy) || sameNameRefs > curRefs) {
-						// this bundle is not selected; add it to the rejected list
-						if (!rejectedSingletons.contains(bundles[i].getBundle()))
-							rejectedSingletons.add(bundles[i].getBundle());
-						break;
+						result = true;
+						boolean rejectedPolicy = selectionPolicy != null ? selectionPolicy.compare(sameNameDesc, bundleDesc) < 0 : sameNameDesc.getVersion().compareTo(bundleDesc.getVersion()) > 0;
+						int sameNameRefs = sameNameBundle.getRefs();
+						int curRefs = bundles[i].getRefs();
+						// a bundle is always rejected if it is not visible from another bundle which is visibleTo it or 
+						// another bundle has more references to it;
+						// otherwise a bundle is rejected based on the selection policy (version) only if the number of references are equal
+						if ((sameNameRefs == curRefs && rejectedPolicy) || sameNameRefs > curRefs) {
+							// this bundle is not selected; add it to the rejected list
+							if (!rejectedSingletons.contains(bundles[i].getBundle()))
+								rejectedSingletons.add(bundles[i].getBundle());
+							break;
+						}
+						// we did not select the sameNameDesc; add the bundle to the rejected list
+						if (!rejectedSingletons.contains(sameNameDesc))
+							rejectedSingletons.add(sameNameDesc);
 					}
-					// we did not select the sameNameDesc; add the bundle to the rejected list
-					if (!rejectedSingletons.contains(sameNameDesc))
-						rejectedSingletons.add(sameNameDesc);
 				}
 			}
 		}

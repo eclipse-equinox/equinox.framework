@@ -29,7 +29,7 @@ public interface ScopePolicy {
 	 * @param clazzes The class names under which the service is registered
 	 * @return true if the client has visibility according to this scope policy; false otherwise
 	 */
-	boolean isVisible(Bundle client, ServiceReference serviceProvider, String clazzes[]);
+	boolean isVisible(Bundle client, ServiceReference<?> serviceProvider, String clazzes[]);
 
 	/**
 	 * Determines if the specified client should have visibility to the 
@@ -39,6 +39,18 @@ public interface ScopePolicy {
 	 * @return true if the client has visibility according to this scope policy; false otherwise
 	 */
 	boolean isVisible(BundleDescription client, BaseDescription constraintProvider);
+
+	/**
+	 * Determines if the specified singleton bundle has a visibility policy
+	 * that may allow an equivalent singleton to be visible from a parent 
+	 * scope.  An equivalent singleton is one that has the same bundle 
+	 * symbolic name as the specified singleton.
+	 * @param singleton The singleton bundle to check.
+	 * @return true if the singleton has a visibility policy that 
+	 * may allow an equivalent singleton to be visible from a parent
+	 * scope; false otherwise.
+	 */
+	boolean hasRequireEquivalent(BundleDescription singleton);
 
 	/**
 	 * Determines if the specified bundles are in the same scope.

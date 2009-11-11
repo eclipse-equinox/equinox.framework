@@ -33,7 +33,7 @@ public class CompositePolicy implements ScopePolicy {
 		scopedSystemServices = new String[] {URLStreamHandlerService.class.getName().intern(), ContentHandler.class.getName().intern(), EventHook.class.getName(), FindHook.class.getName(), ListenerHook.class.getName()};
 	}
 
-	public boolean isVisible(Bundle client, ServiceReference serviceProvider, String[] clazzes) {
+	public boolean isVisible(Bundle client, ServiceReference<?> serviceProvider, String[] clazzes) {
 		return noScopes() || isVisible0((AbstractBundle) client, serviceProvider, clazzes, null);
 	}
 
@@ -45,7 +45,7 @@ public class CompositePolicy implements ScopePolicy {
 		return rootCompositeInfo.noChildren();
 	}
 
-	private boolean isVisible0(AbstractBundle client, ServiceReference serviceProvider, String[] clazzes, BaseDescription constraintProvider) {
+	private boolean isVisible0(AbstractBundle client, ServiceReference<?> serviceProvider, String[] clazzes, BaseDescription constraintProvider) {
 		if (client == null)
 			throw new IllegalArgumentException("Client cannot be null"); //$NON-NLS-1$
 		if (serviceProvider == null && constraintProvider == null)
@@ -88,6 +88,16 @@ public class CompositePolicy implements ScopePolicy {
 
 	private CompositeInfo getCompositeInfo(long compositeId) {
 		return (compositeId == 0) ? getRootCompositeInfo() : ((CompositeImpl) framework.getBundle(compositeId)).getCompositeInfo();
+	}
+
+	public boolean hasRequireEquivalent(BundleDescription singleton) {
+		AbstractBundle bundle = framework.getBundle(singleton.getBundleId());
+		if (bundle == null)
+			return false; // must be uninstalled
+		CompositeInfo compositeInfo = getCompositeInfo(bundle.getCompositeId());
+		if (compositeInfo == null)
+			return false;
+		return compositeInfo.hasRequireEquivalent(singleton);
 	}
 
 	public boolean sameScope(Bundle b1, Bundle b2) {
