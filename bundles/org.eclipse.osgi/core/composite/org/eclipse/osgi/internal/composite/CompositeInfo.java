@@ -77,7 +77,12 @@ class CompositeInfo {
 	}
 
 	synchronized boolean hasRequireEquivalent(BundleDescription singleton) {
-		return matchConstraints(singleton, requireBundlePolicy, this, null) != null;
+		if (requireBundlePolicy == null)
+			return false;
+		for (ClassSpacePolicyInfo policy : requireBundlePolicy)
+			if (policy.matchName(singleton))
+				return true;
+		return false;
 	}
 
 	private synchronized PolicyInfo<?, ?> matchImportPolicy(Object provider) {
@@ -101,18 +106,18 @@ class CompositeInfo {
 	private static ServicePolicyInfo matchFilters(ServiceReference<?> provider, ServicePolicyInfo[] servicePolicy, CompositeInfo providerComposite, ServicePolicyInfo peerPolicy) {
 		if (servicePolicy == null)
 			return null;
-		for (int i = 0; i < servicePolicy.length; i++)
-			if (servicePolicy[i].match(provider, providerComposite, peerPolicy))
-				return servicePolicy[i];
+		for (ServicePolicyInfo policy : servicePolicy)
+			if (policy.match(provider, providerComposite, peerPolicy))
+				return policy;
 		return null;
 	}
 
 	private static ClassSpacePolicyInfo matchConstraints(BaseDescription provider, ClassSpacePolicyInfo[] constraints, CompositeInfo providerComposite, ClassSpacePolicyInfo peerPolicy) {
 		if (constraints == null)
 			return null;
-		for (int i = 0; i < constraints.length; i++)
-			if (constraints[i].match(provider, providerComposite, peerPolicy))
-				return constraints[i];
+		for (ClassSpacePolicyInfo policy : constraints)
+			if (policy.match(provider, providerComposite, peerPolicy))
+				return policy;
 		return null;
 	}
 
@@ -189,7 +194,10 @@ class CompositeInfo {
 			super(compositeName, compositeRange, spec);
 		}
 
-		@Override
+		public boolean matchName(BundleDescription singleton) {
+			return spec.getName().equals(singleton.getName());
+		}
+
 		protected boolean matchProvider(BaseDescription provider) {
 			return spec.isSatisfiedBy(provider);
 		}
@@ -201,7 +209,6 @@ class CompositeInfo {
 			super(compositeName, compositeRange, spec);
 		}
 
-		@Override
 		protected boolean matchProvider(ServiceReference<?> provider) {
 			return spec.match(provider);
 		}
