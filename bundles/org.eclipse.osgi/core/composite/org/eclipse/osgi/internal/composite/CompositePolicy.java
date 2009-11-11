@@ -15,6 +15,7 @@ import org.eclipse.osgi.framework.adaptor.ScopePolicy;
 import org.eclipse.osgi.framework.internal.core.AbstractBundle;
 import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
+import org.eclipse.osgi.internal.serviceregistry.ServiceReferenceImpl;
 import org.eclipse.osgi.service.resolver.BaseDescription;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.*;
@@ -52,7 +53,12 @@ public class CompositePolicy implements ScopePolicy {
 		if (client.getBundleId() == 0 && client.getCompositeId() == 0 && !scopedSystemService(clazzes))
 			// root system bundle sees everything
 			return true;
-		AbstractBundle providerBundle = serviceProvider != null ? (AbstractBundle) serviceProvider.getBundle() : framework.getBundle(constraintProvider.getSupplier().getBundleId());
+		AbstractBundle providerBundle = null;
+		if (serviceProvider != null)
+			// Need to access internals incase the reference has been unregistered (in this case getBundle returns null)
+			providerBundle = (AbstractBundle) ((ServiceReferenceImpl<?>) serviceProvider).getRegistration().getRegisteringBundle();
+		else
+			providerBundle = framework.getBundle(constraintProvider.getSupplier().getBundleId());
 		if (providerBundle == null)
 			return false; // we assume the bundle is uninstalled and should not be visible
 		if (providerBundle.getBundleId() == 0 && providerBundle.getCompositeId() == 0 && !scopedSystemService(clazzes))

@@ -14,7 +14,6 @@ package org.eclipse.osgi.internal.serviceregistry;
 import java.util.*;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.internal.core.*;
-import org.eclipse.osgi.framework.internal.core.Framework;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
 
@@ -392,6 +391,17 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 
 			return bundle;
 		}
+	}
+
+	/**
+	 * This method returns the bundle which registered the 
+	 * service regardless of the registration status of this
+	 * service registration.  This is not an OSGi specified
+	 * method.
+	 * @return The bundle which registered the service.
+	 */
+	public Bundle getRegisteringBundle() {
+		return bundle;
 	}
 
 	/**
