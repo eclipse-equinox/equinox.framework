@@ -26,11 +26,10 @@ public class CompositePolicy implements ScopePolicy {
 	private final static BundleDescription[] EMPTY_DESCRIPTIONS = new BundleDescription[0];
 	private final Framework framework;
 	private final CompositeInfo rootCompositeInfo = new CompositeInfo(Constants.SYSTEM_BUNDLE_SYMBOLICNAME, null, null, null, null, null, null, null);
-	private static String[] scopedSystemServices;
+	private final static String[] scopedSystemServices = new String[] {URLStreamHandlerService.class.getName().intern(), ContentHandler.class.getName().intern(), EventHook.class.getName().intern(), FindHook.class.getName().intern(), ListenerHook.class.getName().intern()};
 
 	public CompositePolicy(Framework framework) {
 		this.framework = framework;
-		scopedSystemServices = new String[] {URLStreamHandlerService.class.getName().intern(), ContentHandler.class.getName().intern(), EventHook.class.getName(), FindHook.class.getName(), ListenerHook.class.getName()};
 	}
 
 	public boolean isVisible(Bundle client, ServiceReference<?> serviceProvider, String[] clazzes) {
