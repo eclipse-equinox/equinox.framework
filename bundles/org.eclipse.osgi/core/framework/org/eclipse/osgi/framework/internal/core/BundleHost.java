@@ -90,7 +90,7 @@ public class BundleHost extends AbstractBundle {
 				exporting = curProxy.inUse();
 				if (exporting) {
 					// add the bundle data to the list of removals
-					framework.packageAdmin.addRemovalPending(bundledata);
+					framework.getPackageAdminImpl().addRemovalPending(bundledata);
 					// make sure the BundleLoader is created.
 					curProxy.getBundleLoader().createClassLoader();
 				} else
@@ -160,7 +160,7 @@ public class BundleHost extends AbstractBundle {
 				exporting = curProxy.inUse();
 				if (exporting) {
 					// add the bundle data to the list of removals
-					framework.packageAdmin.addRemovalPending(bundledata);
+					framework.getPackageAdminImpl().addRemovalPending(bundledata);
 					// make sure the BundleLoader is created.
 					curProxy.getBundleLoader().createClassLoader();
 				} else
@@ -187,7 +187,7 @@ public class BundleHost extends AbstractBundle {
 
 		// check to see if the bundle is resolved
 		if (!isResolved()) {
-			if (!framework.packageAdmin.resolveBundles(new Bundle[] {this})) {
+			if (!framework.getPackageAdminImpl().resolveBundles(new Bundle[] {this})) {
 				return null;
 			}
 		}
@@ -304,7 +304,7 @@ public class BundleHost extends AbstractBundle {
 		}
 		if (!framework.active || (state & ACTIVE) != 0)
 			return;
-		if (getStartLevel0() > framework.startLevelFactory.getStartLevelManager(this).getStartLevel()) {
+		if (getStartLevel0() > framework.getStartLevelManager(this).getStartLevel()) {
 			if ((options & LAZY_TRIGGER) == 0 && (options & START_TRANSIENT) != 0) {
 				// throw exception if this is a transient start
 				String msg = NLS.bind(Msg.BUNDLE_TRANSIENT_START_ERROR, this);
@@ -315,7 +315,7 @@ public class BundleHost extends AbstractBundle {
 		}
 
 		if (state == INSTALLED) {
-			if (!framework.packageAdmin.resolveBundles(new Bundle[] {this}))
+			if (!framework.getPackageAdminImpl().resolveBundles(new Bundle[] {this}))
 				throw getResolutionFailureException();
 		}
 
@@ -332,7 +332,7 @@ public class BundleHost extends AbstractBundle {
 		}
 
 		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
-			Debug.println("Bundle: Active sl = " + framework.startLevelFactory.getStartLevelManager(this).getStartLevel() + "; Bundle " + getBundleId() + " sl = " + getStartLevel0()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			Debug.println("Bundle: Active sl = " + framework.getStartLevelManager(this).getStartLevel() + "; Bundle " + getBundleId() + " sl = " + getStartLevel0()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 		state = STARTING;
@@ -403,7 +403,7 @@ public class BundleHost extends AbstractBundle {
 
 	protected boolean readyToResume() {
 		// Return false if the bundle is not at the correct start-level
-		if (getStartLevel0() > framework.startLevelFactory.getStartLevelManager(this).getStartLevel())
+		if (getStartLevel0() > framework.getStartLevelManager(this).getStartLevel())
 			return false;
 		int status = bundledata.getStatus();
 		// Return false if the bundle is not persistently marked for start
@@ -412,7 +412,7 @@ public class BundleHost extends AbstractBundle {
 		if ((status & Constants.BUNDLE_ACTIVATION_POLICY) == 0 || (status & Constants.BUNDLE_LAZY_START) == 0 || isLazyTriggerSet())
 			return true;
 		if (!isResolved()) {
-			if (framework.getAdaptor().getState().isResolved() || !framework.packageAdmin.resolveBundles(new Bundle[] {this}))
+			if (framework.getAdaptor().getState().isResolved() || !framework.getPackageAdminImpl().resolveBundles(new Bundle[] {this}))
 				// should never transition from UNRESOLVED -> STARTING
 				return false;
 		}

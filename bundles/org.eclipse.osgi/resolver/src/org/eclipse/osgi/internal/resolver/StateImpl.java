@@ -36,7 +36,7 @@ public abstract class StateImpl implements State {
 	transient private Resolver resolver;
 	transient private StateDeltaImpl changes;
 	transient volatile private boolean resolving = false;
-	transient private HashSet removalPendings = new HashSet();
+	transient private HashSet<BundleDescription> removalPendings = new HashSet<BundleDescription>();
 
 	private volatile boolean resolved = true;
 	private volatile long timeStamp = System.currentTimeMillis();
@@ -223,14 +223,20 @@ public abstract class StateImpl implements State {
 		}
 	}
 
+	public BundleDescription[] getBundlesPendingRemoval() {
+		synchronized (this.monitor) {
+			return removalPendings.toArray(new BundleDescription[removalPendings.size()]);
+		}
+	}
+
 	public BundleDescription getBundle(long id) {
 		synchronized (this.monitor) {
 			BundleDescription result = (BundleDescription) bundleDescriptions.getByKey(new Long(id));
 			if (result != null)
 				return result;
 			// need to look in removal pending bundles;
-			for (Iterator iter = removalPendings.iterator(); iter.hasNext();) {
-				BundleDescription removedBundle = (BundleDescription) iter.next();
+			for (Iterator<BundleDescription> iter = removalPendings.iterator(); iter.hasNext();) {
+				BundleDescription removedBundle = iter.next();
 				if (removedBundle.getBundleId() == id) // just return the first matching id
 					return removedBundle;
 			}
@@ -421,12 +427,12 @@ public abstract class StateImpl implements State {
 	}
 
 	private StateDelta resolve(boolean incremental, BundleDescription[] reResolve) {
+		fullyLoad();
 		synchronized (this.monitor) {
 			try {
 				resolving = true;
 				if (resolver == null)
 					throw new IllegalStateException("no resolver set"); //$NON-NLS-1$
-				fullyLoad();
 				long start = 0;
 				if (StateManager.DEBUG_PLATFORM_ADMIN_RESOLVER)
 					start = System.currentTimeMillis();
@@ -572,25 +578,25 @@ public abstract class StateImpl implements State {
 	}
 
 	public ExportPackageDescription[] getExportedPackages() {
+		return getExportedPackages(-1);
+	}
+
+	public ExportPackageDescription[] getExportedPackages(long id) {
 		fullyLoad();
-		final List allExportedPackages = new ArrayList();
-		for (Iterator iter = resolvedBundles.iterator(); iter.hasNext();) {
-			BundleDescription bundle = (BundleDescription) iter.next();
-			ExportPackageDescription[] bundlePackages = bundle.getSelectedExports();
-			if (bundlePackages == null)
-				continue;
-			for (int i = 0; i < bundlePackages.length; i++)
-				allExportedPackages.add(bundlePackages[i]);
+		synchronized (monitor) {
+			final List<ExportPackageDescription> exportedPackages = new ArrayList<ExportPackageDescription>();
+			if (id < 0) {
+				for (Iterator iter = resolvedBundles.iterator(); iter.hasNext();)
+					exportedPackages.addAll(Arrays.asList(((BundleDescription) iter.next()).getSelectedExports()));
+			} else {
+				BundleDescription bundle = (BundleDescription) bundleDescriptions.getByKey(new Long(id));
+				if (bundle != null)
+					exportedPackages.addAll(Arrays.asList(bundle.getSelectedExports()));
+			}
+			for (Iterator<BundleDescription> iter = removalPendings.iterator(); iter.hasNext();)
+				exportedPackages.addAll(Arrays.asList(iter.next().getSelectedExports()));
+			return exportedPackages.toArray(new ExportPackageDescription[exportedPackages.size()]);
 		}
-		for (Iterator iter = removalPendings.iterator(); iter.hasNext();) {
-			BundleDescription bundle = (BundleDescription) iter.next();
-			ExportPackageDescription[] bundlePackages = bundle.getSelectedExports();
-			if (bundlePackages == null)
-				continue;
-			for (int i = 0; i < bundlePackages.length; i++)
-				allExportedPackages.add(bundlePackages[i]);
-		}
-		return (ExportPackageDescription[]) allExportedPackages.toArray(new ExportPackageDescription[allExportedPackages.size()]);
 	}
 
 	BundleDescription[] getFragments(final BundleDescription host) {
@@ -863,10 +869,9 @@ public abstract class StateImpl implements State {
 
 	// not synchronized on this to prevent deadlock
 	public final void fullyLoad() {
-		// TODO add back if ee min 1.2 adds holdsLock method
-		//if (Thread.holdsLock(this.monitor)) {
-		//	throw new IllegalStateException("Should not call fullyLoad() holding monitor."); //$NON-NLS-1$
-		//}
+		if (Thread.holdsLock(this.monitor)) {
+			throw new IllegalStateException("Should not call fullyLoad() holding monitor."); //$NON-NLS-1$
+		}
 		if (reader == null)
 			return;
 		synchronized (reader) {

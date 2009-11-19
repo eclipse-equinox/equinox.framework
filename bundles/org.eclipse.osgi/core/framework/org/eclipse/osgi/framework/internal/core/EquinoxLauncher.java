@@ -279,7 +279,7 @@ public class EquinoxLauncher implements org.osgi.framework.launch.Framework {
 		} catch (Throwable t) {
 			// do nothing
 		}
-		current.startLevelFactory.getStartLevelManager(current.systemBundle).doSetStartLevel(level);
+		current.getStartLevelManager(current.systemBundle).doSetStartLevel(level);
 	}
 
 	public void stop(int options) throws BundleException {

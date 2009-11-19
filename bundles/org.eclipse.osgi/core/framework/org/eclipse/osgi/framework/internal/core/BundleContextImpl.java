@@ -1070,7 +1070,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 	public List<Bundle> getBundles(String symbolicName, String versionRange) {
 		checkValid();
-		Bundle[] bundles = framework.getPackageAdmin().getBundles(symbolicName, versionRange);
+		Bundle[] bundles = framework.getPackageAdmin(bundle).getBundles(symbolicName, versionRange);
 		if (bundles == null) {
 			return Collections.EMPTY_LIST;
 		}
@@ -1083,7 +1083,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 
 	public Collection<Package> getExportedPackages(String name) {
 		checkValid();
-		ExportedPackage[] packages = framework.getPackageAdmin().getExportedPackages(name);
+		ExportedPackage[] packages = framework.getPackageAdmin(bundle).getExportedPackages(name);
 		if (packages == null) {
 			return Collections.EMPTY_LIST;
 		}
@@ -1109,7 +1109,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		if ((bundles != null) && (bundles.length == 0)) {
 			bundles = null;
 		}
-		framework.getPackageAdmin().refreshPackages(bundles);
+		framework.getPackageAdminImpl().refreshPackages(bundles);
 	}
 
 	public boolean resolveBundles(Bundle... bundles) {
@@ -1117,7 +1117,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		if ((bundles != null) && (bundles.length == 0)) {
 			bundles = null;
 		}
-		return framework.getPackageAdmin().resolveBundles(bundles);
+		return framework.getPackageAdminImpl().resolveBundles(bundles);
 	}
 
 	public void setInitialBundleStartLevel(int startlevel) {

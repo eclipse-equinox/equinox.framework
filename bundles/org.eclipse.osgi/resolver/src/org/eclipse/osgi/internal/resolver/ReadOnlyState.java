@@ -60,6 +60,10 @@ public final class ReadOnlyState implements State {
 		return target.getExportedPackages();
 	}
 
+	public ExportPackageDescription[] getExportedPackages(long id) {
+		return target.getExportedPackages(id);
+	}
+
 	public StateObjectFactory getFactory() {
 		return target.getFactory();
 	}
@@ -201,6 +205,10 @@ public final class ReadOnlyState implements State {
 
 	public void removeDisabledInfo(DisabledInfo disabledInfo) {
 		throw new UnsupportedOperationException();
+	}
+
+	public BundleDescription[] getBundlesPendingRemoval() {
+		return target.getBundlesPendingRemoval();
 	}
 
 }

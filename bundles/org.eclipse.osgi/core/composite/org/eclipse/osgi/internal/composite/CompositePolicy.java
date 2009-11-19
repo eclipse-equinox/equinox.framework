@@ -40,6 +40,10 @@ public class CompositePolicy implements ScopePolicy {
 		return noScopes() || isVisible0(framework.getBundle(client.getBundleId()), null, null, constraintProvider);
 	}
 
+	public boolean isVisible(Bundle client, BaseDescription constraintProvider) {
+		return noScopes() || isVisible0((AbstractBundle) client, null, null, constraintProvider);
+	}
+
 	public boolean noScopes() {
 		return rootCompositeInfo.noChildren();
 	}

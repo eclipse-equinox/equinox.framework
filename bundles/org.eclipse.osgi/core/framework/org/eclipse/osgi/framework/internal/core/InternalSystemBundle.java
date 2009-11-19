@@ -193,7 +193,7 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 	 *
 	 */
 	protected void resume() {
-		StartLevelManager startLevel = framework.startLevelFactory.getStartLevelManager(this);
+		StartLevelManager startLevel = framework.getStartLevelManager(this);
 		/* initialize the startlevel service */
 		startLevel.initialize();
 
@@ -261,12 +261,12 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 	 *
 	 */
 	protected void suspend() {
-		StartLevelManager rootStartLevel = framework.startLevelFactory.getStartLevelManager(framework.systemBundle);
+		StartLevelManager rootStartLevel = framework.getStartLevelManager(framework.systemBundle);
 		rootStartLevel.shutdown();
 		rootStartLevel.cleanup();
 
 		/* clean up the exporting loaders */
-		framework.packageAdmin.cleanup();
+		framework.getPackageAdminImpl().cleanup();
 
 		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
 			Debug.println("->Framework shutdown"); //$NON-NLS-1$
@@ -293,7 +293,7 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 		if ((state & (ACTIVE | STARTING)) != 0) {
 			Thread restart = framework.secureAction.createThread(new Runnable() {
 				public void run() {
-					StartLevelManager rootStartLevel = framework.startLevelFactory.getStartLevelManager(framework.systemBundle);
+					StartLevelManager rootStartLevel = framework.getStartLevelManager(framework.systemBundle);
 					int sl = rootStartLevel.getStartLevel();
 					FrameworkProperties.setProperty(Constants.PROP_OSGI_RELAUNCH, ""); //$NON-NLS-1$
 					framework.shutdown(FrameworkEvent.STOPPED_UPDATE);

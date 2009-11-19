@@ -41,12 +41,12 @@ public class SystemBundleActivator implements BundleActivator {
 		bundle = (InternalSystemBundle) context.getBundle();
 		framework = bundle.framework;
 
-		if (framework.packageAdmin != null)
-			packageAdmin = register(new String[] {Constants.OSGI_PACKAGEADMIN_NAME}, framework.packageAdmin, null);
+		if (framework.getPackageAdminFactory() != null)
+			packageAdmin = register(new String[] {Constants.OSGI_PACKAGEADMIN_NAME}, framework.getPackageAdminFactory(), null);
 		if (framework.securityAdmin != null)
 			securityAdmin = register(new String[] {Constants.OSGI_PERMISSIONADMIN_NAME, ConditionalPermissionAdmin.class.getName()}, framework.securityAdmin, null);
-		if (framework.startLevelFactory != null)
-			startLevel = register(new String[] {Constants.OSGI_STARTLEVEL_NAME}, framework.startLevelFactory, null);
+		if (framework.getStartLevelFactory() != null)
+			startLevel = register(new String[] {Constants.OSGI_STARTLEVEL_NAME}, framework.getStartLevelFactory(), null);
 		if (framework.compositeSupport != null)
 			compositeAdmin = register(new String[] {CompositeAdmin.class.getName()}, framework.compositeSupport, null);
 		FrameworkDebugOptions dbgOptions = null;
@@ -66,7 +66,7 @@ public class SystemBundleActivator implements BundleActivator {
 		// attempt to resolve all bundles
 		// this is done after the adaptor.frameworkStart has been called
 		// this should be the first time the resolver State is accessed
-		framework.packageAdmin.setResolvedBundles(bundle);
+		framework.getPackageAdminFactory().getPackageAdminImpl().setResolvedBundles(bundle);
 		// reinitialize the system bundles localization to take into account system bundle fragments
 		framework.systemBundle.manifestLocalization = null;
 	}

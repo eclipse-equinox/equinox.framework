@@ -164,7 +164,7 @@ public class BundleLoaderProxy implements RequiredBundle {
 		return description.isRemovalPending();
 	}
 
-	BundleDescription getBundleDescription() {
+	public BundleDescription getBundleDescription() {
 		return description;
 	}
 

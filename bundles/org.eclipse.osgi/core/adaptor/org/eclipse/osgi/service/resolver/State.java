@@ -99,6 +99,14 @@ public interface State {
 	public BundleDescription[] getBundles();
 
 	/**
+	 * Returns descriptions for all bundles known to this state that
+	 * are pending removal.
+	 * @see BundleDelta#REMOVAL_PENDING
+	 * @return the descriptions of bundles that are removal pending.
+	 */
+	public BundleDescription[] getBundlesPendingRemoval();
+
+	/**
 	 * Returns the bundle descriptor for the bundle with the given id. 
 	 * <code>null</code> is returned if no such bundle is found in 
 	 * this state. 
@@ -367,6 +375,14 @@ public interface State {
 	 * @see org.osgi.service.packageadmin.PackageAdmin#getExportedPackages(org.osgi.framework.Bundle)
 	 */
 	public ExportPackageDescription[] getExportedPackages();
+
+	/**
+	 * Returns all exported packages in this state which are exported by the
+	 * bundle with the given ID.  This includes an removal pending packages.
+	 * @param id
+	 * @return The exported packages for the given bundle ID.
+	 */
+	public ExportPackageDescription[] getExportedPackages(long id);
 
 	/**
 	 * Returns all bundle descriptions with the given bundle symbolic name.

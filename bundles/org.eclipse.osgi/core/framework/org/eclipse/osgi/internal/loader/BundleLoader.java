@@ -21,7 +21,6 @@ import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Constants;
-import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.framework.util.KeyedHashSet;
 import org.eclipse.osgi.internal.loader.buddy.PolicyHandler;
 import org.eclipse.osgi.service.resolver.*;
@@ -216,7 +215,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 		} catch (BundleException e) {
 			// do nothing; buddyList == null
 		}
-		policy = buddyList != null ? new PolicyHandler(this, buddyList, bundle.getFramework().getPackageAdmin()) : null;
+		policy = buddyList != null ? new PolicyHandler(this, buddyList, bundle.getFramework().getPackageAdmin(bundle)) : null;
 		if (policy != null)
 			policy.open(bundle.getFramework().getSystemBundleContext());
 	}

@@ -34,11 +34,20 @@ public interface ScopePolicy {
 	/**
 	 * Determines if the specified client should have visibility to the 
 	 * specified constraint provider (exported package, bundle symbolic name etc.).
-	 * @param clientId the potential client bundle
+	 * @param client the potential client bundle
 	 * @param constraintProvider the service reference to determine visibility of
 	 * @return true if the client has visibility according to this scope policy; false otherwise
 	 */
 	boolean isVisible(BundleDescription client, BaseDescription constraintProvider);
+
+	/**
+	 * Determines if the specified client should have visibility to the 
+	 * specified constraint provider (exported package, bundle symbolic name etc.).
+	 * @param client the potential client bundle
+	 * @param constraintProvider the service reference to determine visibility of
+	 * @return true if the client has visibility according to this scope policy; false otherwise
+	 */
+	boolean isVisible(Bundle client, BaseDescription constraintProvider);
 
 	/**
 	 * Determines if the specified singleton bundle has a visibility policy

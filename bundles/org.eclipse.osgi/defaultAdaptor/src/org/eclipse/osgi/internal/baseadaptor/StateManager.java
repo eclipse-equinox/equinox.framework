@@ -95,7 +95,7 @@ public class StateManager implements PlatformAdmin, Runnable {
 	 * @throws IOException
 	 */
 	public void shutdown(File stateFile, File lazyFile) throws IOException {
-		BundleDescription[] removalPendings = systemState.getRemovalPendings();
+		BundleDescription[] removalPendings = systemState.getBundlesPendingRemoval();
 		cleanRemovalPendings(removalPendings);
 		writeState(systemState, stateFile, lazyFile);
 		stopDataManager();

@@ -35,6 +35,7 @@ import org.eclipse.osgi.signedcontent.SignedContentFactory;
 import org.eclipse.osgi.util.ManifestElement;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
+import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -70,11 +71,11 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	/** The bundles installed in the framework */
 	protected BundleRepository bundles;
 	/** Package Admin object. This object manages the exported packages. */
-	protected PackageAdminImpl packageAdmin;
+	private PackageAdminFactory packageAdminFactory;
 	/** PermissionAdmin and ConditionalPermissionAdmin impl. This object manages the bundle permissions. */
 	protected SecurityAdmin securityAdmin;
 	/** Startlevel object. This object manages the framework and bundle startlevels */
-	protected StartLevelFactory startLevelFactory;
+	private StartLevelFactory startLevelFactory;
 	/** CompositeAdmin impl used to manage composites */
 	final CompositeSupport compositeSupport;
 	/** The ServiceRegistry */
@@ -203,7 +204,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 		 */
 		initializeProperties(adaptor.getProperties());
 		/* initialize admin objects */
-		packageAdmin = new PackageAdminImpl(this);
+		packageAdminFactory = new PackageAdminFactory(this);
 		try {
 			// always create security admin even with security off
 			securityAdmin = new SecurityAdmin(null, this, adaptor.getPermissionStorage());
@@ -612,7 +613,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 			eventManager = null;
 		}
 		secureAction = null;
-		packageAdmin = null;
+		packageAdminFactory = null;
 		adaptor = null;
 		uninstallURLStreamHandlerFactory();
 		uninstallContentHandlerFactory();
@@ -1011,8 +1012,24 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 		return systemBundle.context;
 	}
 
-	public PackageAdminImpl getPackageAdmin() {
-		return packageAdmin;
+	public PackageAdmin getPackageAdmin(AbstractBundle bundle) {
+		return packageAdminFactory.getService(bundle, null);
+	}
+
+	public PackageAdminFactory getPackageAdminFactory() {
+		return packageAdminFactory;
+	}
+
+	public PackageAdminImpl getPackageAdminImpl() {
+		return packageAdminFactory.getPackageAdminImpl();
+	}
+
+	public StartLevelManager getStartLevelManager(AbstractBundle bundle) {
+		return startLevelFactory.getStartLevelManager(bundle);
+	}
+
+	public StartLevelFactory getStartLevelFactory() {
+		return startLevelFactory;
 	}
 
 	public CompositeSupport getCompositeSupport() {
@@ -1757,7 +1774,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	private PackageSource getPackageSource(Class serviceClass, String pkgName) {
 		if (serviceClass == null)
 			return null;
-		AbstractBundle serviceBundle = (AbstractBundle) packageAdmin.getBundle(serviceClass);
+		AbstractBundle serviceBundle = (AbstractBundle) getPackageAdminImpl().getBundle(serviceClass);
 		if (serviceBundle == null)
 			return null;
 		BundleLoader producerBL = serviceBundle.getBundleLoader();

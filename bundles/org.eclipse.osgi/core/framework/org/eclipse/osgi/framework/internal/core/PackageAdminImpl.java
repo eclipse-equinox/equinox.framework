@@ -48,7 +48,7 @@ import org.osgi.service.packageadmin.*;
  * old values, isRemovalPending() returns true, and getExportingBundle()
  * and getImportingBundles() return null.
  */
-public class PackageAdminImpl implements PackageAdmin {
+public class PackageAdminImpl {
 	/** framework object */
 	protected Framework framework;
 	private Map removalPendings = new HashMap();
@@ -86,18 +86,18 @@ public class PackageAdminImpl implements PackageAdmin {
 		this.framework = framework;
 	}
 
-	public ExportedPackage[] getExportedPackages(Bundle bundle) {
+	ExportedPackage[] getExportedPackages(AbstractBundle client, Bundle bundle) {
 		ArrayList<ExportedPackage> allExports = new ArrayList<ExportedPackage>();
 		FrameworkAdaptor adaptor = framework.adaptor;
 		if (adaptor == null)
 			return null;
-		ExportPackageDescription[] allDescriptions = adaptor.getState().getExportedPackages();
-		for (int i = 0; i < allDescriptions.length; i++) {
-			ExportedPackageImpl exportedPackage = createExportedPackage(allDescriptions[i]);
+
+		ExportPackageDescription[] exports = bundle == null ? adaptor.getState().getExportedPackages() : adaptor.getState().getExportedPackages(bundle.getBundleId());
+		for (int i = 0; i < exports.length; i++) {
+			ExportedPackageImpl exportedPackage = createExportedPackage(exports[i]);
 			if (exportedPackage == null)
 				continue;
-			Bundle exporter = exportedPackage.getBundle();
-			if (bundle == null || exporter == bundle || (bundle.getBundleId() == 0 && exporter.getBundleId() == 0))
+			if (framework.getCompositeSupport().getCompositePolicy().isVisible(client, exports[i]))
 				allExports.add(exportedPackage);
 		}
 		return (allExports.size() == 0 ? null : allExports.toArray(new ExportedPackage[allExports.size()]));
@@ -117,20 +117,18 @@ public class PackageAdminImpl implements PackageAdmin {
 		return new ExportedPackageImpl(description, proxy);
 	}
 
-	public ExportedPackage getExportedPackage(String name) {
-		ExportedPackage[] allExports = getExportedPackages((Bundle) null);
+	ExportedPackage getExportedPackage(AbstractBundle client, String name) {
+		ExportedPackage[] allExports = getExportedPackages(client, (Bundle) null);
 		if (allExports == null)
 			return null;
 		ExportedPackage result = null;
+		// TODO not efficient but this is not called very often
 		for (int i = 0; i < allExports.length; i++) {
 			if (name.equals(allExports[i].getName())) {
 				if (result == null) {
 					result = allExports[i];
 				} else {
-					// TODO not efficient but this is not called very often
-					Version curVersion = Version.parseVersion(result.getSpecificationVersion());
-					Version newVersion = Version.parseVersion(allExports[i].getSpecificationVersion());
-					if (newVersion.compareTo(curVersion) >= 0)
+					if (allExports[i].getVersion().compareTo(result.getVersion()) >= 0)
 						result = allExports[i];
 				}
 			}
@@ -138,8 +136,8 @@ public class PackageAdminImpl implements PackageAdmin {
 		return result;
 	}
 
-	public ExportedPackage[] getExportedPackages(String name) {
-		ExportedPackage[] allExports = getExportedPackages((Bundle) null);
+	ExportedPackage[] getExportedPackages(AbstractBundle client, String name) {
+		ExportedPackage[] allExports = getExportedPackages(client, (Bundle) null);
 		if (allExports == null)
 			return null;
 		ArrayList result = new ArrayList(1); // rare to have more than one
@@ -149,11 +147,11 @@ public class PackageAdminImpl implements PackageAdmin {
 		return (ExportedPackage[]) (result.size() == 0 ? null : result.toArray(new ExportedPackage[result.size()]));
 	}
 
-	public void refreshPackages(Bundle[] input) {
+	void refreshPackages(Bundle[] input) {
 		refreshPackages(input, false);
 	}
 
-	public void refreshPackages(Bundle[] input, boolean synchronously) {
+	void refreshPackages(Bundle[] input, boolean synchronously) {
 		framework.checkAdminPermission(framework.systemBundle, AdminPermission.RESOLVE);
 
 		final AbstractBundle[] copy;
@@ -185,7 +183,7 @@ public class PackageAdminImpl implements PackageAdmin {
 		}
 	}
 
-	public boolean resolveBundles(Bundle[] bundles) {
+	boolean resolveBundles(Bundle[] bundles) {
 		framework.checkAdminPermission(framework.systemBundle, AdminPermission.RESOLVE);
 		doResolveBundles(null, false);
 		if (bundles == null)
@@ -552,7 +550,7 @@ public class PackageAdminImpl implements PackageAdmin {
 		return refresh;
 	}
 
-	public RequiredBundle[] getRequiredBundles(String symbolicName) {
+	RequiredBundle[] getRequiredBundles(Bundle client, String symbolicName) {
 		AbstractBundle[] bundles;
 		if (symbolicName == null)
 			bundles = framework.getAllBundles();
@@ -561,17 +559,27 @@ public class PackageAdminImpl implements PackageAdmin {
 		if (bundles == null || bundles.length == 0)
 			return null;
 
-		ArrayList result = new ArrayList(bundles.length);
+		ArrayList<RequiredBundle> result = new ArrayList<RequiredBundle>(bundles.length);
 		for (int i = 0; i < bundles.length; i++) {
 			if (bundles[i].isFragment() || !bundles[i].isResolved() || bundles[i].getSymbolicName() == null)
 				continue;
-			if (bundles[i].hasPermission(new BundlePermission(bundles[i].getSymbolicName(), BundlePermission.PROVIDE)))
-				result.add(((BundleHost) bundles[i]).getLoaderProxy());
+			if (bundles[i].hasPermission(new BundlePermission(bundles[i].getSymbolicName(), BundlePermission.PROVIDE))) {
+				BundleLoaderProxy proxy = ((BundleHost) bundles[i]).getLoaderProxy();
+				if (framework.getCompositeSupport().getCompositePolicy().isVisible(client, proxy.getBundleDescription()))
+					result.add(proxy);
+			}
 		}
-		return result.size() == 0 ? null : (RequiredBundle[]) result.toArray(new RequiredBundle[result.size()]);
+		BundleDescription[] removalPending = framework.adaptor.getState().getBundlesPendingRemoval();
+		for (BundleDescription pending : removalPending) {
+			Object proxy = pending.getUserObject();
+			if (proxy instanceof BundleLoaderProxy)
+				if (framework.getCompositeSupport().getCompositePolicy().isVisible(client, ((BundleLoaderProxy) proxy).getBundleDescription()))
+					result.add((BundleLoaderProxy) proxy);
+		}
+		return result.size() == 0 ? null : result.toArray(new RequiredBundle[result.size()]);
 	}
 
-	public Bundle[] getBundles(String symbolicName, String versionRange) {
+	Bundle[] getBundles(long compositeId, String symbolicName, String versionRange) {
 		if (symbolicName == null) {
 			throw new IllegalArgumentException();
 		}
@@ -579,32 +587,26 @@ public class PackageAdminImpl implements PackageAdmin {
 		if (bundles == null)
 			return null;
 
-		if (versionRange == null) {
-			AbstractBundle[] result = new AbstractBundle[bundles.length];
-			System.arraycopy(bundles, 0, result, 0, result.length);
-			return result;
-		}
-
 		// This code depends on the array of bundles being in descending
 		// version order.
-		ArrayList result = new ArrayList(bundles.length);
-		VersionRange range = new VersionRange(versionRange);
+		ArrayList<Bundle> result = new ArrayList<Bundle>(bundles.length);
+		VersionRange range = versionRange == null ? null : new VersionRange(versionRange);
 		for (int i = 0; i < bundles.length; i++) {
-			if (range.isIncluded(bundles[i].getVersion())) {
+			if (compositeId == bundles[i].getCompositeId() && (range == null || range.isIncluded(bundles[i].getVersion()))) {
 				result.add(bundles[i]);
 			}
 		}
 
 		if (result.size() == 0)
 			return null;
-		return (AbstractBundle[]) result.toArray(new AbstractBundle[result.size()]);
+		return result.toArray(new AbstractBundle[result.size()]);
 	}
 
-	public Bundle[] getFragments(Bundle bundle) {
+	Bundle[] getFragments(Bundle bundle) {
 		return ((AbstractBundle) bundle).getBundleFragments();
 	}
 
-	public Bundle[] getHosts(Bundle bundle) {
+	Bundle[] getHosts(Bundle bundle) {
 		BundleHost[] hosts = ((AbstractBundle) bundle).getBundleHosts();
 		if (hosts == null)
 			return null;
@@ -627,13 +629,13 @@ public class PackageAdminImpl implements PackageAdmin {
 		return null;
 	}
 
-	public Bundle getBundle(final Class clazz) {
+	Bundle getBundle(final Class clazz) {
 		if (System.getSecurityManager() == null)
 			return getBundlePriv(clazz);
 		return (Bundle) AccessController.doPrivileged(new GetBundleAction(this, clazz));
 	}
 
-	public int getBundleType(Bundle bundle) {
+	int getBundleType(Bundle bundle) {
 		return ((AbstractBundle) bundle).isFragment() ? PackageAdmin.BUNDLE_TYPE_FRAGMENT : 0;
 	}
 

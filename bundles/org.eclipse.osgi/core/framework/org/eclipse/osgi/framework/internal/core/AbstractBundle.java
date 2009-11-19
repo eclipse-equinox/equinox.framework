@@ -1372,7 +1372,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		checkValid();
 		// check to see if the bundle is resolved
 		if (!isResolved())
-			framework.packageAdmin.resolveBundles(new Bundle[] {this});
+			framework.getPackageAdminImpl().resolveBundles(new Bundle[] {this});
 
 		// a list used to store the results of the search
 		List pathList = new ArrayList();
@@ -1625,6 +1625,6 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	}
 
 	StartLevelManager getStartLevelManager() {
-		return framework.startLevelFactory.getStartLevelManager(this);
+		return framework.getStartLevelManager(this);
 	}
 }
