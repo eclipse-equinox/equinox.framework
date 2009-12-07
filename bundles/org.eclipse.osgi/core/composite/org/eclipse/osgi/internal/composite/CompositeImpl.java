@@ -21,7 +21,6 @@ import java.util.*;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.internal.core.*;
-import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.framework.internal.protocol.ContentHandlerFactory;
 import org.eclipse.osgi.framework.internal.protocol.StreamHandlerFactory;
 import org.eclipse.osgi.internal.composite.CompositeInfo.ClassSpacePolicyInfo;
@@ -45,6 +44,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 	private final ContentHandlerFactory contentHandlerFactory;
 	private final List<BundleDescription> constituents = new ArrayList<BundleDescription>(0);
 	private final int beginningStartLevel;
+	private final String systemPackages;
+	private final String systemPackagesExtra;
 	final boolean setCompositeParent;
 
 	public CompositeImpl(BundleData bundledata, Framework framework, boolean setCompositeParent) throws BundleException {
@@ -55,6 +56,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
 		Properties configuration = loadCompositeConfiguration();
 		beginningStartLevel = loadBeginningStartLevel(configuration);
+		systemPackages = configuration.getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES);
+		systemPackagesExtra = configuration.getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
 		if (setCompositeParent) {
 			streamHandlerFactory = new StreamHandlerFactory(compositeSystemBundle.getBundleContext(), framework.getAdaptor());
 			contentHandlerFactory = new ContentHandlerFactory(compositeSystemBundle.getBundleContext(), framework.getAdaptor());
@@ -144,6 +147,11 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 	}
 
 	public void update(InputStream in) throws BundleException {
+		try {
+			in.close();
+		} catch (IOException e) {
+			// do nothing
+		}
 		update();
 	}
 
@@ -276,9 +284,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 			return rootSystemBundle.getLoaderProxy();
 		}
 
-		@Override
 		protected void close() {
-
 			super.close();
 			this.state = Bundle.UNINSTALLED;
 		}
@@ -312,13 +318,19 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		return compositeSystemBundle;
 	}
 
-	@Override
+	public String getSystemPackages() {
+		return systemPackages;
+	}
+
+	public String getSystemPackagesExtra() {
+		return systemPackagesExtra;
+	}
+
 	protected void load() {
 		super.load();
 		loadConstituents();
 	}
 
-	@Override
 	protected void refresh() {
 		super.refresh();
 		loadConstituents();
