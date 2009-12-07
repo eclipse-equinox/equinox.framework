@@ -12,13 +12,14 @@ package org.eclipse.osgi.service.resolver;
 
 import java.util.Comparator;
 import java.util.Dictionary;
-import org.eclipse.osgi.framework.adaptor.ScopePolicy;
 
 /**
  * An implementation of a resolver which resolves the constraints of the bundles
  * in a system.
+ * <p>
+ * Clients may implement this interface.
+ * </p>
  * @since 3.1
- * @noimplement This interface is not intended to be implemented by clients.
  */
 public interface Resolver {
 
@@ -142,8 +143,4 @@ public interface Resolver {
 	 * @since 3.2 
 	 */
 	public Comparator getSelectionPolicy();
-
-	public void setScopePolicy(ScopePolicy policy);
-
-	public ScopePolicy getScopePolicy();
 }
