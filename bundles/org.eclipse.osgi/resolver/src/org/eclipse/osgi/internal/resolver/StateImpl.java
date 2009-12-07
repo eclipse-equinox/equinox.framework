@@ -55,7 +55,7 @@ public abstract class StateImpl implements State {
 
 	private static long cumulativeTime;
 
-	private final Object monitor = new Object();
+	final Object monitor = new Object();
 
 	// to prevent extra-package instantiation 
 	protected StateImpl() {
