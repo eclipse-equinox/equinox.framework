@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2008 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,16 +16,14 @@ import org.eclipse.osgi.util.ManifestElement;
 
 public class FilteredSourcePackage extends SingleSourcePackage {
 	private static final char ALL = '*';
-	String[] includes;
-	String[] excludes;
-	String[] friends;
+	private final String[] includes;
+	private final String[] excludes;
+	private final String[] friends;
 
 	public FilteredSourcePackage(String name, BundleLoaderProxy supplier, String includes, String excludes, String[] friends) {
 		super(name, supplier);
-		if (includes != null)
-			this.includes = ManifestElement.getArrayFromList(includes);
-		if (excludes != null)
-			this.excludes = ManifestElement.getArrayFromList(excludes);
+		this.includes = (includes != null) ? ManifestElement.getArrayFromList(includes) : null;
+		this.excludes = (excludes != null) ? ManifestElement.getArrayFromList(excludes) : null;
 		this.friends = friends;
 	}
 
