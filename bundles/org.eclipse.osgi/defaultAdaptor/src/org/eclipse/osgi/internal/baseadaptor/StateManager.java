@@ -18,6 +18,7 @@ import org.eclipse.osgi.framework.internal.core.BundleContextImpl;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.internal.loader.BundleLoader;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
+import org.eclipse.osgi.internal.module.ResolverImpl;
 import org.eclipse.osgi.internal.resolver.*;
 import org.eclipse.osgi.service.resolver.*;
 import org.osgi.framework.BundleContext;
@@ -62,7 +63,7 @@ public class StateManager implements PlatformAdmin, Runnable {
 	public static String PROP_LAZY_UNLOADING_TIME = "osgi.lazyStateUnloadingTime"; //$NON-NLS-1$
 	private long expireTime = 300000; // default to five minutes
 	private long readStartupTime;
-	private StateImpl systemState;
+	private SystemState systemState;
 	private StateObjectFactoryImpl factory;
 	private long lastTimeStamp;
 	private boolean cachedState = false;
@@ -229,7 +230,7 @@ public class StateManager implements PlatformAdmin, Runnable {
 	 * @return the State used by the system or <code>null</code> if one
 	 * does not exist.
 	 */
-	public State getSystemState() {
+	public SystemState getSystemState() {
 		return systemState;
 	}
 
@@ -292,11 +293,11 @@ public class StateManager implements PlatformAdmin, Runnable {
 	}
 
 	private Resolver createResolver(boolean checkPermissions) {
-		return new org.eclipse.osgi.internal.module.ResolverImpl(context, checkPermissions);
+		return new ResolverImpl(context, checkPermissions);
 	}
 
-	private Resolver createSystemResolver(boolean checkPermissions) {
-		Resolver resolver = createResolver(checkPermissions);
+	private ResolverImpl createSystemResolver(boolean checkPermissions) {
+		ResolverImpl resolver = (ResolverImpl) createResolver(checkPermissions);
 		// TODO need a better way to do this
 		ScopePolicy policy = ((BundleContextImpl) context).getFramework().getCompositeSupport().getCompositePolicy();
 		resolver.setScopePolicy(policy);
