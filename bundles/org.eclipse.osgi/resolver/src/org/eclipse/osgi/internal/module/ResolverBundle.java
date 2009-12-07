@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2008 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,6 @@
 package org.eclipse.osgi.internal.module;
 
 import java.util.*;
-import java.util.Map.Entry;
 import org.eclipse.osgi.service.resolver.*;
 import org.osgi.framework.Constants;
 
@@ -392,31 +391,33 @@ public class ResolverBundle extends VersionSupplier implements Comparable {
 			return false;
 		if (!existingDescription.getVersion().equals(newDescription.getVersion()))
 			return false;
-		if (!equivalentMaps(existingDescription.getAttributes(), newDescription.getAttributes(), true))
+		if (!mapsEqual(existingDescription.getAttributes(), newDescription.getAttributes(), null))
 			return false;
-		if (!equivalentMaps(existingDescription.getDirectives(), newDescription.getDirectives(), true))
+		if (!mapsEqual(existingDescription.getDirectives(), newDescription.getDirectives(), null))
 			return false;
 		return true;
 	}
 
-	public static boolean equivalentMaps(Map existingDirectives, Map newDirectives, boolean exactMatch) {
-		if (existingDirectives == null && newDirectives == null)
-			return true;
-		if (existingDirectives == null ? newDirectives != null : newDirectives == null)
+	public static boolean mapsEqual(Map m1, Map m2, String[] keys) {
+		if (m1 == null || m2 == null)
+			return m1 == m2;
+		if (m1.size() != m2.size())
 			return false;
-		if (exactMatch && existingDirectives.size() != newDirectives.size())
-			return false;
-		for (Iterator entries = existingDirectives.entrySet().iterator(); entries.hasNext();) {
-			Entry entry = (Entry) entries.next();
-			Object newValue = newDirectives.get(entry.getKey());
-			if (newValue == null || entry.getValue().getClass() != newValue.getClass())
-				return false;
-			if (newValue instanceof String[]) {
-				if (!Arrays.equals((Object[]) entry.getValue(), (Object[]) newValue))
+		if (keys == null)
+			keys = (String[]) m1.keySet().toArray(new String[m1.size()]);
+		for (String key : keys) {
+			Object value = m1.get(key);
+			if (value instanceof String[]) {
+				if (!Arrays.equals((Object[]) value, (Object[]) m2.get(key)))
 					return false;
-			} else if (!entry.getValue().equals(newValue)) {
+			} else if (value instanceof long[]) {
+				if (!Arrays.equals((long[]) value, (long[]) m2.get(key)))
+					return false;
+			} else if (value == null) {
+				if (m2.get(key) != null)
+					return false;
+			} else if (!value.equals(m2.get(key)))
 				return false;
-			}
 		}
 		return true;
 	}
@@ -563,14 +564,6 @@ public class ResolverBundle extends VersionSupplier implements Comparable {
 
 	void setResolvable(boolean resolvable) {
 		this.resolvable = resolvable;
-	}
-
-	void addExport(ResolverExport re) {
-		ResolverExport[] newExports = new ResolverExport[exports.length + 1];
-		for (int i = 0; i < exports.length; i++)
-			newExports[i] = exports[i];
-		newExports[exports.length] = re;
-		exports = newExports;
 	}
 
 	ResolverImpl getResolver() {
