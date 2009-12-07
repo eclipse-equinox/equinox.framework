@@ -13,9 +13,7 @@ package org.eclipse.osgi.internal.baseadaptor;
 
 import java.io.File;
 import java.io.IOException;
-import org.eclipse.osgi.framework.adaptor.ScopePolicy;
-import org.eclipse.osgi.framework.internal.core.BundleContextImpl;
-import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
+import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.internal.loader.BundleLoader;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.internal.module.ResolverImpl;

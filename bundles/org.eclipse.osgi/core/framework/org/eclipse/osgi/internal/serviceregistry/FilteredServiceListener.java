@@ -11,11 +11,10 @@
 
 package org.eclipse.osgi.internal.serviceregistry;
 
-import org.eclipse.osgi.framework.adaptor.ScopePolicy;
 import org.eclipse.osgi.framework.debug.Debug;
-import org.eclipse.osgi.framework.internal.core.BundleContextImpl;
-import org.eclipse.osgi.framework.internal.core.FilterImpl;
+import org.eclipse.osgi.framework.internal.core.*;
 import org.osgi.framework.*;
+import org.osgi.framework.Constants;
 import org.osgi.framework.hooks.service.ListenerHook;
 
 /**

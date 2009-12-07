@@ -8,7 +8,7 @@
  ******************************************************************************/
 package org.eclipse.osgi.internal.module;
 
-import org.eclipse.osgi.framework.adaptor.ScopePolicy;
+import org.eclipse.osgi.framework.internal.core.ScopePolicy;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.VersionConstraint;
 

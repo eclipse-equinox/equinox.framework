@@ -14,11 +14,10 @@ import java.io.*;
 import java.security.AllPermission;
 import java.util.*;
 import java.util.jar.*;
-import org.eclipse.osgi.framework.adaptor.ScopePolicy;
-import org.eclipse.osgi.framework.internal.core.BundleHost;
-import org.eclipse.osgi.framework.internal.core.Framework;
+import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
+import org.osgi.framework.Constants;
 import org.osgi.service.composite.*;
 
 public class CompositeSupport implements ServiceFactory {

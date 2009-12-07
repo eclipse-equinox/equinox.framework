@@ -11,14 +11,13 @@
 package org.eclipse.osgi.internal.composite;
 
 import java.net.ContentHandler;
-import org.eclipse.osgi.framework.adaptor.ScopePolicy;
-import org.eclipse.osgi.framework.internal.core.AbstractBundle;
-import org.eclipse.osgi.framework.internal.core.Framework;
+import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.internal.serviceregistry.ServiceReferenceImpl;
 import org.eclipse.osgi.service.resolver.BaseDescription;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.*;
+import org.osgi.framework.Constants;
 import org.osgi.framework.hooks.service.*;
 import org.osgi.service.url.URLStreamHandlerService;
 
