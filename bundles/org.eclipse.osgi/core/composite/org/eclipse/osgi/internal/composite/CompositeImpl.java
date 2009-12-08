@@ -34,7 +34,7 @@ import org.osgi.framework.Constants;
 import org.osgi.service.composite.CompositeBundle;
 import org.osgi.service.composite.CompositeConstants;
 
-public class CompositeImpl extends BundleHost implements CompositeBundle, SynchronousBundleListener {
+public class CompositeImpl extends BundleHost implements CompositeBundle {
 	private static final String COMPOSITE_AFFINITY_NAME_DIRECTIVE = "composite-symbolic-name-affinity"; //$NON-NLS-1$
 	private static final String COMPOSITE_AFFINITY_VERSION_DIRECTIVE = "composite-version-affinity"; //$NON-NLS-1$
 	private final CompositeSystemBundle compositeSystemBundle;
@@ -234,8 +234,6 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 
 		protected BundleContextImpl createContext() {
 			CompositeContext compositeContext = new CompositeContext(this);
-			if (setCompositeParent)
-				compositeContext.addBundleListener(CompositeImpl.this);
 			return compositeContext;
 		}
 
@@ -328,7 +326,6 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 
 	protected void load() {
 		super.load();
-		loadConstituents();
 	}
 
 	protected void refresh() {
@@ -336,7 +333,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		loadConstituents();
 	}
 
-	private void loadConstituents() {
+	void loadConstituents() {
 		synchronized (constituents) {
 			constituents.clear();
 			AbstractBundle[] bundles = framework.getBundles(getBundleId());
@@ -350,14 +347,9 @@ public class CompositeImpl extends BundleHost implements CompositeBundle, Synchr
 		}
 	}
 
-	public void bundleChanged(BundleEvent event) {
-		if (event.getType() != BundleEvent.INSTALLED)
-			return;
+	void addConstituent(BundleDescription description) {
 		synchronized (constituents) {
-			AbstractBundle bundle = (AbstractBundle) event.getBundle();
-			BundleDescription desc = bundle.getBundleDescription();
-			if (desc != null)
-				constituents.add(desc);
+			constituents.add(description);
 		}
 	}
 

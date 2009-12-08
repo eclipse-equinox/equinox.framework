@@ -20,7 +20,7 @@ import org.osgi.framework.*;
 import org.osgi.framework.Constants;
 import org.osgi.service.composite.*;
 
-public class CompositeSupport implements ServiceFactory {
+public class CompositeSupport implements ServiceFactory, SynchronousBundleListener {
 	private static final String[] INVALID_COMPOSITE_HEADERS = new String[] {Constants.DYNAMICIMPORT_PACKAGE, Constants.IMPORT_PACKAGE, Constants.EXPORT_PACKAGE, Constants.REQUIRE_BUNDLE, Constants.FRAGMENT_HOST, Constants.BUNDLE_NATIVECODE, Constants.BUNDLE_CLASSPATH, Constants.BUNDLE_ACTIVATOR, Constants.BUNDLE_LOCALIZATION, Constants.BUNDLE_ACTIVATIONPOLICY};
 	public static String COMPOSITE_CONFIGURATION = "compositeConfig.properties"; //$NON-NLS-1$
 
@@ -42,6 +42,32 @@ public class CompositeSupport implements ServiceFactory {
 
 	public ScopePolicy getCompositePolicy() {
 		return compositPolicy;
+	}
+
+	public void start() {
+		framework.getSystemBundleContext().addBundleListener(this);
+		if (!compositPolicy.noScopes()) {
+			AbstractBundle[] bundles = framework.getBundles(-1);
+			for (AbstractBundle bundle : bundles) {
+				if (bundle instanceof CompositeImpl)
+					((CompositeImpl) bundle).loadConstituents();
+			}
+		}
+	}
+
+	public void stop() {
+		framework.getSystemBundleContext().removeBundleListener(this);
+	}
+
+	public void bundleChanged(BundleEvent event) {
+		if (event.getType() != BundleEvent.INSTALLED)
+			return;
+		AbstractBundle bundle = (AbstractBundle) event.getBundle();
+		long compID = bundle.getCompositeId();
+		if (compID == 0)
+			return;
+		CompositeImpl composite = (CompositeImpl) framework.getBundle(compID);
+		composite.addConstituent(bundle.getBundleDescription());
 	}
 
 	class EquinoxCompositeAdmin implements CompositeAdmin {
