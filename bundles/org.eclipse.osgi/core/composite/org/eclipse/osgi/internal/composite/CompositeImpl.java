@@ -27,6 +27,7 @@ import org.eclipse.osgi.internal.composite.CompositeInfo.ClassSpacePolicyInfo;
 import org.eclipse.osgi.internal.composite.CompositeInfo.ServicePolicyInfo;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.internal.resolver.StateBuilder;
+import org.eclipse.osgi.internal.resolver.StateObjectFactoryImpl;
 import org.eclipse.osgi.service.resolver.*;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
@@ -37,6 +38,7 @@ import org.osgi.service.composite.CompositeConstants;
 public class CompositeImpl extends BundleHost implements CompositeBundle {
 	private static final String COMPOSITE_AFFINITY_NAME_DIRECTIVE = "composite-symbolic-name-affinity"; //$NON-NLS-1$
 	private static final String COMPOSITE_AFFINITY_VERSION_DIRECTIVE = "composite-version-affinity"; //$NON-NLS-1$
+	private static final StateObjectFactory stateFactory = new StateObjectFactoryImpl();
 	private final CompositeSystemBundle compositeSystemBundle;
 	private final CompositeInfo compositeInfo;
 	private final StartLevelManager startLevelManager;
@@ -112,13 +114,12 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 
 		BundleContext systemContext = compositeSystemBundle.getBundleContext();
 
-		StateObjectFactory factory = StateObjectFactory.defaultFactory;
-		BundleDescription desc = factory.createBundleDescription(manifest, bundledata.getLocation(), bundledata.getBundleID());
-		ClassSpacePolicyInfo[] imports = createClassSpacePolicy(importPackage, factory, CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY, desc);
-		ClassSpacePolicyInfo[] exports = createClassSpacePolicy(exportPackage, factory, CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY, desc);
-		ClassSpacePolicyInfo[] requires = createClassSpacePolicy(requireBundle, factory, CompositeConstants.COMPOSITE_BUNDLE_REQUIRE_POLICY, desc);
-		ServicePolicyInfo[] importServiceFilter = createServicePolicyInfo(importService, factory, CompositeConstants.COMPOSITE_SERVICE_IMPORT_POLICY, systemContext);
-		ServicePolicyInfo[] exportServiceFilter = createServicePolicyInfo(exportService, factory, CompositeConstants.COMPOSITE_SERVICE_EXPORT_POLICY, systemContext);
+		BundleDescription desc = stateFactory.createBundleDescription(manifest, bundledata.getLocation(), bundledata.getBundleID());
+		ClassSpacePolicyInfo[] imports = createClassSpacePolicy(importPackage, stateFactory, CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY, desc);
+		ClassSpacePolicyInfo[] exports = createClassSpacePolicy(exportPackage, stateFactory, CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY, desc);
+		ClassSpacePolicyInfo[] requires = createClassSpacePolicy(requireBundle, stateFactory, CompositeConstants.COMPOSITE_BUNDLE_REQUIRE_POLICY, desc);
+		ServicePolicyInfo[] importServiceFilter = createServicePolicyInfo(importService, stateFactory, CompositeConstants.COMPOSITE_SERVICE_IMPORT_POLICY, systemContext);
+		ServicePolicyInfo[] exportServiceFilter = createServicePolicyInfo(exportService, stateFactory, CompositeConstants.COMPOSITE_SERVICE_EXPORT_POLICY, systemContext);
 		// set the parent info
 		CompositeInfo parentInfo = null;
 		if (setParent) {
