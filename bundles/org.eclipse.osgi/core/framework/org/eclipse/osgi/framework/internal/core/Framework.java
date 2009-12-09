@@ -1737,7 +1737,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 			return false;
 		// 1) if the registrant == consumer always return true
 		AbstractBundle producer = (AbstractBundle) registrant;
-		if (consumer == producer)
+		if (consumer.getBundleId() == producer.getBundleId())
 			return true;
 		// 2) get the package name from the specified className
 		String pkgName = BundleLoader.getPackageName(className);
