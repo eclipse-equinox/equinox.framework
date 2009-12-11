@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at 
@@ -38,6 +38,9 @@ static int shouldShutdown(JNIEnv *env);
 static void JNI_ReleaseStringChars(JNIEnv *env, jstring s, const _TCHAR* data);
 static const _TCHAR* JNI_GetStringChars(JNIEnv *env, jstring str);
 static char * getMainClass(JNIEnv *env, _TCHAR * jarFile);
+#ifdef AIX
+static void setLibraryLocation(JNIEnv *env, jobject obj);
+#endif
 
 void setExitData(JNIEnv *env, jstring id, jstring s);
 
@@ -92,6 +95,10 @@ JNIEXPORT jlong JNICALL get_splash_handle(JNIEnv * env, jobject obj){
 }
 
 JNIEXPORT void JNICALL show_splash(JNIEnv * env, jobject obj, jstring s){
+#ifdef AIX
+	setLibraryLocation(env, obj);
+#endif
+
 	if(showSplashHook != NULL)
 		showSplashHook(env, s);
 	else
@@ -103,6 +110,33 @@ JNIEXPORT void JNICALL takedown_splash(JNIEnv * env, jobject obj){
 		takeDownHook();
 	else
 		takeDownSplash();
+}
+#endif
+
+
+#ifdef AIX
+/*
+ * On AIX we need the location of the eclipse shared library so that we
+ * can find the libeclipse-motif.so library.  Reach into the JNIBridge
+ * object to get the "library" field.
+ */
+void setLibraryLocation(JNIEnv * env, jobject obj) {
+	jclass bridge = (*env)->FindClass(env, "org/eclipse/equinox/launcher/JNIBridge");
+	if (bridge != NULL) {
+		jfieldID libraryField = (*env)->GetFieldID(env, bridge, "library", "Ljava/lang/String;");
+		if (libraryField != NULL) {
+			jstring stringObject = (jstring) (*env)->GetObjectField(env, obj, libraryField);
+			if (stringObject != NULL) {
+				const char * str = JNI_GetStringChars(env, stringObject);
+				eclipseLibrary = strdup(str);
+				JNI_ReleaseStringChars(env, stringObject, str);
+			}
+		}
+	}
+	if( (*env)->ExceptionOccurred(env) != 0 ){
+		(*env)->ExceptionDescribe(env);
+		(*env)->ExceptionClear(env);
+	}
 }
 #endif
 

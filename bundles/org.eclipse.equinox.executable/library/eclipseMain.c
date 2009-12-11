@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at 
@@ -56,6 +56,10 @@ static _TCHAR*  checkForIni(int argc, _TCHAR* argv[]);
  
 static int initialArgc;
 static _TCHAR** initialArgv;
+
+#ifdef AIX
+_TCHAR * eclipseLibrary = NULL;
+#endif
 
 #if (defined(_WIN32) || defined(VISTA))
 #ifdef UNICODE
@@ -161,6 +165,9 @@ int main( int argc, _TCHAR* argv[] )
 
 	/* Find the eclipse library */
 	library = findLibrary(library, program);
+#ifdef AIX
+	eclipseLibrary = library;
+#endif
 		
 	if(library != NULL)
 		handle = loadLibrary(library);

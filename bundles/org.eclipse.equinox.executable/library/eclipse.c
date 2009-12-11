@@ -255,6 +255,9 @@ static _TCHAR * startupArg    = NULL;			/* path of the startup.jar the user want
 static _TCHAR*  vmName        = NULL;     		/* Java VM that the user wants to run */
 static _TCHAR*  name          = NULL;			/* program name */	
 static _TCHAR*  library       = NULL;			/* the shared library */
+#ifdef AIX
+	   _TCHAR*  eclipseLibrary = NULL;			/* global, eclipse shared library, same as library */
+#endif
 static _TCHAR*  permGen  	  = NULL;			/* perm gen size for sun */
 
 /* variables for ee options */
@@ -339,6 +342,9 @@ JNIEXPORT void setInitialArgs(int argc, _TCHAR** argv, _TCHAR* lib) {
 	initialArgc = argc;
 	initialArgv = argv;
 	library = lib;
+#ifdef AIX
+	eclipseLibrary = lib;
+#endif
 }
 
 /* this method must match the RunMethod typedef in eclipseMain.c */
