@@ -424,7 +424,7 @@ public class PackageAdminImpl {
 		}
 		AbstractBundle[] refresh = (AbstractBundle[]) bundlesList.toArray(new AbstractBundle[bundlesList.size()]);
 		// first sort by id/start-level order
-		Util.sort(refresh);
+		Util.sort(refresh, 0, refresh.length);
 		// then sort by dependency order
 		StartLevelManager.sortByDependency(refresh, framework);
 		boolean[] previouslyResolved = new boolean[refresh.length];
