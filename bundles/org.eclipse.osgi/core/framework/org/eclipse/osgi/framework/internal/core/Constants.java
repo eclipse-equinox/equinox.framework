@@ -52,15 +52,6 @@ public class Constants implements org.osgi.framework.Constants {
 	/** Name of OSGi LogService */
 	public static final String OSGI_LOGSERVICE_NAME = "org.osgi.service.log.LogService"; //$NON-NLS-1$
 
-	/** Name of OSGi PackageAdmin */
-	public static final String OSGI_PACKAGEADMIN_NAME = "org.osgi.service.packageadmin.PackageAdmin"; //$NON-NLS-1$
-
-	/** Name of OSGi PermissionAdmin */
-	public static final String OSGI_PERMISSIONADMIN_NAME = "org.osgi.service.permissionadmin.PermissionAdmin"; //$NON-NLS-1$
-
-	/** Name of OSGi StartLevel */
-	public static final String OSGI_STARTLEVEL_NAME = "org.osgi.service.startlevel.StartLevel"; //$NON-NLS-1$
-
 	/** JVM java.vm.name property name */
 	public static final String JVM_VM_NAME = "java.vm.name"; //$NON-NLS-1$
 

@@ -17,6 +17,9 @@ import org.eclipse.osgi.framework.debug.FrameworkDebugOptions;
 import org.osgi.framework.*;
 import org.osgi.service.composite.CompositeAdmin;
 import org.osgi.service.condpermadmin.ConditionalPermissionAdmin;
+import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.permissionadmin.PermissionAdmin;
+import org.osgi.service.startlevel.StartLevel;
 
 /**
  * This class activates the System Bundle.
@@ -41,12 +44,12 @@ public class SystemBundleActivator implements BundleActivator {
 		bundle = (InternalSystemBundle) context.getBundle();
 		framework = bundle.framework;
 
-		if (framework.getPackageAdminFactory() != null)
-			packageAdmin = register(new String[] {Constants.OSGI_PACKAGEADMIN_NAME}, framework.getPackageAdminFactory(), null);
-		if (framework.securityAdmin != null)
-			securityAdmin = register(new String[] {Constants.OSGI_PERMISSIONADMIN_NAME, ConditionalPermissionAdmin.class.getName()}, framework.securityAdmin, null);
-		if (framework.getStartLevelFactory() != null)
-			startLevel = register(new String[] {Constants.OSGI_STARTLEVEL_NAME}, framework.getStartLevelFactory(), null);
+		CoreServicesFactory factory = framework.getCoreServicesFactory();
+		if (factory != null) {
+			packageAdmin = register(new String[] {PackageAdmin.class.getName()}, factory, null);
+			startLevel = register(new String[] {StartLevel.class.getName()}, factory, null);
+			securityAdmin = register(new String[] {PermissionAdmin.class.getName(), ConditionalPermissionAdmin.class.getName()}, factory, null);
+		}
 		if (framework.compositeSupport != null)
 			compositeAdmin = register(new String[] {CompositeAdmin.class.getName()}, framework.compositeSupport, null);
 		FrameworkDebugOptions dbgOptions = null;
@@ -66,7 +69,7 @@ public class SystemBundleActivator implements BundleActivator {
 		// attempt to resolve all bundles
 		// this is done after the adaptor.frameworkStart has been called
 		// this should be the first time the resolver State is accessed
-		framework.getPackageAdminFactory().getPackageAdminImpl().setResolvedBundles(bundle);
+		framework.getCoreServicesFactory().getPackageAdminImpl().setResolvedBundles(bundle);
 		framework.getCompositeSupport().start();
 		// reinitialize the system bundles localization to take into account system bundle fragments
 		framework.systemBundle.manifestLocalization = null;

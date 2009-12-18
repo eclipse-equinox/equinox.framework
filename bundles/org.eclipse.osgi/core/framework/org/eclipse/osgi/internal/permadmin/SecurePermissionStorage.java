@@ -24,6 +24,7 @@ public class SecurePermissionStorage implements PermissionStorage, PrivilegedExc
 	private String location;
 	private String[] data;
 	private String[] infos;
+	private long scopeId;
 	private int action;
 	private static final int GET = 1;
 	private static final int SET = 2;
@@ -38,25 +39,26 @@ public class SecurePermissionStorage implements PermissionStorage, PrivilegedExc
 	public Object run() throws IOException {
 		switch (action) {
 			case GET :
-				return storage.getPermissionData(location);
+				return storage.getPermissionData(location, scopeId);
 			case SET :
-				storage.setPermissionData(location, data);
+				storage.setPermissionData(location, data, scopeId);
 				return null;
 			case LOCATION :
-				return storage.getLocations();
+				return storage.getLocations(scopeId);
 			case SAVE_INFOS :
-				storage.saveConditionalPermissionInfos(infos);
+				storage.saveConditionalPermissionInfos(infos, scopeId);
 				return null;
 			case GET_INFOS :
-				return storage.getConditionalPermissionInfos();
+				return storage.getConditionalPermissionInfos(scopeId);
 		}
 
 		throw new UnsupportedOperationException();
 	}
 
-	public String[] getPermissionData(String location) throws IOException {
+	public String[] getPermissionData(String location, long scopeId) throws IOException {
 		this.location = location;
 		this.action = GET;
+		this.scopeId = scopeId;
 
 		try {
 			return (String[]) AccessController.doPrivileged(this);
@@ -65,8 +67,9 @@ public class SecurePermissionStorage implements PermissionStorage, PrivilegedExc
 		}
 	}
 
-	public String[] getLocations() throws IOException {
+	public String[] getLocations(long scopeId) throws IOException {
 		this.action = LOCATION;
+		this.scopeId = scopeId;
 
 		try {
 			return (String[]) AccessController.doPrivileged(this);
@@ -75,10 +78,11 @@ public class SecurePermissionStorage implements PermissionStorage, PrivilegedExc
 		}
 	}
 
-	public void setPermissionData(String location, String[] data) throws IOException {
+	public void setPermissionData(String location, String[] data, long scopeId) throws IOException {
 		this.location = location;
 		this.data = data;
 		this.action = SET;
+		this.scopeId = scopeId;
 
 		try {
 			AccessController.doPrivileged(this);
@@ -87,9 +91,10 @@ public class SecurePermissionStorage implements PermissionStorage, PrivilegedExc
 		}
 	}
 
-	public void saveConditionalPermissionInfos(String[] infos) throws IOException {
+	public void saveConditionalPermissionInfos(String[] infos, long scopeId) throws IOException {
 		this.action = SAVE_INFOS;
 		this.infos = infos;
+		this.scopeId = scopeId;
 		try {
 			AccessController.doPrivileged(this);
 		} catch (PrivilegedActionException e) {
@@ -98,8 +103,9 @@ public class SecurePermissionStorage implements PermissionStorage, PrivilegedExc
 
 	}
 
-	public String[] getConditionalPermissionInfos() throws IOException {
+	public String[] getConditionalPermissionInfos(long scopeId) throws IOException {
 		this.action = GET_INFOS;
+		this.scopeId = scopeId;
 		try {
 			return (String[]) AccessController.doPrivileged(this);
 		} catch (PrivilegedActionException e) {

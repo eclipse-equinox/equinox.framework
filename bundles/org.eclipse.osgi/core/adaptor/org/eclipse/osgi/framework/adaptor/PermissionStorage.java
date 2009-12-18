@@ -46,12 +46,13 @@ public interface PermissionStorage {
 	 * that is, locations for which permission data
 	 * exists in persistent storage.
 	 *
+	 * @param scopeId the scope id to get the locations for.
 	 * @return The locations that have permission data in
 	 * persistent storage, or <tt>null</tt> if there is no permission data
 	 * in persistent storage.
 	 * @throws IOException If a failure occurs accessing persistent storage.
 	 */
-	public String[] getLocations() throws IOException;
+	public String[] getLocations(long scopeId) throws IOException;
 
 	/**
 	 * Gets the permission data assigned to the specified
@@ -60,13 +61,14 @@ public interface PermissionStorage {
 	 * @param location The location whose permission data is to
 	 * be returned.
 	 * The location can be <tt>null</tt> for the default permission data.
-	 *
+	 * @param scopeId the scope id whose permission data is to
+	 * be returned.
 	 * @return The permission data assigned to the specified
 	 * location, or <tt>null</tt> if that location has not been assigned any
 	 * permission data.
 	 * @throws IOException If a failure occurs accessing persistent storage.
 	 */
-	public String[] getPermissionData(String location) throws IOException;
+	public String[] getPermissionData(String location, long scopeId) throws IOException;
 
 	/**
 	 * Assigns the specified permission data to the specified
@@ -77,24 +79,27 @@ public interface PermissionStorage {
 	 * The location can be <tt>null</tt> for the default permission data.
 	 * @param data The permission data to be assigned, or <tt>null</tt>
 	 * if the specified location is to be removed from persistent storaqe.
+	 * @param scopeId the scope id that will be assigned the permissions.
 	 * @throws IOException If a failure occurs modifying persistent storage.
 	 */
-	public void setPermissionData(String location, String[] data) throws IOException;
+	public void setPermissionData(String location, String[] data, long scopeId) throws IOException;
 
 	/**
 	 * Persists the array of encoded ConditionalPermissionInfo strings
 	 * @param infos an array of encoded ConditionalPermissionInfo strings
+	 * @param scopeId the scope id to save the info for
 	 * @throws IOException If a failure occurs modifying persistent storage.
 	 * @since 3.2
 	 */
-	public void saveConditionalPermissionInfos(String[] infos) throws IOException;
+	public void saveConditionalPermissionInfos(String[] infos, long scopeId) throws IOException;
 
 	/**
 	 * Returns the persistent array of encoded ConditionalPermissionInfo strings
+	 * @param scopeId the scope id to return the infos for.
 	 * @return an array of encoded ConditionalPermissionInfo strings or null 
 	 * if none exist in persistent storage.
 	 * @throws IOException If a failure occurs accessing persistent storage.
 	 * @since 3.2
 	 */
-	public String[] getConditionalPermissionInfos() throws IOException;
+	public String[] getConditionalPermissionInfos(long scopeId) throws IOException;
 }

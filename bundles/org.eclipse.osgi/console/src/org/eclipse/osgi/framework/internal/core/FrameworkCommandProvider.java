@@ -103,7 +103,7 @@ public class FrameworkCommandProvider implements CommandProvider, SynchronousBun
 		this.framework = framework;
 		context = framework.systemBundle.getContext();
 		slImpl = framework.getStartLevelManager(framework.systemBundle);
-		securityAdmin = framework.securityAdmin;
+		securityAdmin = framework.getCoreServicesFactory().getSecurityAdmin(framework.systemBundle);
 	}
 
 	/**

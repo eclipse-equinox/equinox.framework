@@ -19,6 +19,7 @@ import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
 import org.eclipse.osgi.internal.loader.BundleLoader;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
+import org.eclipse.osgi.internal.permadmin.SecurityAdmin;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
@@ -60,8 +61,9 @@ public class BundleHost extends AbstractBundle {
 
 		if (framework.isActive()) {
 			SecurityManager sm = System.getSecurityManager();
-			if (sm != null && framework.securityAdmin != null) {
-				domain = framework.securityAdmin.createProtectionDomain(this);
+			if (sm != null) {
+				SecurityAdmin sa = framework.getCoreServicesFactory().getSecurityAdmin(this);
+				domain = sa.createProtectionDomain(this);
 			}
 		}
 		proxy = null;
@@ -111,8 +113,10 @@ public class BundleHost extends AbstractBundle {
 		this.bundledata = newBundle.bundledata;
 		this.bundledata.setBundle(this);
 		// create a new domain for the bundle because its signers/symbolic-name may have changed
-		if (framework.isActive() && System.getSecurityManager() != null && framework.securityAdmin != null)
-			domain = framework.securityAdmin.createProtectionDomain(this);
+		if (framework.isActive() && System.getSecurityManager() != null) {
+			SecurityAdmin sa = framework.getCoreServicesFactory().getSecurityAdmin(this);
+			domain = sa.createProtectionDomain(this);
+		}
 		return (exporting);
 	}
 

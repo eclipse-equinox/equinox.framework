@@ -26,6 +26,7 @@ import org.eclipse.osgi.framework.internal.protocol.StreamHandlerFactory;
 import org.eclipse.osgi.internal.composite.CompositeInfo.ClassSpacePolicyInfo;
 import org.eclipse.osgi.internal.composite.CompositeInfo.ServicePolicyInfo;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
+import org.eclipse.osgi.internal.permadmin.SecurityAdmin;
 import org.eclipse.osgi.internal.resolver.StateBuilder;
 import org.eclipse.osgi.internal.resolver.StateObjectFactoryImpl;
 import org.eclipse.osgi.service.resolver.*;
@@ -34,6 +35,7 @@ import org.osgi.framework.*;
 import org.osgi.framework.Constants;
 import org.osgi.service.composite.CompositeBundle;
 import org.osgi.service.composite.CompositeConstants;
+import org.osgi.service.condpermadmin.ConditionalPermissionUpdate;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle {
 	private static final String COMPOSITE_AFFINITY_NAME_DIRECTIVE = "composite-symbolic-name-affinity"; //$NON-NLS-1$
@@ -42,6 +44,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	private final CompositeSystemBundle compositeSystemBundle;
 	private final CompositeInfo compositeInfo;
 	private final StartLevelManager startLevelManager;
+	private final SecurityAdmin securityAdmin;
 	private final StreamHandlerFactory streamHandlerFactory;
 	private final ContentHandlerFactory contentHandlerFactory;
 	private final List<BundleDescription> constituents = new ArrayList<BundleDescription>(0);
@@ -61,11 +64,17 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		systemPackages = configuration.getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES);
 		systemPackagesExtra = configuration.getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
 		if (setCompositeParent) {
+			try {
+				securityAdmin = new SecurityAdmin(framework, framework.getAdaptor().getPermissionStorage(), bundledata.getBundleID());
+			} catch (IOException e) {
+				throw new BundleException("Error creating SecurityAdmin", e); //$NON-NLS-1$
+			}
 			streamHandlerFactory = new StreamHandlerFactory(compositeSystemBundle.getBundleContext(), framework.getAdaptor());
 			contentHandlerFactory = new ContentHandlerFactory(compositeSystemBundle.getBundleContext(), framework.getAdaptor());
 			framework.getStreamHandlerFactory().registerComposite(streamHandlerFactory);
 			framework.getContentHandlerFactory().registerComposite(contentHandlerFactory);
 		} else {
+			securityAdmin = null;
 			streamHandlerFactory = null;
 			contentHandlerFactory = null;
 		}
@@ -205,13 +214,24 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		super.uninstallWorkerPrivileged();
 		Bundle[] bundles = framework.getBundles(getBundleId());
 		// uninstall all the constituents 
-		for (int i = 0; i < bundles.length; i++)
+		for (int i = 0; i < bundles.length; i++) {
 			if (bundles[i].getBundleId() != 0) // not the system bundle
 				try {
 					bundles[i].uninstall();
 				} catch (BundleException e) {
 					framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundles[i], e);
 				}
+		}
+		// clean up persistent storage associated with this composite
+		framework.getAdaptor().setInitialBundleStartLevel(getBundleId(), -1);
+		securityAdmin.setDefaultPermissions(null);
+		String[] locations = securityAdmin.getLocations();
+		if (locations != null)
+			for (int i = 0; i < locations.length; i++)
+				securityAdmin.setPermissions(locations[i], null);
+		ConditionalPermissionUpdate update = securityAdmin.newConditionalPermissionUpdate();
+		update.getConditionalPermissionInfos().clear();
+		update.commit();
 	}
 
 	protected void close() {
@@ -311,6 +331,10 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 
 	public StartLevelManager getStartLevelService() {
 		return startLevelManager;
+	}
+
+	public SecurityAdmin getSecurityAdmin() {
+		return securityAdmin;
 	}
 
 	public BundleHost getSystemBundle() {

@@ -17,8 +17,10 @@ import java.security.PrivilegedAction;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.*;
 import org.eclipse.osgi.framework.debug.Debug;
+import org.eclipse.osgi.internal.composite.CompositeImpl;
 import org.eclipse.osgi.internal.loader.BundleLoader;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
+import org.eclipse.osgi.internal.permadmin.SecurityAdmin;
 import org.eclipse.osgi.internal.profile.Profile;
 import org.eclipse.osgi.service.resolver.*;
 import org.eclipse.osgi.util.NLS;
@@ -539,7 +541,20 @@ public class PackageAdminImpl {
 			return refresh;
 		if (refreshPackages) {
 			// must clear permission class and condition cache
-			framework.securityAdmin.clearCaches();
+			SecurityAdmin rootSA = framework.getCoreServicesFactory().getSecurityAdmin(framework.systemBundle);
+			if (rootSA != null)
+				rootSA.clearCaches();
+			synchronized (framework.bundles) {
+				List allBundles = framework.bundles.getBundles();
+				for (Iterator iBundles = allBundles.iterator(); iBundles.hasNext();) {
+					AbstractBundle bundle = (AbstractBundle) iBundles.next();
+					if (bundle instanceof CompositeImpl) {
+						SecurityAdmin compSA = ((CompositeImpl) bundle).getSecurityAdmin();
+						if (compSA != null)
+							compSA.clearCaches();
+					}
+				}
+			}
 			// increment the system state timestamp if we are refreshing packages.
 			// this is needed incase we suspended a bundle from processing the delta (bug 167483)
 			if (bundleDeltas.length > 0)

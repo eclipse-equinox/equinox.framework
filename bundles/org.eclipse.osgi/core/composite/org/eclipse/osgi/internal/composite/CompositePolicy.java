@@ -52,8 +52,8 @@ public class CompositePolicy implements ScopePolicy {
 			throw new IllegalArgumentException("Client cannot be null"); //$NON-NLS-1$
 		if (serviceProvider == null && constraintProvider == null)
 			throw new IllegalArgumentException("Provider cannot be null"); //$NON-NLS-1$
-		if (client.getBundleId() == 0 && client.getCompositeId() == 0 && !scopedSystemService(clazzes))
-			// root system bundle sees everything
+		if (serviceProvider != null && client.getBundleId() == 0 && client.getCompositeId() == 0 && !scopedSystemService(clazzes))
+			// root system bundle sees every service
 			return true;
 		AbstractBundle providerBundle = null;
 		if (serviceProvider != null)
@@ -64,7 +64,7 @@ public class CompositePolicy implements ScopePolicy {
 		if (providerBundle == null)
 			return false; // we assume the bundle is uninstalled and should not be visible
 		if (providerBundle.getBundleId() == 0 && providerBundle.getCompositeId() == 0 && !scopedSystemService(clazzes))
-			// Everyone sees the root system bundle
+			// Everyone sees the root system bundle' services and packages
 			return true;
 		long clientCompID = client.getCompositeId();
 		long providerCompID = providerBundle.getCompositeId();

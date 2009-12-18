@@ -28,7 +28,6 @@ import org.eclipse.osgi.framework.util.SecureAction;
 import org.eclipse.osgi.internal.composite.CompositeSupport;
 import org.eclipse.osgi.internal.loader.*;
 import org.eclipse.osgi.internal.permadmin.EquinoxSecurityManager;
-import org.eclipse.osgi.internal.permadmin.SecurityAdmin;
 import org.eclipse.osgi.internal.profile.Profile;
 import org.eclipse.osgi.internal.serviceregistry.ServiceRegistry;
 import org.eclipse.osgi.signedcontent.SignedContentFactory;
@@ -70,12 +69,11 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	private FrameworkEvent[] shutdownEvent;
 	/** The bundles installed in the framework */
 	protected BundleRepository bundles;
-	/** Package Admin object. This object manages the exported packages. */
-	private PackageAdminFactory packageAdminFactory;
+
 	/** PermissionAdmin and ConditionalPermissionAdmin impl. This object manages the bundle permissions. */
-	protected SecurityAdmin securityAdmin;
 	/** Startlevel object. This object manages the framework and bundle startlevels */
-	private StartLevelFactory startLevelFactory;
+	/** Package Admin object. This object manages the exported packages. */
+	private CoreServicesFactory coreServicesFactory;
 	/** CompositeAdmin impl used to manage composites */
 	final CompositeSupport compositeSupport;
 	/** The ServiceRegistry */
@@ -203,18 +201,15 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 		 * methods.
 		 */
 		initializeProperties(adaptor.getProperties());
-		/* initialize admin objects */
-		packageAdminFactory = new PackageAdminFactory(this);
-		try {
-			// always create security admin even with security off
-			securityAdmin = new SecurityAdmin(null, this, adaptor.getPermissionStorage());
-		} catch (IOException e) /* fatal error */{
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
-		}
 		/* create the system bundle */
 		createSystemBundle();
-		startLevelFactory = new StartLevelFactory(new StartLevelManager(this, 0, systemBundle), this);
+		/* initialize admin objects */
+		try {
+			coreServicesFactory = new CoreServicesFactory(this);
+		} catch (IOException e) {
+			// fatal error
+			throw new RuntimeException(e);
+		}
 		/* create the event manager and top level event dispatchers */
 		eventManager = new EventManager("Framework Event Dispatcher"); //$NON-NLS-1$
 		bundleEvent = new CopyOnWriteIdentityMap();
@@ -613,7 +608,7 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 			eventManager = null;
 		}
 		secureAction = null;
-		packageAdminFactory = null;
+		coreServicesFactory = null;
 		adaptor = null;
 		uninstallURLStreamHandlerFactory();
 		uninstallContentHandlerFactory();
@@ -1012,24 +1007,20 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 		return systemBundle.context;
 	}
 
-	public PackageAdmin getPackageAdmin(AbstractBundle bundle) {
-		return packageAdminFactory.getService(bundle, null);
+	public CoreServicesFactory getCoreServicesFactory() {
+		return coreServicesFactory;
 	}
 
-	public PackageAdminFactory getPackageAdminFactory() {
-		return packageAdminFactory;
+	public PackageAdmin getPackageAdmin(AbstractBundle bundle) {
+		return coreServicesFactory.getPackageAdmin(bundle);
 	}
 
 	public PackageAdminImpl getPackageAdminImpl() {
-		return packageAdminFactory.getPackageAdminImpl();
+		return coreServicesFactory.getPackageAdminImpl();
 	}
 
 	public StartLevelManager getStartLevelManager(AbstractBundle bundle) {
-		return startLevelFactory.getStartLevelManager(bundle);
-	}
-
-	public StartLevelFactory getStartLevelFactory() {
-		return startLevelFactory;
+		return coreServicesFactory.getStartLevelManager(bundle);
 	}
 
 	public CompositeSupport getCompositeSupport() {

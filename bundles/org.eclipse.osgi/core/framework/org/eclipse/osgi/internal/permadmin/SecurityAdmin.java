@@ -20,7 +20,6 @@ import org.eclipse.osgi.framework.adaptor.BundleProtectionDomain;
 import org.eclipse.osgi.framework.adaptor.PermissionStorage;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.framework.internal.core.Constants;
-import org.eclipse.osgi.framework.internal.core.Framework;
 import org.osgi.framework.*;
 import org.osgi.framework.Package;
 import org.osgi.service.condpermadmin.*;
@@ -53,36 +52,37 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 	private final Object lock = new Object();
 	private final Framework framework;
 	private final PermissionInfo[] impliedPermissionInfos;
-	private final EquinoxSecurityManager supportedSecurityManager;
+	private final long scopeId;
 
-	private SecurityAdmin(EquinoxSecurityManager supportedSecurityManager, Framework framework, PermissionInfo[] impliedPermissionInfos, PermissionInfoCollection permAdminDefaults) {
-		this.supportedSecurityManager = supportedSecurityManager;
+	private SecurityAdmin(Framework framework, PermissionInfo[] impliedPermissionInfos, PermissionInfoCollection permAdminDefaults, long scopeId) {
 		this.framework = framework;
 		this.impliedPermissionInfos = impliedPermissionInfos;
 		this.permAdminDefaults = permAdminDefaults;
 		this.permissionStorage = null;
+		this.scopeId = scopeId;
 	}
 
-	public SecurityAdmin(EquinoxSecurityManager supportedSecurityManager, Framework framework, PermissionStorage permissionStorage) throws IOException {
-		this.supportedSecurityManager = supportedSecurityManager;
+	public SecurityAdmin(Framework framework, PermissionStorage permissionStorage, long scopeId) throws IOException {
 		this.framework = framework;
-		this.permissionStorage = new SecurePermissionStorage(permissionStorage);
+		permissionStorage = new SecurePermissionStorage(permissionStorage);
+		this.permissionStorage = permissionStorage;
 		this.impliedPermissionInfos = SecurityAdmin.getPermissionInfos(getClass().getResource(Constants.OSGI_BASE_IMPLIED_PERMISSIONS), framework);
-		String[] encodedDefaultInfos = permissionStorage.getPermissionData(null);
+		this.scopeId = scopeId;
+		String[] encodedDefaultInfos = permissionStorage.getPermissionData(null, scopeId);
 		PermissionInfo[] defaultInfos = getPermissionInfos(encodedDefaultInfos);
 		if (defaultInfos != null)
 			permAdminDefaults = new PermissionInfoCollection(defaultInfos);
-		String[] locations = permissionStorage.getLocations();
+		String[] locations = permissionStorage.getLocations(scopeId);
 		if (locations != null) {
 			for (int i = 0; i < locations.length; i++) {
-				String[] encodedLocationInfos = permissionStorage.getPermissionData(locations[i]);
+				String[] encodedLocationInfos = permissionStorage.getPermissionData(locations[i], scopeId);
 				if (encodedLocationInfos != null) {
 					PermissionInfo[] locationInfos = getPermissionInfos(encodedLocationInfos);
 					permAdminTable.setPermissions(locations[i], locationInfos);
 				}
 			}
 		}
-		String[] encodedCondPermInfos = permissionStorage.getConditionalPermissionInfos();
+		String[] encodedCondPermInfos = permissionStorage.getConditionalPermissionInfos(scopeId);
 		if (encodedCondPermInfos == null)
 			condAdminTable = new SecurityTable(this, new SecurityRow[0]);
 		else {
@@ -166,7 +166,7 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 			else
 				permAdminDefaults = new PermissionInfoCollection(permissions);
 			try {
-				permissionStorage.setPermissionData(null, getEncodedPermissionInfos(permissions));
+				permissionStorage.setPermissionData(null, getEncodedPermissionInfos(permissions), scopeId);
 			} catch (IOException e) {
 				// log
 				e.printStackTrace();
@@ -194,7 +194,7 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 		synchronized (lock) {
 			permAdminTable.setPermissions(location, permissions);
 			try {
-				permissionStorage.setPermissionData(location, getEncodedPermissionInfos(permissions));
+				permissionStorage.setPermissionData(location, getEncodedPermissionInfos(permissions), scopeId);
 			} catch (IOException e) {
 				// TODO log
 				e.printStackTrace();
@@ -280,7 +280,7 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 	private SecurityAdmin getSnapShot() {
 		SecurityAdmin sa;
 		synchronized (lock) {
-			sa = new SecurityAdmin(supportedSecurityManager, framework, impliedPermissionInfos, permAdminDefaults);
+			sa = new SecurityAdmin(framework, impliedPermissionInfos, permAdminDefaults, scopeId);
 			SecurityRow[] rows = condAdminTable.getRows();
 			SecurityRow[] rowsSnapShot = new SecurityRow[rows.length];
 			for (int i = 0; i < rows.length; i++)
@@ -342,7 +342,7 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 			}
 			condAdminTable = new SecurityTable(this, newRows);
 			try {
-				permissionStorage.saveConditionalPermissionInfos(condAdminTable.getEncodedRows());
+				permissionStorage.saveConditionalPermissionInfos(condAdminTable.getEncodedRows(), scopeId);
 			} catch (IOException e) {
 				// TODO log
 				e.printStackTrace();
@@ -414,7 +414,7 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 	}
 
 	EquinoxSecurityManager getSupportedSecurityManager() {
-		return supportedSecurityManager != null ? supportedSecurityManager : getSupportedSystemSecurityManager();
+		return getSupportedSystemSecurityManager();
 	}
 
 	static private EquinoxSecurityManager getSupportedSystemSecurityManager() {

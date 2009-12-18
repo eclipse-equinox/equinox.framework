@@ -82,7 +82,6 @@ public class BaseStorage implements SynchronousBundleListener {
 	 */
 	public static final String DELETE_FLAG = ".delete"; //$NON-NLS-1$
 	private static final String PERM_DATA_FILE = ".permdata"; //$NON-NLS-1$
-	private static final byte PERMDATA_VERSION = 1;
 
 	private final MRUBundleFileList mruList = new MRUBundleFileList();
 
@@ -449,42 +448,17 @@ public class BaseStorage implements SynchronousBundleListener {
 		InputStream permDataStream = findStorageStream(PERM_DATA_FILE);
 		if (permDataStream == null)
 			return result;
+		DataInputStream in = new DataInputStream(new BufferedInputStream(permDataStream));
 		try {
-			DataInputStream in = new DataInputStream(new BufferedInputStream(permDataStream));
-			try {
-				if (PERMDATA_VERSION != in.readByte())
-					return result;
-				// read the default permissions first
-				int numPerms = in.readInt();
-				if (numPerms > 0) {
-					String[] perms = new String[numPerms];
-					for (int i = 0; i < numPerms; i++)
-						perms[i] = in.readUTF();
-					result.setPermissionData(null, perms);
-				}
-				int numLocs = in.readInt();
-				if (numLocs > 0)
-					for (int i = 0; i < numLocs; i++) {
-						String loc = in.readUTF();
-						numPerms = in.readInt();
-						String[] perms = new String[numPerms];
-						for (int j = 0; j < numPerms; j++)
-							perms[j] = in.readUTF();
-						result.setPermissionData(loc, perms);
-					}
-				int numCondPerms = in.readInt();
-				if (numCondPerms > 0) {
-					String[] condPerms = new String[numCondPerms];
-					for (int i = 0; i < numCondPerms; i++)
-						condPerms[i] = in.readUTF();
-					result.saveConditionalPermissionInfos(condPerms);
-				}
-				result.setDirty(false);
-			} finally {
-				in.close();
-			}
+			result.readPermissionStorage(in);
 		} catch (IOException e) {
-			adaptor.getFrameworkLog().log(new FrameworkEvent(FrameworkEvent.ERROR, context.getBundle(), e));
+			adaptor.getFrameworkLog().log(new FrameworkLogEntry("org.eclipse.osgi", FrameworkLogEntry.ERROR, 0, "Error reading permission storage.", 0, e, null)); //$NON-NLS-2$
+		} finally {
+			try {
+				in.close();
+			} catch (IOException e) {
+				// ignore
+			}
 		}
 		return result;
 	}
@@ -497,29 +471,7 @@ public class BaseStorage implements SynchronousBundleListener {
 			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(fmos));
 			boolean error = true;
 			try {
-				out.writeByte(PERMDATA_VERSION);
-				// always write the default permissions first
-				String[] defaultPerms = permissionStorage.getPermissionData(null);
-				out.writeInt(defaultPerms == null ? 0 : defaultPerms.length);
-				if (defaultPerms != null)
-					for (int i = 0; i < defaultPerms.length; i++)
-						out.writeUTF(defaultPerms[i]);
-				String[] locations = permissionStorage.getLocations();
-				out.writeInt(locations == null ? 0 : locations.length);
-				if (locations != null)
-					for (int i = 0; i < locations.length; i++) {
-						out.writeUTF(locations[i]);
-						String[] perms = permissionStorage.getPermissionData(locations[i]);
-						out.writeInt(perms == null ? 0 : perms.length);
-						if (perms != null)
-							for (int j = 0; j < perms.length; j++)
-								out.writeUTF(perms[j]);
-					}
-				String[] condPerms = permissionStorage.getConditionalPermissionInfos();
-				out.writeInt(condPerms == null ? 0 : condPerms.length);
-				if (condPerms != null)
-					for (int i = 0; i < condPerms.length; i++)
-						out.writeUTF(condPerms[i]);
+				permissionStorage.writePermissionStorage(out);
 				out.close();
 				permissionStorage.setDirty(false);
 				error = false;
@@ -638,7 +590,10 @@ public class BaseStorage implements SynchronousBundleListener {
 	}
 
 	public void setInitialBundleStartLevel(long scopeId, int value) {
-		initialBundleStartLevels.put(new Long(scopeId), new Integer(value));
+		if (value <= 0)
+			initialBundleStartLevels.remove(scopeId);
+		else
+			initialBundleStartLevels.put(scopeId, new Integer(value));
 		requestSave();
 	}
 
