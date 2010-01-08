@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,7 +47,7 @@ class CompositeInfo {
 			PolicyInfo<?, ?> matchedPolicy = matchImportPolicy(provider);
 			if (matchedPolicy != null) {
 				// our policy allows the provider to be imported from the parent
-				if (providerComposite == parent && matchedPolicy.matchAffinity(providerComposite))
+				if (providerComposite == parent && matchedPolicy.matchParentAffinity(parent))
 					// the parent actually provides this; and affinity matches with parent
 					return true;
 				// check if the provider is visible from the parent policy perspective;
@@ -156,6 +156,7 @@ class CompositeInfo {
 	}
 
 	static abstract class PolicyInfo<C, P> {
+		private static final String PARENT_AFFINITY = "<<parent>>"; //$NON-NLS-1$
 		protected final String compositeName;
 		protected final VersionRange compositeRange;
 		protected final C spec;
@@ -167,7 +168,7 @@ class CompositeInfo {
 		}
 
 		public final boolean match(P provider, CompositeInfo providerComposite, PolicyInfo<C, P> peerPolicy) {
-			if (peerPolicy != null && !peerPolicy.matchAffinity(providerComposite))
+			if (peerPolicy != null && !peerPolicy.matchPeerAffinity(providerComposite))
 				return false;
 			return matchProvider(provider);
 
@@ -177,7 +178,19 @@ class CompositeInfo {
 			return compositeName != null || compositeRange != null;
 		}
 
-		boolean matchAffinity(CompositeInfo providerComposite) {
+		boolean matchParentAffinity(CompositeInfo parentComposite) {
+			if (PARENT_AFFINITY.equals(compositeName))
+				return true; // ignore version in this case
+			return matchAffinity(parentComposite);
+		}
+
+		private boolean matchPeerAffinity(CompositeInfo peerComposite) {
+			if (PARENT_AFFINITY.equals(compositeName))
+				return false; // peer cannot satisfy parent affinity
+			return matchAffinity(peerComposite);
+		}
+
+		private boolean matchAffinity(CompositeInfo providerComposite) {
 			if (compositeName != null && !compositeName.equals(providerComposite.getName()))
 				return false;
 			if (compositeRange != null && !compositeRange.isIncluded(providerComposite.getVersion()))
