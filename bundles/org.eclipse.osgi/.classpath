@@ -5,6 +5,8 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/org.osgi.framework"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.osgi.util.tracker"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.osgi.service.composite"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.osgi.service.packageadmin"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.osgi.service.startlevel"/>
 	<classpathentry kind="src" path="osgi/src"/>
 	<classpathentry kind="src" path="supplement/src"/>
 	<classpathentry kind="src" path="core/adaptor"/>

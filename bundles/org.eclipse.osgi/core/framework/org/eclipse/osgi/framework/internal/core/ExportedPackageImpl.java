@@ -10,16 +10,16 @@
  *******************************************************************************/
 package org.eclipse.osgi.framework.internal.core;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
 import org.eclipse.osgi.internal.loader.*;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.ExportPackageDescription;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Package;
-import org.osgi.service.packageadmin.ExportedPackage;
+import org.osgi.service.packageadmin.*;
 
-public class ExportedPackageImpl implements ExportedPackage, Package {
+public class ExportedPackageImpl implements ExportedPackage, PackageExport {
 
 	private final String specVersion;
 	private final ExportPackageDescription exportedPackage;
@@ -98,19 +98,13 @@ public class ExportedPackageImpl implements ExportedPackage, Package {
 		return result.toString();
 	}
 
-	public Bundle getExporter() {
-		return getExportingBundle();
+	public BundleWiring getExporter() {
+		// TODO need to implement
+		throw new UnsupportedOperationException("need to implement");
 	}
 
-	public Collection<Bundle> getImporters() {
-		Bundle[] importers = getImportingBundles();
-		if (importers == null) {
-			return Collections.EMPTY_LIST;
-		}
-		List<Bundle> list = new ArrayList<Bundle>(importers.length);
-		for (Bundle b : importers) {
-			list.add(b);
-		}
-		return list;
+	public Collection<BundleWiring> getImporters() {
+		// TODO need to implement
+		throw new UnsupportedOperationException("need to implement");
 	}
 }

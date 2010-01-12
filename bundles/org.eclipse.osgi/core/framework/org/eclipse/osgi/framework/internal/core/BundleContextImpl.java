@@ -25,8 +25,6 @@ import org.eclipse.osgi.internal.serviceregistry.*;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Package;
-import org.osgi.service.packageadmin.ExportedPackage;
 
 /**
  * Bundle's execution context.
@@ -1068,65 +1066,4 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		return result;
 	}
 
-	public List<Bundle> getBundles(String symbolicName, String versionRange) {
-		checkValid();
-		Bundle[] bundles = framework.getPackageAdmin(bundle).getBundles(symbolicName, versionRange);
-		if (bundles == null) {
-			return Collections.EMPTY_LIST;
-		}
-		List<Bundle> result = new ArrayList<Bundle>(bundles.length);
-		for (Bundle b : bundles) {
-			result.add(b);
-		}
-		return result;
-	}
-
-	public Collection<Package> getExportedPackages(String name) {
-		checkValid();
-		ExportedPackage[] packages = framework.getPackageAdmin(bundle).getExportedPackages(name);
-		if (packages == null) {
-			return Collections.EMPTY_LIST;
-		}
-		List<Package> result = new ArrayList<Package>(packages.length);
-		for (ExportedPackage b : packages) {
-			result.add((Package) b);
-		}
-		return result;
-	}
-
-	public int getInitialBundleStartLevel() {
-		checkValid();
-		return bundle.getStartLevelManager().getInitialBundleStartLevel();
-	}
-
-	public int getStartLevel() {
-		checkValid();
-		return bundle.getStartLevelManager().getStartLevel();
-	}
-
-	public void refreshBundles(Bundle... bundles) {
-		checkValid();
-		if ((bundles != null) && (bundles.length == 0)) {
-			bundles = null;
-		}
-		framework.getPackageAdminImpl().refreshPackages(bundles);
-	}
-
-	public boolean resolveBundles(Bundle... bundles) {
-		checkValid();
-		if ((bundles != null) && (bundles.length == 0)) {
-			bundles = null;
-		}
-		return framework.getPackageAdminImpl().resolveBundles(bundles);
-	}
-
-	public void setInitialBundleStartLevel(int startlevel) {
-		checkValid();
-		bundle.getStartLevelManager().setInitialBundleStartLevel(startlevel);
-	}
-
-	public void setStartLevel(int startlevel) {
-		checkValid();
-		bundle.getStartLevelManager().setStartLevel(startlevel);
-	}
 }

@@ -22,20 +22,20 @@ import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.util.KeyedElement;
 import org.eclipse.osgi.internal.composite.CompositeImpl;
 import org.eclipse.osgi.internal.loader.BundleLoader;
-import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.internal.permadmin.EquinoxSecurityManager;
-import org.eclipse.osgi.service.resolver.*;
+import org.eclipse.osgi.service.resolver.BundleDescription;
+import org.eclipse.osgi.service.resolver.ResolverError;
 import org.eclipse.osgi.signedcontent.*;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
-import org.osgi.framework.Package;
+import org.osgi.service.startlevel.BundleStartLevel;
 
 /**
  * This object is given out to bundles and wraps the internal Bundle object. It
  * is destroyed when a bundle is uninstalled and reused if a bundle is updated.
  * This class is abstract and is extended by BundleHost and BundleFragment.
  */
-public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement {
+public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, KeyedElement, BundleStartLevel {
 	/** The Framework this bundle is part of */
 	protected final Framework framework;
 	/** The state of the bundle. */
@@ -1140,7 +1140,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 	 *                if the argument can not be converted into something
 	 *                comparable with the receiver.
 	 */
-	public int compareTo(Object obj) {
+	public int compareTo(Bundle obj) {
 		int slcomp = getStartLevel0() - ((AbstractBundle) obj).getStartLevel0();
 		if (slcomp != 0) {
 			return slcomp;
@@ -1539,68 +1539,26 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		return isFragment() ? TYPE_FRAGMENT : 0;
 	}
 
-	public Collection<Bundle> getFragments() {
-		checkValid();
-		BundleFragment[] fragments = getBundleFragments();
-		if (fragments == null) {
-			return Collections.EMPTY_LIST;
-		}
-		List<Bundle> result = new ArrayList<Bundle>(fragments.length);
-		for (Bundle b : fragments) {
-			result.add(b);
-		}
-		return result;
-	}
-
-	public Collection<Bundle> getHosts() {
-		checkValid();
-		BundleHost[] hosts = getBundleHosts();
-		if (hosts == null) {
-			return Collections.EMPTY_LIST;
-		}
-		List<Bundle> result = new ArrayList<Bundle>(hosts.length);
-		for (Bundle b : hosts) {
-			result.add(b);
-		}
-		return result;
-	}
-
-	public Collection<Package> getExportedPackages() {
-		checkValid();
-		FrameworkAdaptor adaptor = framework.adaptor;
-		if (adaptor == null) {
-			return Collections.EMPTY_LIST;
-		}
-		List<Package> result = new ArrayList<Package>();
-		ExportPackageDescription[] allDescriptions = adaptor.getState().getExportedPackages();
-		for (int i = 0; i < allDescriptions.length; i++) {
-			ExportedPackageImpl exportedPackage = createExportedPackage(allDescriptions[i]);
-			if (exportedPackage == null)
-				continue;
-			Bundle exporter = exportedPackage.getBundle();
-			if (exporter == this || (getBundleId() == 0 && exporter.getBundleId() == 0))
-				result.add(exportedPackage);
-		}
-		return result;
-	}
-
-	private ExportedPackageImpl createExportedPackage(ExportPackageDescription description) {
-		BundleDescription exporter = description.getExporter();
-		if (exporter == null || exporter.getHost() != null)
+	public <A> A adapt(Class<A> adapterType) {
+		if (!adapterType.isInstance(this)) {
 			return null;
-		BundleLoaderProxy proxy = (BundleLoaderProxy) exporter.getUserObject();
-		if (proxy == null) {
-			BundleHost bundle = (BundleHost) framework.getBundle(exporter.getBundleId());
-			if (bundle == null)
-				return null;
-			proxy = bundle.getLoaderProxy();
 		}
-		return new ExportedPackageImpl(description, proxy);
+		if (BundleStartLevel.class.isAssignableFrom(adapterType)) {
+			return (A) this;
+		}
+		if (BundleContext.class.isAssignableFrom(adapterType)) {
+			try {
+				return (A) getBundleContext();
+			} catch (SecurityException e) {
+				return null;
+			}
+		}
+		// TODO need to handle BundleWiring, BundlePackageAdmin
+		return null;
 	}
 
-	public Collection<Bundle> getRequiringBundles() {
-		checkValid();
-		return Collections.EMPTY_LIST;
+	public Bundle getBundle() {
+		return this;
 	}
 
 	public int getStartLevel() {

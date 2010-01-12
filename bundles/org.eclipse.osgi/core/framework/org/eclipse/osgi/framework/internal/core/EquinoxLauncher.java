@@ -20,7 +20,6 @@ import org.eclipse.core.runtime.adaptor.LocationManager;
 import org.eclipse.osgi.baseadaptor.BaseAdaptor;
 import org.eclipse.osgi.framework.adaptor.FrameworkAdaptor;
 import org.osgi.framework.*;
-import org.osgi.framework.Package;
 
 public class EquinoxLauncher implements org.osgi.framework.launch.Framework {
 
@@ -340,66 +339,16 @@ public class EquinoxLauncher implements org.osgi.framework.launch.Framework {
 		return 0;
 	}
 
-	public Collection<Bundle> getFragments() {
+	public <A> A adapt(Class<A> adapterType) {
 		Bundle current = systemBundle;
 		if (current != null) {
-			return current.getFragments();
+			return current.adapt(adapterType);
 		}
-		return Collections.EMPTY_LIST;
+		return null;
 	}
 
-	public Collection<Bundle> getHosts() {
-		Bundle current = systemBundle;
-		if (current != null) {
-			return current.getHosts();
-		}
-		return Collections.EMPTY_LIST;
-	}
-
-	public Collection<Package> getExportedPackages() {
-		Bundle current = systemBundle;
-		if (current != null) {
-			return current.getExportedPackages();
-		}
-		return Collections.EMPTY_LIST;
-	}
-
-	public Collection<Bundle> getRequiringBundles() {
-		Bundle current = systemBundle;
-		if (current != null) {
-			return current.getRequiringBundles();
-		}
-		return Collections.EMPTY_LIST;
-	}
-
-	public int getStartLevel() {
-		Bundle current = systemBundle;
-		if (current != null) {
-			return current.getStartLevel();
-		}
-		return 0;
-	}
-
-	public void setStartLevel(int startlevel) {
-		Bundle current = systemBundle;
-		if (current != null) {
-			current.setStartLevel(startlevel);
-		}
-	}
-
-	public boolean isActivationPolicyUsed() {
-		Bundle current = systemBundle;
-		if (current != null) {
-			return current.isActivationPolicyUsed();
-		}
-		return false;
-	}
-
-	public boolean isPersistentlyStarted() {
-		Bundle current = systemBundle;
-		if (current != null) {
-			return current.isPersistentlyStarted();
-		}
-		return true;
+	public int compareTo(Bundle o) {
+		// TODO need to implement
+		throw new UnsupportedOperationException("need to implement");
 	}
 }

@@ -676,4 +676,9 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 			}
 		}
 	}
+
+	public void setStartLevel(int startlevel, FrameworkListener... listeners) {
+		// TODO need to implement
+		throw new UnsupportedOperationException("need to implement");
+	}
 }

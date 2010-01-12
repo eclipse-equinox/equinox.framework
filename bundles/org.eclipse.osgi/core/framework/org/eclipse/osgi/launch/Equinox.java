@@ -20,7 +20,6 @@ import java.security.*;
 import java.util.*;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.osgi.framework.*;
-import org.osgi.framework.Package;
 import org.osgi.framework.launch.Framework;
 
 /**
@@ -202,35 +201,12 @@ public class Equinox implements Framework {
 		return getImpl().getTypes();
 	}
 
-	public Collection<Bundle> getFragments() {
-		return getImpl().getFragments();
+	public <A> A adapt(Class<A> adapterType) {
+		return getImpl().adapt(adapterType);
 	}
 
-	public Collection<Bundle> getHosts() {
-		return getImpl().getHosts();
+	public int compareTo(Bundle o) {
+		return getImpl().compareTo(o);
 	}
 
-	public Collection<Package> getExportedPackages() {
-		return getImpl().getExportedPackages();
-	}
-
-	public Collection<Bundle> getRequiringBundles() {
-		return getImpl().getRequiringBundles();
-	}
-
-	public int getStartLevel() {
-		return getImpl().getStartLevel();
-	}
-
-	public void setStartLevel(int startlevel) {
-		getImpl().setStartLevel(startlevel);
-	}
-
-	public boolean isActivationPolicyUsed() {
-		return getImpl().isActivationPolicyUsed();
-	}
-
-	public boolean isPersistentlyStarted() {
-		return getImpl().isPersistentlyStarted();
-	}
 }
