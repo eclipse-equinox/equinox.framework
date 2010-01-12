@@ -864,8 +864,10 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 				AbstractBundle bundle = getBundleByLocation(location);
 				/* If already installed, return bundle object */
 				if (bundle != null) {
-					if (compositeID != bundle.getCompositeId())
-						throw new BundleException("A bundle is already installed with the location \"" + location + "\" in another composite.");
+					if (compositeID != bundle.getCompositeId()) {
+						AbstractBundle composite = getBundle(bundle.getCompositeId());
+						throw new BundleException("A bundle is already installed with the location \"" + location + "\" in another composite: " + (composite == null ? bundle.getCompositeId() : composite.bundledata.getLocation()));
+					}
 					return bundle;
 				}
 				Thread current = Thread.currentThread();

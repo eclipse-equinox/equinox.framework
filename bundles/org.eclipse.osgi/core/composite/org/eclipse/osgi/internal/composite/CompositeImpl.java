@@ -38,8 +38,8 @@ import org.osgi.service.composite.CompositeConstants;
 import org.osgi.service.condpermadmin.ConditionalPermissionUpdate;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle {
-	private static final String COMPOSITE_AFFINITY_NAME_DIRECTIVE = "composite-symbolic-name-affinity"; //$NON-NLS-1$
-	private static final String COMPOSITE_AFFINITY_VERSION_DIRECTIVE = "composite-version-affinity"; //$NON-NLS-1$
+	private static final String COMPOSITE_SYMBOLICNAME_DIRECTIVE = "composite-symbolic-name"; //$NON-NLS-1$
+	private static final String COMPOSITE_VERSION_DIRECTIVE = "composite-version"; //$NON-NLS-1$
 	private static final StateObjectFactory stateFactory = new StateObjectFactoryImpl();
 	private final CompositeSystemBundle compositeSystemBundle;
 	private final CompositeInfo compositeInfo;
@@ -390,8 +390,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			return null;
 		ArrayList<ClassSpacePolicyInfo> result = new ArrayList<ClassSpacePolicyInfo>(policy.length);
 		for (int i = 0; i < policy.length; i++) {
-			String compositeAffinityName = policy[i].getDirective(COMPOSITE_AFFINITY_NAME_DIRECTIVE);
-			VersionRange compositeAffinityVersion = StateBuilder.getVersionRange(policy[i].getDirective(COMPOSITE_AFFINITY_VERSION_DIRECTIVE));
+			String compositeAffinityName = policy[i].getDirective(COMPOSITE_SYMBOLICNAME_DIRECTIVE);
+			VersionRange compositeAffinityVersion = StateBuilder.getVersionRange(policy[i].getDirective(COMPOSITE_VERSION_DIRECTIVE));
 			if (header == CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY || header == CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY) {
 				VersionRange versionRange = StateBuilder.getVersionRange(policy[i].getAttribute(Constants.VERSION_ATTRIBUTE));
 
@@ -420,8 +420,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			return null;
 		ArrayList<ServicePolicyInfo> result = new ArrayList<ServicePolicyInfo>(policy.length);
 		for (int i = 0; i < policy.length; i++) {
-			String compositeAffinityName = policy[i].getDirective(COMPOSITE_AFFINITY_NAME_DIRECTIVE);
-			VersionRange compositeAffinityVersion = StateBuilder.getVersionRange(policy[i].getDirective(COMPOSITE_AFFINITY_VERSION_DIRECTIVE));
+			String compositeAffinityName = policy[i].getDirective(COMPOSITE_SYMBOLICNAME_DIRECTIVE);
+			VersionRange compositeAffinityVersion = StateBuilder.getVersionRange(policy[i].getDirective(COMPOSITE_VERSION_DIRECTIVE));
 			String[] filters = policy[i].getValueComponents();
 			for (int j = 0; j < filters.length; j++) {
 				Filter filter = null;

@@ -42,17 +42,17 @@ class CompositeInfo {
 
 	boolean isVisible0(Object provider, CompositeInfo origin, PolicyInfo<?, ?> peerPolicy, CompositeInfo providerComposite) {
 		// first check if the the import policy allows the parent to provide
-		if (origin != parent) {
+		// we only allow for parent delegation if the peer policy does not have affinity
+		if (origin != parent && (peerPolicy == null || !peerPolicy.hasPeerConstraint())) {
 			// this request did not come from the parent
 			PolicyInfo<?, ?> matchedPolicy = matchImportPolicy(provider);
 			if (matchedPolicy != null) {
-				// our policy allows the provider to be imported from the parent
-				if (providerComposite == parent && matchedPolicy.matchParentAffinity(parent))
-					// the parent actually provides this; and affinity matches with parent
+				// Found a match policy that allows the provider to be imported; we have not checked the peer constraints yet
+				if (providerComposite == parent && !matchedPolicy.hasPeerConstraint())
+					// the parent actually provides this; a parent can only provide that if there is no peer constraint
 					return true;
 				// check if the provider is visible from the parent policy perspective;
-				// We only allow for parent delegation if the peer policy does not have affinity
-				if ((peerPolicy == null || !peerPolicy.hasAffinity()) && parent.isVisible0(provider, this, matchedPolicy, providerComposite))
+				if (parent.isVisible0(provider, this, matchedPolicy, providerComposite))
 					return true;
 			}
 		}
@@ -156,44 +156,31 @@ class CompositeInfo {
 	}
 
 	static abstract class PolicyInfo<C, P> {
-		private static final String PARENT_AFFINITY = "<<parent>>"; //$NON-NLS-1$
-		protected final String compositeName;
-		protected final VersionRange compositeRange;
+		protected final String peerCompositeName;
+		protected final VersionRange peerCompositeRange;
 		protected final C spec;
 
-		public PolicyInfo(String compositeName, VersionRange compositeRange, C spec) {
-			this.compositeName = compositeName;
-			this.compositeRange = compositeRange;
+		public PolicyInfo(String peerCompositeName, VersionRange peerCompositeRange, C spec) {
+			this.peerCompositeName = peerCompositeName;
+			this.peerCompositeRange = peerCompositeRange;
 			this.spec = spec;
 		}
 
 		public final boolean match(P provider, CompositeInfo providerComposite, PolicyInfo<C, P> peerPolicy) {
-			if (peerPolicy != null && !peerPolicy.matchPeerAffinity(providerComposite))
+			if (peerPolicy != null && !peerPolicy.matchPeerConstraint(providerComposite))
 				return false;
 			return matchProvider(provider);
 
 		}
 
-		boolean hasAffinity() {
-			return compositeName != null || compositeRange != null;
+		boolean hasPeerConstraint() {
+			return peerCompositeName != null || peerCompositeRange != null;
 		}
 
-		boolean matchParentAffinity(CompositeInfo parentComposite) {
-			if (PARENT_AFFINITY.equals(compositeName))
-				return true; // ignore version in this case
-			return matchAffinity(parentComposite);
-		}
-
-		private boolean matchPeerAffinity(CompositeInfo peerComposite) {
-			if (PARENT_AFFINITY.equals(compositeName))
-				return false; // peer cannot satisfy parent affinity
-			return matchAffinity(peerComposite);
-		}
-
-		private boolean matchAffinity(CompositeInfo providerComposite) {
-			if (compositeName != null && !compositeName.equals(providerComposite.getName()))
+		private boolean matchPeerConstraint(CompositeInfo providerComposite) {
+			if (peerCompositeName != null && !peerCompositeName.equals(providerComposite.getName()))
 				return false;
-			if (compositeRange != null && !compositeRange.isIncluded(providerComposite.getVersion()))
+			if (peerCompositeRange != null && !peerCompositeRange.isIncluded(providerComposite.getVersion()))
 				return false;
 			return true;
 		}
@@ -203,8 +190,8 @@ class CompositeInfo {
 
 	static class ClassSpacePolicyInfo extends PolicyInfo<VersionConstraint, BaseDescription> {
 
-		public ClassSpacePolicyInfo(String compositeName, VersionRange compositeRange, VersionConstraint spec) {
-			super(compositeName, compositeRange, spec);
+		public ClassSpacePolicyInfo(String peerCompositeName, VersionRange peerCompositeRange, VersionConstraint spec) {
+			super(peerCompositeName, peerCompositeRange, spec);
 		}
 
 		public boolean matchName(BundleDescription singleton) {
@@ -218,8 +205,8 @@ class CompositeInfo {
 
 	static class ServicePolicyInfo extends PolicyInfo<Filter, ServiceReference<?>> {
 
-		public ServicePolicyInfo(String compositeName, VersionRange compositeRange, Filter spec) {
-			super(compositeName, compositeRange, spec);
+		public ServicePolicyInfo(String peerCompositeName, VersionRange peerCompositeRange, Filter spec) {
+			super(peerCompositeName, peerCompositeRange, spec);
 		}
 
 		protected boolean matchProvider(ServiceReference<?> provider) {
