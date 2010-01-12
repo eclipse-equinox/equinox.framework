@@ -58,6 +58,8 @@
 	<target name="pre.@dot">
 		<copydir dest="osgi/src2" src="../org.osgi.framework/src"></copydir>
 		<copydir dest="osgi/src2" src="../org.osgi.service.composite/src"></copydir>
+		<copydir dest="osgi/src2" src="../org.osgi.service.packageadmin/src"></copydir>
+		<copydir dest="osgi/src2" src="../org.osgi.service.startlevel/src"></copydir>
 		<copydir dest="osgi/src2" src="../org.osgi.util.tracker/src"></copydir>
 	</target>
 
