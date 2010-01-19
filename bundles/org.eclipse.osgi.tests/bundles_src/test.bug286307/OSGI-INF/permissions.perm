@@ -1,1 +1,0 @@
-(java.io.FilePermission "<<ALL FILES>>" "read")
