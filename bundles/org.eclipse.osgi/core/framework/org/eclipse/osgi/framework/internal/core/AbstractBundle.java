@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2009 IBM Corporation and others.
+ * Copyright (c) 2003, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1540,13 +1540,9 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 	}
 
 	public <A> A adapt(Class<A> adapterType) {
-		if (!adapterType.isInstance(this)) {
-			return null;
-		}
-		if (BundleStartLevel.class.isAssignableFrom(adapterType)) {
+		if (adapterType.isInstance(this))
 			return (A) this;
-		}
-		if (BundleContext.class.isAssignableFrom(adapterType)) {
+		if (BundleContext.class.equals(adapterType)) {
 			try {
 				return (A) getBundleContext();
 			} catch (SecurityException e) {
@@ -1567,17 +1563,17 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 	}
 
 	public void setStartLevel(int startlevel) {
-		checkValid();
+		// bundle validity check done by the StartLevelManager
 		getStartLevelManager().setBundleStartLevel(this, startlevel);
 	}
 
 	public boolean isPersistentlyStarted() {
-		checkValid();
+		// bundle validity check done by the StartLevelManager
 		return getStartLevelManager().isBundlePersistentlyStarted(this);
 	}
 
 	public boolean isActivationPolicyUsed() {
-		checkValid();
+		// bundle validity check done by the StartLevelManager
 		return getStartLevelManager().isBundleActivationPolicyUsed(this);
 	}
 
