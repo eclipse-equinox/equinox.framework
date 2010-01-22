@@ -593,29 +593,33 @@ public abstract class StateImpl implements State {
 				if (bundle != null)
 					exportedPackages.addAll(Arrays.asList(bundle.getSelectedExports()));
 			}
-			for (Iterator<BundleDescription> iter = removalPendings.iterator(); iter.hasNext();)
-				exportedPackages.addAll(Arrays.asList(iter.next().getSelectedExports()));
+			for (BundleDescription removalPending : removalPendings) {
+				if (id < 0 || id == removalPending.getBundleId())
+					exportedPackages.addAll(Arrays.asList(removalPending.getSelectedExports()));
+			}
 			return exportedPackages.toArray(new ExportPackageDescription[exportedPackages.size()]);
 		}
 	}
 
 	BundleDescription[] getFragments(final BundleDescription host) {
-		final List fragments = new ArrayList();
-		for (Iterator iter = bundleDescriptions.iterator(); iter.hasNext();) {
-			BundleDescription bundle = (BundleDescription) iter.next();
-			HostSpecification hostSpec = bundle.getHost();
+		synchronized (this.monitor) {
+			final List fragments = new ArrayList();
+			for (Iterator iter = bundleDescriptions.iterator(); iter.hasNext();) {
+				BundleDescription bundle = (BundleDescription) iter.next();
+				HostSpecification hostSpec = bundle.getHost();
 
-			if (hostSpec != null) {
-				BundleDescription[] hosts = hostSpec.getHosts();
-				if (hosts != null)
-					for (int i = 0; i < hosts.length; i++)
-						if (hosts[i] == host) {
-							fragments.add(bundle);
-							break;
-						}
+				if (hostSpec != null) {
+					BundleDescription[] hosts = hostSpec.getHosts();
+					if (hosts != null)
+						for (int i = 0; i < hosts.length; i++)
+							if (hosts[i] == host) {
+								fragments.add(bundle);
+								break;
+							}
+				}
 			}
+			return (BundleDescription[]) fragments.toArray(new BundleDescription[fragments.size()]);
 		}
-		return (BundleDescription[]) fragments.toArray(new BundleDescription[fragments.size()]);
 	}
 
 	public void setTimeStamp(long newTimeStamp) {
