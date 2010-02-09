@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -51,6 +51,8 @@ class EclipseDebugTrace implements DebugTrace {
 	private final static String TRACE_COMMENT = "#"; //$NON-NLS-1$
 	/** The delimiter used to separate trace elements such as the time stamp, message, etc */
 	private final static String TRACE_ELEMENT_DELIMITER = "|"; //$NON-NLS-1$
+	/** The string written in place of the {@link EclipseDebugTrace#TRACE_TRACE_ELEMENT_DELIMITER} in entries */
+	private final static String TRACE_ELEMENT_DELIMITER_ENCODED = "&#124;"; //$NON-NLS-1$
 	/** OS-specific line separator */
 	private static final String LINE_SEPARATOR;
 	static {
@@ -309,11 +311,11 @@ class EclipseDebugTrace implements DebugTrace {
 				Writer traceWriter = null;
 				try {
 					// check to see if the file should be rotated
-					checkTraceFileSize(tracingFile);
+					checkTraceFileSize(tracingFile, entry.getTimestamp());
 					// open the trace file
 					traceWriter = openWriter(tracingFile);
 					if (EclipseDebugTrace.newSession) {
-						writeSession(traceWriter);
+						writeSession(traceWriter, entry.getTimestamp());
 						EclipseDebugTrace.newSession = false;
 					}
 					writeMessage(traceWriter, entry);
@@ -362,9 +364,10 @@ class EclipseDebugTrace implements DebugTrace {
 	 * Checks the trace file size.  If the file size reaches the limit then the trace file is rotated. 
 	 * 
 	 * @param traceFile The tracing file
+	 * @param timestamp the timestamp for the session; this is the same timestamp as the first entry
 	 * @return false if an error occurred trying to rotate the trace file
 	 */
-	private boolean checkTraceFileSize(final File traceFile) {
+	private boolean checkTraceFileSize(final File traceFile, long timestamp) {
 
 		// 0 file size means there is no size limit
 		boolean isBackupOK = true;
@@ -408,7 +411,8 @@ class EclipseDebugTrace implements DebugTrace {
 					try {
 						traceWriter = openWriter(traceFile);
 						writeComment(traceWriter, "This is a continuation of trace file " + backupFile.getAbsolutePath()); //$NON-NLS-1$
-						writeComment(traceWriter, EclipseDebugTrace.TRACE_FILE_DATE + EclipseDebugTrace.TRACE_FILE_DATE_FORMATTER.format(new Date(System.currentTimeMillis())));
+						writeComment(traceWriter, EclipseDebugTrace.TRACE_FILE_VERSION_COMMENT + EclipseDebugTrace.TRACE_FILE_VERSION);
+						writeComment(traceWriter, EclipseDebugTrace.TRACE_FILE_DATE + getFormattedDate(timestamp));
 						traceWriter.flush();
 					} catch (IOException ioEx) {
 						ioEx.printStackTrace();
@@ -441,16 +445,6 @@ class EclipseDebugTrace implements DebugTrace {
 	}
 
 	/**
-	 * Accessor to retrieve the current date and time in a formatted manner.
-	 * 
-	 * @return A formatted time stamp based on the {@link EclipseDebugTrace#TRACE_FILE_DATE_FORMATTER} formatter
-	 */
-	private final String getFormattedDate() {
-
-		return this.getFormattedDate(System.currentTimeMillis());
-	}
-
-	/**
 	 * Accessor to retrieve the time stamp in a formatted manner.
 	 * 
 	 * @return A formatted time stamp based on the {@link EclipseDebugTrace#TRACE_FILE_DATE_FORMATTER} formatter
@@ -476,7 +470,7 @@ class EclipseDebugTrace implements DebugTrace {
 				ByteArrayOutputStream throwableByteOutputStream = new ByteArrayOutputStream();
 				throwableStream = new PrintStream(throwableByteOutputStream, false);
 				error.printStackTrace(throwableStream);
-				result = throwableByteOutputStream.toString();
+				result = encodeText(throwableByteOutputStream.toString());
 			} finally {
 				if (throwableStream != null) {
 					throwableStream.close();
@@ -490,11 +484,12 @@ class EclipseDebugTrace implements DebugTrace {
 	 * Writes header information to a new trace file
 	 * 
 	 * @param traceWriter the trace writer
+	 * @param timestamp the timestamp for the session; this is the same timestamp as the first entry
 	 * @throws IOException If an error occurs while writing this session information 
 	 */
-	private void writeSession(final Writer traceWriter) throws IOException {
+	private void writeSession(final Writer traceWriter, long timestamp) throws IOException {
 
-		writeComment(traceWriter, EclipseDebugTrace.TRACE_NEW_SESSION + this.getFormattedDate());
+		writeComment(traceWriter, EclipseDebugTrace.TRACE_NEW_SESSION + this.getFormattedDate(timestamp));
 		writeComment(traceWriter, EclipseDebugTrace.TRACE_FILE_VERSION_COMMENT + EclipseDebugTrace.TRACE_FILE_VERSION);
 		writeComment(traceWriter, "The following option strings are specified for this debug session:"); //$NON-NLS-1$ 
 		final String[] allOptions = FrameworkDebugOptions.getDefault().getAllOptions();
@@ -517,7 +512,7 @@ class EclipseDebugTrace implements DebugTrace {
 		// format the trace entry
 		StringBuffer message = new StringBuffer(EclipseDebugTrace.TRACE_ELEMENT_DELIMITER);
 		message.append(" "); //$NON-NLS-1$
-		message.append(entry.getThreadName());
+		message.append(encodeText(entry.getThreadName()));
 		message.append(" "); //$NON-NLS-1$
 		message.append(EclipseDebugTrace.TRACE_ELEMENT_DELIMITER);
 		message.append(" "); //$NON-NLS-1$
@@ -529,7 +524,7 @@ class EclipseDebugTrace implements DebugTrace {
 		message.append(" "); //$NON-NLS-1$
 		message.append(EclipseDebugTrace.TRACE_ELEMENT_DELIMITER);
 		message.append(" "); //$NON-NLS-1$
-		message.append(entry.getOptionPath());
+		message.append(encodeText(entry.getOptionPath()));
 		message.append(" "); //$NON-NLS-1$
 		message.append(EclipseDebugTrace.TRACE_ELEMENT_DELIMITER);
 		message.append(" "); //$NON-NLS-1$
@@ -545,7 +540,7 @@ class EclipseDebugTrace implements DebugTrace {
 		message.append(" "); //$NON-NLS-1$
 		message.append(EclipseDebugTrace.TRACE_ELEMENT_DELIMITER);
 		message.append(" "); //$NON-NLS-1$
-		message.append(entry.getMessage());
+		message.append(encodeText(entry.getMessage()));
 		if (entry.getThrowable() != null) {
 			message.append(" "); //$NON-NLS-1$
 			message.append(EclipseDebugTrace.TRACE_ELEMENT_DELIMITER);
@@ -559,6 +554,30 @@ class EclipseDebugTrace implements DebugTrace {
 		if ((traceWriter != null) && (message != null)) {
 			traceWriter.write(message.toString());
 		}
+	}
+
+	/**
+	 * Encodes the specified string to replace any occurrence of the {@link EclipseDebugTrace#TRACE_ELEMENT_DELIMITER}
+	 * string with the {@link EclipseDebugTrace#TRACE_ELEMENT_DELIMITER_ENCODED}
+	 * string.  This can be used to ensure that the delimiter character does not break parsing when
+	 * the entry text contains the delimiter character. 
+	 * 
+	 * @param inputString The original string to be written to the trace file. 
+	 * @return The original input string with all occurrences of
+	 * {@link EclipseDebugTrace#TRACE_ELEMENT_DELIMITER} replaced with 
+	 * {@link EclipseDebugTrace#TRACE_ELEMENT_DELIMITER_ENCODED}. A <code>null</code> value will be
+	 * returned if the input string is <code>null</code>.
+	 */
+	private static String encodeText(final String inputString) {
+		if (inputString == null || inputString.indexOf(TRACE_ELEMENT_DELIMITER) < 0)
+			return inputString;
+		final StringBuffer tempBuffer = new StringBuffer(inputString);
+		int currentIndex = tempBuffer.indexOf(TRACE_ELEMENT_DELIMITER);
+		while (currentIndex >= 0) {
+			tempBuffer.replace(currentIndex, currentIndex + TRACE_ELEMENT_DELIMITER.length(), TRACE_ELEMENT_DELIMITER_ENCODED);
+			currentIndex = tempBuffer.indexOf(TRACE_ELEMENT_DELIMITER);
+		}
+		return tempBuffer.toString();
 	}
 
 	/**

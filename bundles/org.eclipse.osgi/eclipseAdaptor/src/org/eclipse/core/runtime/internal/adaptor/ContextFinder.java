@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,7 +43,7 @@ public class ContextFinder extends ClassLoader implements PrivilegedAction {
 
 	public ContextFinder(ClassLoader contextClassLoader) {
 		super(contextClassLoader);
-		this.parentContextClassLoader = contextClassLoader != null ? contextClassLoader : new ClassLoader(null) {/*parentless classloader*/};
+		this.parentContextClassLoader = contextClassLoader != null ? contextClassLoader : new ClassLoader(Object.class.getClassLoader()) {/*boot classloader*/};
 	}
 
 	// Return a list of all classloaders on the stack that are neither the 
@@ -153,7 +153,7 @@ public class ContextFinder extends ClassLoader implements PrivilegedAction {
 	protected Enumeration findResources(String arg0) throws IOException {
 		//Shortcut cycle
 		if (startLoading(arg0) == false)
-			return null;
+			return Collections.enumeration(Collections.EMPTY_LIST);
 		try {
 			ArrayList toConsult = findClassLoaders();
 			for (Iterator loaders = toConsult.iterator(); loaders.hasNext();) {

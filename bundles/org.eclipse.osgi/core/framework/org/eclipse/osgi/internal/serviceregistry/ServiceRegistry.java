@@ -16,7 +16,6 @@ import java.util.*;
 import org.eclipse.osgi.framework.debug.Debug;
 import org.eclipse.osgi.framework.eventmgr.*;
 import org.eclipse.osgi.framework.internal.core.*;
-import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
@@ -292,7 +291,12 @@ public class ServiceRegistry {
 		List<ServiceRegistrationImpl<?>> registrations = lookupServiceRegistrations(clazz, filter);
 		List<ServiceReferenceImpl<?>> references = new ArrayList<ServiceReferenceImpl<?>>(registrations.size());
 		for (ServiceRegistrationImpl<?> registration : registrations) {
-			ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
+			ServiceReferenceImpl<?> reference;
+			try {
+				reference = registration.getReferenceImpl();
+			} catch (IllegalStateException e) {
+				continue; // got unregistered
+			}
 			if (isInScope(context.getBundle(), reference) && (allservices || isAssignableTo(context, reference))) {
 				try { /* test for permission to get the service */
 					checkGetServicePermission(reference);
@@ -509,13 +513,16 @@ public class ServiceRegistry {
 		List<ServiceRegistrationImpl<?>> registrations = lookupServiceRegistrations(context);
 		List<ServiceReferenceImpl<?>> references = new ArrayList<ServiceReferenceImpl<?>>(registrations.size());
 		for (ServiceRegistrationImpl<?> registration : registrations) {
-			ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
-			try { /* test for permission to get the service */
+			try {
+				ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
+				/* test for permission to get the service */
 				checkGetServicePermission(reference);
+				references.add(reference);
+			} catch (IllegalStateException e) {
+				continue; // got unregistered
 			} catch (SecurityException se) {
 				continue; // don't return reference
 			}
-			references.add(reference);
 		}
 
 		int size = references.size();
@@ -565,13 +572,16 @@ public class ServiceRegistry {
 		}
 		List<ServiceReferenceImpl<?>> references = new ArrayList<ServiceReferenceImpl<?>>(registrations.size());
 		for (ServiceRegistrationImpl<?> registration : registrations) {
-			ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
-			try { /* test for permission to get the service */
+			try {
+				ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
+				/* test for permission to get the service */
 				checkGetServicePermission(reference);
+				references.add(reference);
+			} catch (IllegalStateException e) {
+				continue; // got unregistered
 			} catch (SecurityException se) {
 				continue; // don't return reference
 			}
-			references.add(reference);
 		}
 
 		int size = references.size();
@@ -928,7 +938,14 @@ public class ServiceRegistry {
 
 		for (Iterator<ServiceRegistrationImpl<?>> iter = result.iterator(); iter.hasNext();) {
 			ServiceRegistrationImpl<?> registration = iter.next();
-			if (!filter.match(registration.getReferenceImpl())) {
+			ServiceReferenceImpl reference;
+			try {
+				reference = registration.getReferenceImpl();
+			} catch (IllegalStateException e) {
+				iter.remove(); /* service was unregistered after we left the synchronized block above */
+				continue;
+			}
+			if (!filter.match(reference)) {
 				iter.remove();
 			}
 		}

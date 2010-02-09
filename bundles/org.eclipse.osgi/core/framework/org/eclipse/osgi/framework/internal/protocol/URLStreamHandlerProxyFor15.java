@@ -34,7 +34,7 @@ public class URLStreamHandlerProxyFor15 extends URLStreamHandlerProxy {
 			throw (RuntimeException) e.getTargetException();
 		} catch (Exception e) {
 			// expected on JRE < 1.5
-			throw new UnsupportedOperationException();
+			throw (UnsupportedOperationException) new UnsupportedOperationException().initCause(e);
 		}
 	}
 }
