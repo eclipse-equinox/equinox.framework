@@ -290,6 +290,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 	 */
 	/* @GuardedBy("registrationLock") */
 	private ServiceProperties createProperties(Dictionary<String, Object> p) {
+		assert Thread.holdsLock(registrationLock);
 		ServiceProperties props = new ServiceProperties(p);
 
 		props.set(Constants.OBJECTCLASS, clazzes, true);

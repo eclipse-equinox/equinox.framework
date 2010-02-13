@@ -107,6 +107,7 @@ public class ServiceUse<S> {
 	 */
 	/* @GuardedBy("this") */
 	S getService() {
+		assert Thread.holdsLock(this);
 		if ((useCount > 0) || (factory == null)) {
 			useCount++;
 			return cachedService;
@@ -191,6 +192,7 @@ public class ServiceUse<S> {
 	 */
 	/* @GuardedBy("this") */
 	boolean ungetService() {
+		assert Thread.holdsLock(this);
 		if (useCount == 0) {
 			return true;
 		}
@@ -241,6 +243,7 @@ public class ServiceUse<S> {
 	 */
 	/* @GuardedBy("this") */
 	void releaseService() {
+		assert Thread.holdsLock(this);
 		if ((useCount == 0) || (factory == null)) {
 			return;
 		}

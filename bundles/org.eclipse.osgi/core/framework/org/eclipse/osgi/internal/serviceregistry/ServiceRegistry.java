@@ -57,10 +57,10 @@ public class ServiceRegistry {
 	/* @GuardedBy("this") */
 	private long serviceid;
 	/** Active Service Listeners.
-	 * Map&lt;BundleContextImpl,Map&lt;ServiceListener,FilteredServiceListener&gt;&gt;.
+	 * Map&lt;BundleContextImpl,CopyOnWriteIdentityMap&lt;ServiceListener,FilteredServiceListener&gt;&gt;.
 	 */
 	/* @GuardedBy("serviceEventListeners") */
-	private final Map<BundleContextImpl, Map<ServiceListener, FilteredServiceListener>> serviceEventListeners;
+	private final Map<BundleContextImpl, CopyOnWriteIdentityMap<ServiceListener, FilteredServiceListener>> serviceEventListeners;
 
 	/** initial capacity of the main data structure */
 	private static final int initialCapacity = 50;
@@ -79,7 +79,7 @@ public class ServiceRegistry {
 		publishedServicesByClass = new HashMap<String, List<ServiceRegistrationImpl<?>>>(initialCapacity);
 		publishedServicesByContext = new HashMap<BundleContextImpl, List<ServiceRegistrationImpl<?>>>(initialCapacity);
 		allPublishedServices = new ArrayList<ServiceRegistrationImpl<?>>(initialCapacity);
-		serviceEventListeners = new HashMap<BundleContextImpl, Map<ServiceListener, FilteredServiceListener>>(initialCapacity);
+		serviceEventListeners = new HashMap<BundleContextImpl, CopyOnWriteIdentityMap<ServiceListener, FilteredServiceListener>>(initialCapacity);
 	}
 
 	/**
@@ -295,7 +295,7 @@ public class ServiceRegistry {
 			try {
 				reference = registration.getReferenceImpl();
 			} catch (IllegalStateException e) {
-				continue; // got unregistered
+				continue; // got unregistered, don't return reference
 			}
 			if (isInScope(context.getBundle(), reference) && (allservices || isAssignableTo(context, reference))) {
 				try { /* test for permission to get the service */
@@ -513,16 +513,19 @@ public class ServiceRegistry {
 		List<ServiceRegistrationImpl<?>> registrations = lookupServiceRegistrations(context);
 		List<ServiceReferenceImpl<?>> references = new ArrayList<ServiceReferenceImpl<?>>(registrations.size());
 		for (ServiceRegistrationImpl<?> registration : registrations) {
+			ServiceReferenceImpl<?> reference;
 			try {
-				ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
+				reference = registration.getReferenceImpl();
+			} catch (IllegalStateException e) {
+				continue; // got unregistered, don't return reference
+			}
+			try {
 				/* test for permission to get the service */
 				checkGetServicePermission(reference);
-				references.add(reference);
-			} catch (IllegalStateException e) {
-				continue; // got unregistered
 			} catch (SecurityException se) {
 				continue; // don't return reference
 			}
+			references.add(reference);
 		}
 
 		int size = references.size();
@@ -572,16 +575,19 @@ public class ServiceRegistry {
 		}
 		List<ServiceReferenceImpl<?>> references = new ArrayList<ServiceReferenceImpl<?>>(registrations.size());
 		for (ServiceRegistrationImpl<?> registration : registrations) {
+			ServiceReferenceImpl<?> reference;
 			try {
-				ServiceReferenceImpl<?> reference = registration.getReferenceImpl();
+				reference = registration.getReferenceImpl();
+			} catch (IllegalStateException e) {
+				continue; // got unregistered, don't return reference
+			}
+			try {
 				/* test for permission to get the service */
 				checkGetServicePermission(reference);
-				references.add(reference);
-			} catch (IllegalStateException e) {
-				continue; // got unregistered
 			} catch (SecurityException se) {
 				continue; // don't return reference
 			}
+			references.add(reference);
 		}
 
 		int size = references.size();
@@ -651,7 +657,7 @@ public class ServiceRegistry {
 		FilteredServiceListener filteredListener = new FilteredServiceListener(context, listener, filter);
 		FilteredServiceListener oldFilteredListener;
 		synchronized (serviceEventListeners) {
-			Map<ServiceListener, FilteredServiceListener> listeners = serviceEventListeners.get(context);
+			CopyOnWriteIdentityMap<ServiceListener, FilteredServiceListener> listeners = serviceEventListeners.get(context);
 			if (listeners == null) {
 				listeners = new CopyOnWriteIdentityMap<ServiceListener, FilteredServiceListener>();
 				serviceEventListeners.put(context, listeners);
@@ -752,8 +758,8 @@ public class ServiceRegistry {
 		Map<BundleContextImpl, Set<Map.Entry<ServiceListener, FilteredServiceListener>>> listenerSnapshot;
 		synchronized (serviceEventListeners) {
 			listenerSnapshot = new HashMap<BundleContextImpl, Set<Map.Entry<ServiceListener, FilteredServiceListener>>>(serviceEventListeners.size());
-			for (Map.Entry<BundleContextImpl, Map<ServiceListener, FilteredServiceListener>> entry : serviceEventListeners.entrySet()) {
-				Map<ServiceListener, FilteredServiceListener> listeners = entry.getValue();
+			for (Map.Entry<BundleContextImpl, CopyOnWriteIdentityMap<ServiceListener, FilteredServiceListener>> entry : serviceEventListeners.entrySet()) {
+				CopyOnWriteIdentityMap<ServiceListener, FilteredServiceListener> listeners = entry.getValue();
 				if (!listeners.isEmpty()) {
 					listenerSnapshot.put(entry.getKey(), listeners.entrySet());
 				}
@@ -811,6 +817,7 @@ public class ServiceRegistry {
 	 */
 	/* @GuardedBy("this") */
 	void addServiceRegistration(BundleContextImpl context, ServiceRegistrationImpl<?> registration) {
+		assert Thread.holdsLock(this);
 		// Add the ServiceRegistrationImpl to the list of Services published by BundleContextImpl.
 		List<ServiceRegistrationImpl<?>> contextServices = publishedServicesByContext.get(context);
 		if (contextServices == null) {
@@ -852,6 +859,7 @@ public class ServiceRegistry {
 	 */
 	/* @GuardedBy("this") */
 	void modifyServiceRegistration(BundleContextImpl context, ServiceRegistrationImpl<?> registration) {
+		assert Thread.holdsLock(this);
 		// The list of Services published by BundleContextImpl is not sorted, so
 		// we do not need to modify it.
 
@@ -884,6 +892,7 @@ public class ServiceRegistry {
 	 */
 	/* @GuardedBy("this") */
 	void removeServiceRegistration(BundleContextImpl context, ServiceRegistrationImpl<?> registration) {
+		assert Thread.holdsLock(this);
 		// Remove the ServiceRegistrationImpl from the list of Services published by BundleContextImpl.
 		List<ServiceRegistrationImpl<?>> contextServices = publishedServicesByContext.get(context);
 		if (contextServices != null) {
@@ -938,7 +947,7 @@ public class ServiceRegistry {
 
 		for (Iterator<ServiceRegistrationImpl<?>> iter = result.iterator(); iter.hasNext();) {
 			ServiceRegistrationImpl<?> registration = iter.next();
-			ServiceReferenceImpl reference;
+			ServiceReferenceImpl<?> reference;
 			try {
 				reference = registration.getReferenceImpl();
 			} catch (IllegalStateException e) {
@@ -1116,8 +1125,15 @@ public class ServiceRegistry {
 			try {
 				if (findHook instanceof FindHook) { // if the hook is usable
 					// only allow hooks that are visible to the context's bundle
-					if (isInScope(context.getBundle(), registration.getReferenceImpl()))
+					ServiceReferenceImpl<?> reference;
+					try {
+						reference = registration.getReferenceImpl();
+					} catch (IllegalStateException e) {
+						continue; // service unregistered after we got it
+					}
+					if (isInScope(context.getBundle(), reference)) {
 						((FindHook) findHook).find(context, clazz, filterstring, allservices, result);
+					}
 				}
 			} catch (Throwable t) {
 				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
@@ -1163,9 +1179,16 @@ public class ServiceRegistry {
 			}
 			try {
 				if (eventHook instanceof EventHook) { // if the hook is usable
+					ServiceReferenceImpl<?> reference;
+					try {
+						reference = registration.getReferenceImpl();
+					} catch (IllegalStateException e) {
+						continue; // service unregistered after we got it
+					}
 					// only allow hooks that have visibility to the service event
-					if (isInScope(event.getServiceReference().getBundle(), registration.getReferenceImpl()))
+					if (isInScope(event.getServiceReference().getBundle(), reference)) {
 						((EventHook) eventHook).event(event, result);
+					}
 				}
 			} catch (Throwable t) {
 				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
@@ -1212,14 +1235,29 @@ public class ServiceRegistry {
 			Debug.println("notifyNewListenerHook(" + registration + ")"); //$NON-NLS-1$ //$NON-NLS-2$ 
 		}
 
-		Collection<ListenerInfo> addedListeners = new ArrayList<ListenerInfo>(initialCapacity);
+		// snapshot the contexts with listeners
+		Map<BundleContextImpl, Collection<ListenerInfo>> snapshot;
+		int capacity = 0;
 		synchronized (serviceEventListeners) {
-			for (Map.Entry<BundleContextImpl, Map<ServiceListener, FilteredServiceListener>> entry : serviceEventListeners.entrySet()) {
-				if (isInScope(entry.getKey().getBundle(), registration.getReferenceImpl())) {
-					if (!entry.getValue().isEmpty()) {
-						addedListeners.addAll(entry.getValue().values());
-					}
-				}
+			snapshot = new HashMap<BundleContextImpl, Collection<ListenerInfo>>(serviceEventListeners.size());
+			for (Map.Entry<BundleContextImpl, CopyOnWriteIdentityMap<ServiceListener, FilteredServiceListener>> entry : serviceEventListeners.entrySet()) {
+				Collection<ListenerInfo> listeners = asListenerInfos(entry.getValue().values());
+				snapshot.put(entry.getKey(), listeners);
+				capacity += listeners.size();
+			}
+		}
+		ServiceReferenceImpl<?> reference;
+		try {
+			reference = registration.getReferenceImpl();
+		} catch (IllegalStateException e) {
+			return; // service unregistered
+		}
+		// outside synchronized block, discard contexts which are not in scope
+		Collection<ListenerInfo> addedListeners = new ArrayList<ListenerInfo>(capacity);
+		for (Map.Entry<BundleContextImpl, Collection<ListenerInfo>> entry : snapshot.entrySet()) {
+			Collection<ListenerInfo> listeners = entry.getValue();
+			if (!listeners.isEmpty() && isInScope(entry.getKey().getBundle(), reference)) {
+				addedListeners.addAll(listeners);
 			}
 		}
 		addedListeners = Collections.unmodifiableCollection(addedListeners);
@@ -1251,7 +1289,8 @@ public class ServiceRegistry {
 	 * The ListenerHook must be called in order: descending by service.ranking, then ascending by service.id.
 	 * This is the natural order for ServiceReference.
 	 * 
-	 * @param listeners An unmodifiable collection of ListenerInfo objects.
+	 * @param listeners A non-empty, unmodifiable collection of ListenerInfo objects. 
+	 * All elements in the list must be for the same bundle. 
 	 * @param added <code>true</code> if the specified listeners are being added. <code>false</code>
 	 * if they are being removed.
 	 */
@@ -1270,6 +1309,7 @@ public class ServiceRegistry {
 	}
 
 	void notifyListenerHooksPrivileged(Collection<ListenerInfo> listeners, boolean added) {
+		assert !listeners.isEmpty();
 		BundleContextImpl systemBundleContext = framework.getSystemBundleContext();
 		if (systemBundleContext == null) { // if no system bundle context, we are done!
 			return;
@@ -1290,10 +1330,15 @@ public class ServiceRegistry {
 			}
 			try {
 				if (listenerHook instanceof ListenerHook) { // if the hook is usable
-					// We assume all listener here are from the same context and there is at least one
-					// TODO is that valid?
+					ServiceReferenceImpl<?> reference;
+					try {
+						reference = registration.getReferenceImpl();
+					} catch (IllegalStateException e) {
+						continue; // service unregistered after we got it
+					}
+					// All listeners here are from the same context and there is at least one
 					Bundle listenerBundle = listeners.iterator().next().getBundleContext().getBundle();
-					if (isInScope(listenerBundle, registration.getReferenceImpl())) {
+					if (isInScope(listenerBundle, reference)) {
 						if (added) {
 							((ListenerHook) listenerHook).added(listeners);
 						} else {
