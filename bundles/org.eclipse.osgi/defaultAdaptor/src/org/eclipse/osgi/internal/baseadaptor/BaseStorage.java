@@ -206,7 +206,7 @@ public class BaseStorage implements SynchronousBundleListener {
 		StateManager.DEBUG_PLATFORM_ADMIN_RESOLVER = options.getBooleanOption(OPTION_PLATFORM_ADMIN_RESOLVER, false);
 	}
 
-	protected StorageManager initFileManager(File baseDir, String lockMode, boolean readOnly) {
+	protected StorageManager initFileManager(File baseDir, String lockMode, boolean readOnly) throws IOException {
 		StorageManager sManager = new StorageManager(baseDir, lockMode, readOnly);
 		try {
 			sManager.open(!readOnly);
@@ -218,6 +218,10 @@ public class BaseStorage implements SynchronousBundleListener {
 			String message = NLS.bind(EclipseAdaptorMsg.ECLIPSE_STARTUP_FILEMANAGER_OPEN_ERROR, ex.getMessage());
 			FrameworkLogEntry logEntry = new FrameworkLogEntry(FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME, FrameworkLogEntry.ERROR, 0, message, 0, ex, null);
 			adaptor.getFrameworkLog().log(logEntry);
+			FrameworkProperties.setProperty(EclipseStarter.PROP_EXITCODE, "15"); //$NON-NLS-1$
+			String errorDialog = "<title>" + AdaptorMsg.ADAPTOR_STORAGE_INIT_FAILED_TITLE + "</title>" + NLS.bind(AdaptorMsg.ADAPTOR_STORAGE_INIT_FAILED_MSG, baseDir) + "\n" + ex.getMessage(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			FrameworkProperties.setProperty(EclipseStarter.PROP_EXITDATA, errorDialog);
+			throw ex;
 		}
 		return sManager;
 	}
