@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,7 +29,6 @@ import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.internal.permadmin.SecurityAdmin;
 import org.eclipse.osgi.internal.resolver.StateBuilder;
 import org.eclipse.osgi.internal.resolver.StateObjectFactoryImpl;
-import org.eclipse.osgi.service.environment.EnvironmentInfo;
 import org.eclipse.osgi.service.resolver.*;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
@@ -50,12 +49,10 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	private final ContentHandlerFactory contentHandlerFactory;
 	private final List<BundleDescription> constituents = new ArrayList<BundleDescription>(0);
 	private final int beginningStartLevel;
-	final Properties configuration;
-	final boolean setCompositeParent;
+	private final Properties configuration;
 
 	public CompositeImpl(BundleData bundledata, Framework framework, boolean setCompositeParent) throws BundleException {
 		super(bundledata, framework);
-		this.setCompositeParent = setCompositeParent;
 		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0), framework);
 		compositeInfo = createCompositeInfo(setCompositeParent);
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
@@ -438,54 +435,5 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			}
 		}
 		return result.toArray(new ServicePolicyInfo[result.size()]);
-	}
-
-	public EnvironmentInfo getEnvironmentInfo(final EnvironmentInfo base) {
-		return new EnvironmentInfo() {
-
-			public String setProperty(String key, String value) {
-				return (String) configuration.setProperty(key, value);
-			}
-
-			public boolean inDevelopmentMode() {
-				return base.inDevelopmentMode();
-			}
-
-			public boolean inDebugMode() {
-				return base.inDebugMode();
-			}
-
-			public String getWS() {
-				return base.getWS();
-			}
-
-			public String getProperty(String key) {
-				return configuration.getProperty(key);
-			}
-
-			public String getOSArch() {
-				return base.getOSArch();
-			}
-
-			public String getOS() {
-				return base.getOS();
-			}
-
-			public String[] getNonFrameworkArgs() {
-				return base.getNonFrameworkArgs();
-			}
-
-			public String getNL() {
-				return base.getNL();
-			}
-
-			public String[] getFrameworkArgs() {
-				return base.getFrameworkArgs();
-			}
-
-			public String[] getCommandLineArgs() {
-				return base.getCommandLineArgs();
-			}
-		};
 	}
 }

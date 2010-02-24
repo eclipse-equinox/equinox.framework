@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2009 IBM Corporation and others.
+ * Copyright (c) 2003, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -51,9 +51,15 @@ public class EclipseEnvironmentInfo implements EnvironmentInfo, ServiceFactory<E
 	// this internally to be x86_64.
 	private static final String INTERNAL_AMD64 = "amd64"; //$NON-NLS-1$
 
+	private final CompositeImpl composite;
+
 	private EclipseEnvironmentInfo() {
-		super();
+		this.composite = null;
 		setupSystemContext();
+	}
+
+	public EclipseEnvironmentInfo(CompositeImpl composite) {
+		this.composite = composite;
 	}
 
 	public static EclipseEnvironmentInfo getDefault() {
@@ -237,18 +243,22 @@ public class EclipseEnvironmentInfo implements EnvironmentInfo, ServiceFactory<E
 	}
 
 	public String getProperty(String key) {
+		if (composite != null)
+			return composite.getProperty(key);
 		return FrameworkProperties.getProperty(key);
 	}
 
 	public String setProperty(String key, String value) {
+		if (composite != null)
+			return composite.setProperty(key, value);
 		return FrameworkProperties.setProperty(key, value);
 	}
 
 	public EnvironmentInfo getService(Bundle bundle, ServiceRegistration<EnvironmentInfo> registration) {
-		CompositeImpl composite = (CompositeImpl) ((AbstractBundle) bundle).getComposite();
-		if (composite == null)
+		final CompositeImpl compositeBundle = (CompositeImpl) ((AbstractBundle) bundle).getComposite();
+		if (compositeBundle == null)
 			return this;
-		return composite.getEnvironmentInfo(this);
+		return new EclipseEnvironmentInfo(compositeBundle);
 	}
 
 	public void ungetService(Bundle bundle, ServiceRegistration<EnvironmentInfo> registration, EnvironmentInfo service) {
