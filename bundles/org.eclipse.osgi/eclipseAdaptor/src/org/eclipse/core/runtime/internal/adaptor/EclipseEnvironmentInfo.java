@@ -11,15 +11,18 @@
 package org.eclipse.core.runtime.internal.adaptor;
 
 import java.util.*;
+import org.eclipse.osgi.framework.internal.core.AbstractBundle;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
+import org.eclipse.osgi.internal.composite.CompositeImpl;
 import org.eclipse.osgi.service.environment.Constants;
 import org.eclipse.osgi.service.environment.EnvironmentInfo;
 import org.eclipse.osgi.util.NLS;
+import org.osgi.framework.*;
 
 /**
  * Internal class.
  */
-public class EclipseEnvironmentInfo implements EnvironmentInfo {
+public class EclipseEnvironmentInfo implements EnvironmentInfo, ServiceFactory<EnvironmentInfo> {
 	private static EclipseEnvironmentInfo singleton;
 	private static String nl;
 	private static String os;
@@ -239,5 +242,16 @@ public class EclipseEnvironmentInfo implements EnvironmentInfo {
 
 	public String setProperty(String key, String value) {
 		return FrameworkProperties.setProperty(key, value);
+	}
+
+	public EnvironmentInfo getService(Bundle bundle, ServiceRegistration<EnvironmentInfo> registration) {
+		CompositeImpl composite = (CompositeImpl) ((AbstractBundle) bundle).getComposite();
+		if (composite == null)
+			return this;
+		return composite.getEnvironmentInfo(this);
+	}
+
+	public void ungetService(Bundle bundle, ServiceRegistration<EnvironmentInfo> registration, EnvironmentInfo service) {
+		// nothing to do
 	}
 }

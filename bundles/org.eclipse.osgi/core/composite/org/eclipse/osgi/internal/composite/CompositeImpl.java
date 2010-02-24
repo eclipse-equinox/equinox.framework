@@ -29,6 +29,7 @@ import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.internal.permadmin.SecurityAdmin;
 import org.eclipse.osgi.internal.resolver.StateBuilder;
 import org.eclipse.osgi.internal.resolver.StateObjectFactoryImpl;
+import org.eclipse.osgi.service.environment.EnvironmentInfo;
 import org.eclipse.osgi.service.resolver.*;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
@@ -49,8 +50,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	private final ContentHandlerFactory contentHandlerFactory;
 	private final List<BundleDescription> constituents = new ArrayList<BundleDescription>(0);
 	private final int beginningStartLevel;
-	private final String systemPackages;
-	private final String systemPackagesExtra;
+	final Properties configuration;
 	final boolean setCompositeParent;
 
 	public CompositeImpl(BundleData bundledata, Framework framework, boolean setCompositeParent) throws BundleException {
@@ -59,10 +59,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0), framework);
 		compositeInfo = createCompositeInfo(setCompositeParent);
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
-		Properties configuration = loadCompositeConfiguration();
+		configuration = loadCompositeConfiguration();
 		beginningStartLevel = loadBeginningStartLevel(configuration);
-		systemPackages = configuration.getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES);
-		systemPackagesExtra = configuration.getProperty(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
 		if (setCompositeParent) {
 			try {
 				securityAdmin = new SecurityAdmin(framework, framework.getAdaptor().getPermissionStorage(), bundledata.getBundleID());
@@ -80,8 +78,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		}
 	}
 
-	private int loadBeginningStartLevel(Properties configuration) {
-		String level = configuration.getProperty(Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
+	private int loadBeginningStartLevel(Properties config) {
+		String level = config.getProperty(Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
 		if (level == null)
 			return 1;
 		return Integer.parseInt(level);
@@ -89,15 +87,15 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 
 	private Properties loadCompositeConfiguration() throws BundleException {
 		Properties result = new Properties();
-		URL configuration = bundledata.getEntry(CompositeSupport.COMPOSITE_CONFIGURATION);
-		if (configuration == null)
+		URL configURL = bundledata.getEntry(CompositeSupport.COMPOSITE_CONFIGURATION);
+		if (configURL == null)
 			return result;
 		InputStream in = null;
 		try {
-			in = configuration.openStream();
-			result.load(configuration.openStream());
+			in = configURL.openStream();
+			result.load(configURL.openStream());
 		} catch (IOException e) {
-			throw new BundleException("Error loading composite configuration: " + configuration, e); //$NON-NLS-1$
+			throw new BundleException("Error loading composite configuration: " + configURL, e); //$NON-NLS-1$
 		} finally {
 			if (in != null)
 				try {
@@ -180,10 +178,10 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		CompositeSupport.validateCompositeManifest(compositeManifest);
 		try {
 			URL configURL = bundledata.getEntry(CompositeSupport.COMPOSITE_CONFIGURATION);
-			Properties configuration = new Properties();
-			configuration.load(configURL.openStream());
+			Properties config = new Properties();
+			config.load(configURL.openStream());
 			// get an in memory input stream to jar content of the composite we want to install
-			InputStream content = CompositeSupport.getCompositeInput(configuration, compositeManifest);
+			InputStream content = CompositeSupport.getCompositeInput(config, compositeManifest);
 			// update with the new content
 			super.update(content);
 		} catch (IOException e) {
@@ -341,12 +339,18 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		return compositeSystemBundle;
 	}
 
-	public String getSystemPackages() {
-		return systemPackages;
+	public String getProperty(String key) {
+		SecurityManager sm = System.getSecurityManager();
+		if (sm != null)
+			sm.checkPropertyAccess(key);
+		return configuration.getProperty(key, FrameworkProperties.getProperty(key));
 	}
 
-	public String getSystemPackagesExtra() {
-		return systemPackagesExtra;
+	public String setProperty(String key, String value) {
+		SecurityManager sm = System.getSecurityManager();
+		if (sm != null)
+			sm.checkPermission(new PropertyPermission(key, "write")); //$NON-NLS-1$
+		return (String) configuration.setProperty(key, value);
 	}
 
 	protected void load() {
@@ -434,5 +438,54 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			}
 		}
 		return result.toArray(new ServicePolicyInfo[result.size()]);
+	}
+
+	public EnvironmentInfo getEnvironmentInfo(final EnvironmentInfo base) {
+		return new EnvironmentInfo() {
+
+			public String setProperty(String key, String value) {
+				return (String) configuration.setProperty(key, value);
+			}
+
+			public boolean inDevelopmentMode() {
+				return base.inDevelopmentMode();
+			}
+
+			public boolean inDebugMode() {
+				return base.inDebugMode();
+			}
+
+			public String getWS() {
+				return base.getWS();
+			}
+
+			public String getProperty(String key) {
+				return configuration.getProperty(key);
+			}
+
+			public String getOSArch() {
+				return base.getOSArch();
+			}
+
+			public String getOS() {
+				return base.getOS();
+			}
+
+			public String[] getNonFrameworkArgs() {
+				return base.getNonFrameworkArgs();
+			}
+
+			public String getNL() {
+				return base.getNL();
+			}
+
+			public String[] getFrameworkArgs() {
+				return base.getFrameworkArgs();
+			}
+
+			public String[] getCommandLineArgs() {
+				return base.getCommandLineArgs();
+			}
+		};
 	}
 }

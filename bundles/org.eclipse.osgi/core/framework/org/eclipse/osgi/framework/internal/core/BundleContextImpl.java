@@ -139,8 +139,11 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		if (sm != null) {
 			sm.checkPropertyAccess(key);
 		}
-
-		return (framework.getProperty(key));
+		long compositeID = getCompositeId();
+		if (compositeID == 0)
+			return (framework.getProperty(key));
+		CompositeImpl composite = (CompositeImpl) framework.getBundle(compositeID);
+		return composite.getProperty(key);
 	}
 
 	/**

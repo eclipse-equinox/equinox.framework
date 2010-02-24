@@ -976,6 +976,13 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 		return bundledata.getCompositeID();
 	}
 
+	public Bundle getComposite() {
+		long compositeId = getCompositeId();
+		if (compositeId == 0)
+			return null;
+		return framework.getBundle(compositeId);
+	}
+
 	/**
 	 * Retrieve the location identifier of the bundle. This is typically the
 	 * location passed to
