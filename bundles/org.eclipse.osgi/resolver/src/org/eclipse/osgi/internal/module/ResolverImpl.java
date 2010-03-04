@@ -245,11 +245,16 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 		}
 		// Check for singletons
 		if (bundle.isSingleton()) {
+			ScopePolicy policy = getScopePolicy();
 			Object[] sameName = resolverBundles.get(bundle.getName());
 			if (sameName.length > 1) // Need to check if one is already resolved
 				for (int i = 0; i < sameName.length; i++) {
 					if (sameName[i] == bundle || !((ResolverBundle) sameName[i]).getBundle().isSingleton())
 						continue; // Ignore the bundle we are resolving and non-singletons
+					boolean visibleTo = policy == null ? true : policy.isVisible(bundle, ((ResolverBundle) sameName[i]).getBundle());
+					if (!visibleTo)
+						continue; // Ignore the bundles that are not visible to the current bundleDesc
+
 					if (((ResolverBundle) sameName[i]).getBundle().isResolved()) {
 						rejectedSingletons.add(bundle);
 						return false; // Must fail since there is already a resolved bundle
