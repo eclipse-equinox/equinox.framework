@@ -17,6 +17,7 @@ import org.osgi.framework.*;
 class CompositeInfo {
 	private final CompositeInfo parent;
 	private final List<CompositeInfo> children = Collections.synchronizedList(new ArrayList<CompositeInfo>(0));
+	private final long id;
 	private String name;
 	private Version version;
 	private ClassSpacePolicyInfo[] importPackagePolicy;
@@ -25,7 +26,8 @@ class CompositeInfo {
 	private ServicePolicyInfo[] importServicePolicy;
 	private ServicePolicyInfo[] exportServicePolicy;
 
-	CompositeInfo(String name, Version version, CompositeInfo parent, ClassSpacePolicyInfo[] importPackagePolicy, ClassSpacePolicyInfo[] exportPackagePolicy, ClassSpacePolicyInfo[] requireBundlePolicy, ServicePolicyInfo[] importServicePolicy, ServicePolicyInfo[] exportServicePolicy) {
+	CompositeInfo(long id, String name, Version version, CompositeInfo parent, ClassSpacePolicyInfo[] importPackagePolicy, ClassSpacePolicyInfo[] exportPackagePolicy, ClassSpacePolicyInfo[] requireBundlePolicy, ServicePolicyInfo[] importServicePolicy, ServicePolicyInfo[] exportServicePolicy) {
+		this.id = id;
 		this.name = name == null ? "" : name; //$NON-NLS-1$
 		this.version = version == null ? Version.emptyVersion : version;
 		this.parent = parent;
@@ -147,6 +149,10 @@ class CompositeInfo {
 		this.exportServicePolicy = updatedInfo.exportServicePolicy;
 	}
 
+	long getId() {
+		return id;
+	}
+
 	String getName() {
 		return name;
 	}
@@ -213,5 +219,20 @@ class CompositeInfo {
 			return spec.match(provider);
 		}
 
+	}
+
+	synchronized CompositeInfo getChildCompositeInfo(long compositeId) {
+		if (compositeId < getId() || noChildren())
+			return null; // We assume that nested child composites will always have a higher id
+		// get a snap shot of the children
+		CompositeInfo[] currentChildren = children.toArray(new CompositeInfo[children.size()]);
+		for (CompositeInfo childInfo : currentChildren) {
+			if (childInfo.getId() == compositeId)
+				return childInfo;
+			CompositeInfo result = childInfo.getChildCompositeInfo(compositeId);
+			if (result != null)
+				return result;
+		}
+		return null;
 	}
 }

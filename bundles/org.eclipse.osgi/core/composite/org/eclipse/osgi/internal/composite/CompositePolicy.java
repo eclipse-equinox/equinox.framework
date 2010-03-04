@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,7 @@ import org.osgi.service.url.URLStreamHandlerService;
 public class CompositePolicy implements ScopePolicy {
 	private final static BundleDescription[] EMPTY_DESCRIPTIONS = new BundleDescription[0];
 	private final Framework framework;
-	private final CompositeInfo rootCompositeInfo = new CompositeInfo(Constants.SYSTEM_BUNDLE_SYMBOLICNAME, null, null, null, null, null, null, null);
+	private final CompositeInfo rootCompositeInfo = new CompositeInfo(0, Constants.SYSTEM_BUNDLE_SYMBOLICNAME, null, null, null, null, null, null, null);
 	private final static String[] scopedSystemServices = new String[] {URLStreamHandlerService.class.getName().intern(), ContentHandler.class.getName().intern(), EventHook.class.getName().intern(), FindHook.class.getName().intern(), ListenerHook.class.getName().intern()};
 
 	public CompositePolicy(Framework framework) {
@@ -88,8 +88,8 @@ public class CompositePolicy implements ScopePolicy {
 		return false;
 	}
 
-	private CompositeInfo getCompositeInfo(long compositeId) {
-		return (compositeId == 0) ? getRootCompositeInfo() : ((CompositeImpl) framework.getBundle(compositeId)).getCompositeInfo();
+	public CompositeInfo getCompositeInfo(long compositeId) {
+		return (compositeId == 0) ? getRootCompositeInfo() : rootCompositeInfo.getChildCompositeInfo(compositeId);
 	}
 
 	public boolean hasRequireEquivalent(BundleDescription singleton) {
@@ -142,4 +142,5 @@ public class CompositePolicy implements ScopePolicy {
 	CompositeInfo getRootCompositeInfo() {
 		return rootCompositeInfo;
 	}
+
 }

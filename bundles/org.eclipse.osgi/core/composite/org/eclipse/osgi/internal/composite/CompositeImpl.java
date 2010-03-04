@@ -54,7 +54,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	public CompositeImpl(BundleData bundledata, Framework framework, boolean setCompositeParent) throws BundleException {
 		super(bundledata, framework);
 		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0), framework);
-		compositeInfo = createCompositeInfo(setCompositeParent);
+		compositeInfo = createCompositeInfo(bundledata.getBundleID(), setCompositeParent);
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
 		configuration = loadCompositeConfiguration();
 		beginningStartLevel = loadBeginningStartLevel(configuration);
@@ -104,11 +104,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		return result;
 	}
 
-	CompositeInfo getCompositeInfo() {
-		return compositeInfo;
-	}
-
-	private CompositeInfo createCompositeInfo(boolean setParent) throws BundleException {
+	private CompositeInfo createCompositeInfo(long id, boolean setParent) throws BundleException {
 		Dictionary manifest = bundledata.getManifest();
 		String importPackage = (String) manifest.get(CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY);
 		String exportPackage = (String) manifest.get(CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY);
@@ -127,13 +123,9 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		// set the parent info
 		CompositeInfo parentInfo = null;
 		if (setParent) {
-			long compositeID = bundledata.getCompositeID();
-			if (compositeID == 0) // this is the root framework
-				parentInfo = framework.getCompositeSupport().compositPolicy.getRootCompositeInfo();
-			else
-				parentInfo = ((CompositeImpl) framework.getBundle(bundledata.getCompositeID())).getCompositeInfo();
+			parentInfo = framework.getCompositeSupport().compositPolicy.getCompositeInfo(bundledata.getCompositeID());
 		}
-		CompositeInfo result = new CompositeInfo(bundledata.getSymbolicName(), bundledata.getVersion(), parentInfo, imports, exports, requires, importServiceFilter, exportServiceFilter);
+		CompositeInfo result = new CompositeInfo(id, bundledata.getSymbolicName(), bundledata.getVersion(), parentInfo, imports, exports, requires, importServiceFilter, exportServiceFilter);
 		if (setParent) {
 			// add the the composite info as a child of the parent.
 			parentInfo.addChild(result);
@@ -190,7 +182,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	protected void updateWorkerPrivileged(URLConnection source, AccessControlContext callerContext) throws BundleException {
 		super.updateWorkerPrivileged(source, callerContext);
 		// update the composite info with the new data.
-		CompositeInfo updatedInfo = createCompositeInfo(false);
+		CompositeInfo updatedInfo = createCompositeInfo(getBundleId(), false);
 		compositeInfo.update(updatedInfo);
 	}
 
