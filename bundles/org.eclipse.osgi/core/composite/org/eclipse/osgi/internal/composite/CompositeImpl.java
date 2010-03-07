@@ -56,6 +56,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0), framework);
 		compositeInfo = createCompositeInfo(bundledata.getBundleID(), setCompositeParent);
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
+		startLevelManager.initialize();
 		configuration = loadCompositeConfiguration();
 		beginningStartLevel = loadBeginningStartLevel(configuration);
 		if (setCompositeParent) {
@@ -187,13 +188,11 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	}
 
 	protected void startHook() {
-		startLevelManager.initialize();
 		startLevelManager.doSetStartLevel(beginningStartLevel);
 	}
 
 	protected void stopHook() {
 		startLevelManager.shutdown();
-		startLevelManager.cleanup();
 	}
 
 	public void uninstallWorkerPrivileged() throws BundleException {
@@ -223,6 +222,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 
 	protected void close() {
 		super.close();
+		startLevelManager.cleanup();
 		// remove the composite info from the parent
 		compositeInfo.orphaned();
 		// unregister the composite factory before closing the system bundle
