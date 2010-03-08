@@ -606,9 +606,11 @@ public class PackageAdminImpl {
 		// version order.
 		ArrayList<Bundle> result = new ArrayList<Bundle>(bundles.length);
 		VersionRange range = versionRange == null ? null : new VersionRange(versionRange);
-		for (int i = 0; i < bundles.length; i++) {
-			if (compositeId == bundles[i].getCompositeId() && (range == null || range.isIncluded(bundles[i].getVersion()))) {
-				result.add(bundles[i]);
+		for (AbstractBundle bundle : bundles) {
+			if (bundle.getBundleId() == 0 && compositeId > 0)
+				bundle = ((CompositeImpl) framework.getBundle(compositeId)).getSystemBundle();
+			if (compositeId == bundle.getCompositeId() && (range == null || range.isIncluded(bundle.getVersion()))) {
+				result.add(bundle);
 			}
 		}
 
