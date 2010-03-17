@@ -249,6 +249,11 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 						framework.publishFrameworkEvent(FrameworkEvent.STARTED, systemBundle, null);
 					}
 				} else {
+					if (newSL == 0 && systemBundle.getCompositeId() > 0) {
+						// this is a composite bundle stopping; must fire the STOPPING event
+						systemBundle.state = Bundle.STOPPING;
+						framework.publishBundleEvent(BundleEvent.STOPPING, systemBundle);
+					}
 					AbstractBundle[] sortedBundles = getInstalledBundles(true, compositeId, framework);
 					for (int i = tempSL; i > newSL; i--) {
 						if (Debug.DEBUG && Debug.DEBUG_STARTLEVEL) {
