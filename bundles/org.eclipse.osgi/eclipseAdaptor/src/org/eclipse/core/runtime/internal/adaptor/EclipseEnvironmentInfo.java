@@ -202,7 +202,7 @@ public class EclipseEnvironmentInfo implements EnvironmentInfo, ServiceFactory<E
 		if (os.equals(Constants.OS_LINUX))
 			return Constants.WS_GTK;
 		if (os.equals(Constants.OS_MACOSX))
-			return Constants.WS_CARBON;
+			return Constants.WS_COCOA;
 		if (os.equals(Constants.OS_HPUX))
 			return Constants.WS_MOTIF;
 		if (os.equals(Constants.OS_AIX))

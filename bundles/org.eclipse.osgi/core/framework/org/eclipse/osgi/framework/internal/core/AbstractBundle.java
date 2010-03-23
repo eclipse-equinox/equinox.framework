@@ -193,6 +193,11 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 		return ((state & (ACTIVE | STARTING)) != 0);
 	}
 
+	boolean isLazyStart() {
+		int status = bundledata.getStatus();
+		return (status & Constants.BUNDLE_ACTIVATION_POLICY) != 0 && (status & Constants.BUNDLE_LAZY_START) != 0;
+	}
+
 	/**
 	 * Return true if the bundle is resolved.
 	 *  
