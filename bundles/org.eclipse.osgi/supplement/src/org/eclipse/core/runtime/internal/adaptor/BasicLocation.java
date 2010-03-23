@@ -257,4 +257,8 @@ public class BasicLocation implements Location {
 			filename.substring(1);
 		return new URL(prefix + dataAreaPrefix + filename);
 	}
+
+	public String getProperty() {
+		return property;
+	}
 }
