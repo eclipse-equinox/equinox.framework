@@ -38,8 +38,6 @@ import org.osgi.service.composite.CompositeConstants;
 import org.osgi.service.condpermadmin.ConditionalPermissionUpdate;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle {
-	private static final String COMPOSITE_SYMBOLICNAME_DIRECTIVE = "composite-symbolic-name"; //$NON-NLS-1$
-	private static final String COMPOSITE_VERSION_DIRECTIVE = "composite-version"; //$NON-NLS-1$
 	private static final StateObjectFactory stateFactory = new StateObjectFactoryImpl();
 	private final CompositeSystemBundle compositeSystemBundle;
 	private final CompositeInfo compositeInfo;
@@ -110,6 +108,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		String importPackage = (String) manifest.get(CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY);
 		String exportPackage = (String) manifest.get(CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY);
 		String requireBundle = (String) manifest.get(CompositeConstants.COMPOSITE_BUNDLE_REQUIRE_POLICY);
+		String provideBundle = (String) manifest.get(CompositeConstants.COMPOSITE_BUNDLE_PROVIDE_POLICY);
 		String importService = (String) manifest.get(CompositeConstants.COMPOSITE_SERVICE_IMPORT_POLICY);
 		String exportService = (String) manifest.get(CompositeConstants.COMPOSITE_SERVICE_EXPORT_POLICY);
 
@@ -119,6 +118,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		ClassSpacePolicyInfo[] imports = createClassSpacePolicy(importPackage, stateFactory, CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY, desc);
 		ClassSpacePolicyInfo[] exports = createClassSpacePolicy(exportPackage, stateFactory, CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY, desc);
 		ClassSpacePolicyInfo[] requires = createClassSpacePolicy(requireBundle, stateFactory, CompositeConstants.COMPOSITE_BUNDLE_REQUIRE_POLICY, desc);
+		ClassSpacePolicyInfo[] provides = createClassSpacePolicy(provideBundle, stateFactory, CompositeConstants.COMPOSITE_BUNDLE_PROVIDE_POLICY, desc);
 		ServicePolicyInfo[] importServiceFilter = createServicePolicyInfo(importService, stateFactory, CompositeConstants.COMPOSITE_SERVICE_IMPORT_POLICY, systemContext);
 		ServicePolicyInfo[] exportServiceFilter = createServicePolicyInfo(exportService, stateFactory, CompositeConstants.COMPOSITE_SERVICE_EXPORT_POLICY, systemContext);
 		// set the parent info
@@ -126,7 +126,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		if (setParent) {
 			parentInfo = framework.getCompositeSupport().compositPolicy.getCompositeInfo(bundledata.getCompositeID());
 		}
-		CompositeInfo result = new CompositeInfo(id, bundledata.getSymbolicName(), bundledata.getVersion(), parentInfo, imports, exports, requires, importServiceFilter, exportServiceFilter);
+		CompositeInfo result = new CompositeInfo(id, bundledata.getSymbolicName(), bundledata.getVersion(), parentInfo, imports, exports, requires, provides, importServiceFilter, exportServiceFilter);
 		if (setParent) {
 			// add the the composite info as a child of the parent.
 			parentInfo.addChild(result);
@@ -383,8 +383,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			return null;
 		ArrayList<ClassSpacePolicyInfo> result = new ArrayList<ClassSpacePolicyInfo>(policy.length);
 		for (int i = 0; i < policy.length; i++) {
-			String compositeAffinityName = policy[i].getDirective(COMPOSITE_SYMBOLICNAME_DIRECTIVE);
-			VersionRange compositeAffinityVersion = StateBuilder.getVersionRange(policy[i].getDirective(COMPOSITE_VERSION_DIRECTIVE));
+			String compositeAffinityName = policy[i].getDirective(CompositeConstants.COMPOSITE_SYMBOLICNAME_DIRECTIVE);
+			VersionRange compositeAffinityVersion = StateBuilder.getVersionRange(policy[i].getDirective(CompositeConstants.COMPOSITE_VERSION_DIRECTIVE));
 			if (header == CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY || header == CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY) {
 				VersionRange versionRange = StateBuilder.getVersionRange(policy[i].getAttribute(Constants.VERSION_ATTRIBUTE));
 
@@ -413,8 +413,8 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			return null;
 		ArrayList<ServicePolicyInfo> result = new ArrayList<ServicePolicyInfo>(policy.length);
 		for (int i = 0; i < policy.length; i++) {
-			String compositeAffinityName = policy[i].getDirective(COMPOSITE_SYMBOLICNAME_DIRECTIVE);
-			VersionRange compositeAffinityVersion = StateBuilder.getVersionRange(policy[i].getDirective(COMPOSITE_VERSION_DIRECTIVE));
+			String compositeAffinityName = policy[i].getDirective(CompositeConstants.COMPOSITE_SYMBOLICNAME_DIRECTIVE);
+			VersionRange compositeAffinityVersion = StateBuilder.getVersionRange(policy[i].getDirective(CompositeConstants.COMPOSITE_VERSION_DIRECTIVE));
 			String[] filters = policy[i].getValueComponents();
 			for (int j = 0; j < filters.length; j++) {
 				Filter filter = null;

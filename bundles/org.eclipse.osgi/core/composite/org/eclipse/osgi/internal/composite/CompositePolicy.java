@@ -24,7 +24,7 @@ import org.osgi.service.url.URLStreamHandlerService;
 public class CompositePolicy implements ScopePolicy {
 	private final static BundleDescription[] EMPTY_DESCRIPTIONS = new BundleDescription[0];
 	private final Framework framework;
-	private final CompositeInfo rootCompositeInfo = new CompositeInfo(0, Constants.SYSTEM_BUNDLE_SYMBOLICNAME, null, null, null, null, null, null, null);
+	private final CompositeInfo rootCompositeInfo = new CompositeInfo(0, Constants.SYSTEM_BUNDLE_SYMBOLICNAME, null, null, null, null, null, null, null, null);
 	private final static String[] scopedSystemServices = new String[] {URLStreamHandlerService.class.getName().intern(), ContentHandler.class.getName().intern(), EventHook.class.getName().intern(), FindHook.class.getName().intern(), ListenerHook.class.getName().intern()};
 
 	public CompositePolicy(Framework framework) {
@@ -92,14 +92,14 @@ public class CompositePolicy implements ScopePolicy {
 		return (compositeId == 0) ? getRootCompositeInfo() : rootCompositeInfo.getChildCompositeInfo(compositeId);
 	}
 
-	public boolean hasRequireEquivalent(BundleDescription singleton) {
+	public boolean hasBundlePolicyEquivalent(BundleDescription singleton) {
 		AbstractBundle bundle = framework.getBundle(singleton.getBundleId());
 		if (bundle == null)
 			return false; // must be uninstalled
 		CompositeInfo compositeInfo = getCompositeInfo(bundle.getCompositeId());
 		if (compositeInfo == null)
 			return false;
-		return compositeInfo.hasRequireEquivalent(singleton);
+		return compositeInfo.hasBundlePolicyEquivalent(singleton);
 	}
 
 	public boolean sameScope(Bundle b1, Bundle b2) {

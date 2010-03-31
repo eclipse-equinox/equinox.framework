@@ -23,10 +23,11 @@ class CompositeInfo {
 	private ClassSpacePolicyInfo[] importPackagePolicy;
 	private ClassSpacePolicyInfo[] exportPackagePolicy;
 	private ClassSpacePolicyInfo[] requireBundlePolicy;
+	private ClassSpacePolicyInfo[] provideBundlePolicy;
 	private ServicePolicyInfo[] importServicePolicy;
 	private ServicePolicyInfo[] exportServicePolicy;
 
-	CompositeInfo(long id, String name, Version version, CompositeInfo parent, ClassSpacePolicyInfo[] importPackagePolicy, ClassSpacePolicyInfo[] exportPackagePolicy, ClassSpacePolicyInfo[] requireBundlePolicy, ServicePolicyInfo[] importServicePolicy, ServicePolicyInfo[] exportServicePolicy) {
+	CompositeInfo(long id, String name, Version version, CompositeInfo parent, ClassSpacePolicyInfo[] importPackagePolicy, ClassSpacePolicyInfo[] exportPackagePolicy, ClassSpacePolicyInfo[] requireBundlePolicy, ClassSpacePolicyInfo[] provideBundlePolicy, ServicePolicyInfo[] importServicePolicy, ServicePolicyInfo[] exportServicePolicy) {
 		this.id = id;
 		this.name = name == null ? "" : name; //$NON-NLS-1$
 		this.version = version == null ? Version.emptyVersion : version;
@@ -34,6 +35,7 @@ class CompositeInfo {
 		this.importPackagePolicy = importPackagePolicy;
 		this.exportPackagePolicy = exportPackagePolicy;
 		this.requireBundlePolicy = requireBundlePolicy;
+		this.provideBundlePolicy = provideBundlePolicy;
 		this.importServicePolicy = importServicePolicy;
 		this.exportServicePolicy = exportServicePolicy;
 	}
@@ -78,12 +80,17 @@ class CompositeInfo {
 		return false;
 	}
 
-	synchronized boolean hasRequireEquivalent(BundleDescription singleton) {
-		if (requireBundlePolicy == null)
-			return false;
-		for (ClassSpacePolicyInfo policy : requireBundlePolicy)
-			if (policy.matchName(singleton))
-				return true;
+	synchronized boolean hasBundlePolicyEquivalent(BundleDescription singleton) {
+		if (requireBundlePolicy != null) {
+			for (ClassSpacePolicyInfo policy : requireBundlePolicy)
+				if (policy.matchName(singleton))
+					return true;
+		}
+		if (provideBundlePolicy != null) {
+			for (ClassSpacePolicyInfo policy : provideBundlePolicy)
+				if (policy.matchName(singleton))
+					return true;
+		}
 		return false;
 	}
 
@@ -102,6 +109,8 @@ class CompositeInfo {
 			return matchFilters((ServiceReference<?>) provider, exportServicePolicy, this, (ServicePolicyInfo) peerPolicy);
 		if (provider instanceof ExportPackageDescription)
 			return matchConstraints((BaseDescription) provider, exportPackagePolicy, this, (ClassSpacePolicyInfo) peerPolicy);
+		if (provider instanceof BundleDescription)
+			return matchConstraints((BaseDescription) provider, provideBundlePolicy, this, (ClassSpacePolicyInfo) peerPolicy);
 		return null;
 	}
 
@@ -145,6 +154,7 @@ class CompositeInfo {
 		this.importPackagePolicy = updatedInfo.importPackagePolicy;
 		this.exportPackagePolicy = updatedInfo.exportPackagePolicy;
 		this.requireBundlePolicy = updatedInfo.requireBundlePolicy;
+		this.provideBundlePolicy = updatedInfo.provideBundlePolicy;
 		this.importServicePolicy = updatedInfo.importServicePolicy;
 		this.exportServicePolicy = updatedInfo.exportServicePolicy;
 	}
