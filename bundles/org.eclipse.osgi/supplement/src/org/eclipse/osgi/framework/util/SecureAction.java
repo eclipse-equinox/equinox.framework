@@ -15,6 +15,7 @@ import java.io.*;
 import java.net.*;
 import java.security.*;
 import java.util.Properties;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.osgi.framework.*;
@@ -245,18 +246,28 @@ public class SecureAction {
 	 * @throws IOException if an error occured
 	 */
 	public ZipFile getZipFile(final File file) throws IOException {
-		if (System.getSecurityManager() == null)
-			return new ZipFile(file);
 		try {
-			return (ZipFile) AccessController.doPrivileged(new PrivilegedExceptionAction() {
-				public Object run() throws IOException {
-					return new ZipFile(file);
-				}
-			}, controlContext);
-		} catch (PrivilegedActionException e) {
-			if (e.getException() instanceof IOException)
-				throw (IOException) e.getException();
-			throw (RuntimeException) e.getException();
+			if (System.getSecurityManager() == null)
+				return new ZipFile(file);
+			try {
+				return (ZipFile) AccessController.doPrivileged(new PrivilegedExceptionAction() {
+					public Object run() throws IOException {
+						return new ZipFile(file);
+					}
+				}, controlContext);
+			} catch (PrivilegedActionException e) {
+				if (e.getException() instanceof IOException)
+					throw (IOException) e.getException();
+				throw (RuntimeException) e.getException();
+			}
+		} catch (ZipException e) {
+			ZipException zipNameException = new ZipException("Exception in opening zip file: " + file.getPath()); //$NON-NLS-1$
+			zipNameException.initCause(e);
+			throw zipNameException;
+		} catch (IOException e) {
+			IOException fileNameException = new IOException("Exception in opening zip file: " + file.getPath()); //$NON-NLS-1$
+			fileNameException.initCause(e);
+			throw fileNameException;
 		}
 	}
 
