@@ -39,6 +39,12 @@ import org.osgi.service.condpermadmin.ConditionalPermissionUpdate;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle {
 	private static final StateObjectFactory stateFactory = new StateObjectFactoryImpl();
+	private static final ThreadLocal<Boolean> updating = new ThreadLocal<Boolean>() {
+		public Boolean initialValue() {
+			return Boolean.FALSE;
+		}
+	};
+
 	private final CompositeSystemBundle compositeSystemBundle;
 	private final CompositeInfo compositeInfo;
 	private final StartLevelManager startLevelManager;
@@ -145,6 +151,10 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	}
 
 	public void update(InputStream in) throws BundleException {
+		if (in == RELOAD) {
+			super.update(RELOAD);
+			return;
+		}
 		try {
 			in.close();
 		} catch (IOException e) {
@@ -172,10 +182,13 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			config.load(configURL.openStream());
 			// get an in memory input stream to jar content of the composite we want to install
 			InputStream content = CompositeSupport.getCompositeInput(config, compositeManifest);
+			updating.set(true);
 			// update with the new content
 			super.update(content);
 		} catch (IOException e) {
 			throw new BundleException("Error creating composite bundle", e); //$NON-NLS-1$
+		} finally {
+			updating.set(false);
 		}
 	}
 
@@ -185,6 +198,16 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		// update the composite info with the new data.
 		CompositeInfo updatedInfo = createCompositeInfo(getBundleId(), false);
 		compositeInfo.update(updatedInfo);
+		AbstractBundle[] bundles = framework.getBundles(getBundleId());
+		// reload all the constituents 
+		for (AbstractBundle bundle : bundles) {
+			if (bundle.getBundleId() != 0) // not the system bundle
+				try {
+					bundle.reload();
+				} catch (BundleException e) {
+					framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundle, e);
+				}
+		}
 	}
 
 	protected void startHook() {
@@ -192,7 +215,10 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	}
 
 	protected void stopHook() {
-		startLevelManager.shutdown();
+		if (updating.get())
+			startLevelManager.update();
+		else
+			startLevelManager.shutdown();
 	}
 
 	public void uninstallWorkerPrivileged() throws BundleException {
@@ -340,10 +366,6 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		if (sm != null)
 			sm.checkPermission(new PropertyPermission(key, "write")); //$NON-NLS-1$
 		return (String) configuration.setProperty(key, value);
-	}
-
-	protected void load() {
-		super.load();
 	}
 
 	protected void refresh() {

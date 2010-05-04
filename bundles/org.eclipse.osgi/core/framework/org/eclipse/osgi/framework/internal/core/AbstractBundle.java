@@ -10,8 +10,7 @@
  *******************************************************************************/
 package org.eclipse.osgi.framework.internal.core;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.*;
@@ -36,6 +35,7 @@ import org.osgi.service.startlevel.BundleStartLevel;
  * This class is abstract and is extended by BundleHost and BundleFragment.
  */
 public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, KeyedElement, BundleStartLevel {
+	protected static final InputStream RELOAD = new ByteArrayInputStream(new byte[0]);
 	/** The Framework this bundle is part of */
 	protected final Framework framework;
 	/** The state of the bundle. */
@@ -557,6 +557,10 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 		update(null);
 	}
 
+	public void reload() throws BundleException {
+		update(RELOAD);
+	}
+
 	public void update(final InputStream in) throws BundleException {
 		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
 			Debug.println("update location " + bundledata.getLocation()); //$NON-NLS-1$
@@ -583,6 +587,8 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 							Debug.println("   from location: " + updateLocation); //$NON-NLS-1$
 						/* Map the update location to a URLConnection */
 						source = framework.adaptor.mapLocationToURLConnection(updateLocation);
+					} else if (in == RELOAD) {
+						source = null;
 					} else {
 						/* Map the InputStream to a URLConnection */
 						source = new BundleSource(in);
@@ -591,7 +597,7 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 					updateWorkerPrivileged(source, callerContext);
 					return null;
 				}
-			});
+			}, in == RELOAD);
 		} finally {
 			completeStateChange();
 		}
@@ -600,7 +606,7 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 	/**
 	 * Update worker. Assumes the caller has the state change lock.
 	 */
-	protected void updateWorker(PrivilegedExceptionAction action) throws BundleException {
+	final void updateWorker(PrivilegedExceptionAction action, boolean reload) throws BundleException {
 		int previousState = 0;
 		if (!isFragment())
 			previousState = state;
@@ -616,7 +622,8 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 		}
 		try {
 			AccessController.doPrivileged(action);
-			framework.publishBundleEvent(BundleEvent.UPDATED, this);
+			if (!reload)
+				framework.publishBundleEvent(BundleEvent.UPDATED, this);
 		} catch (PrivilegedActionException pae) {
 			if (pae.getException() instanceof RuntimeException)
 				throw (RuntimeException) pae.getException();

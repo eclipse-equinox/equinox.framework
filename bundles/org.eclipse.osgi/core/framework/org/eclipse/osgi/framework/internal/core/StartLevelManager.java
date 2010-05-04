@@ -214,13 +214,11 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 		doSetStartLevel(0);
 	}
 
-	/**
-	 *  Internal worker method to set the startlevel
-	 *
-	 * @param newSL start level value                  
-	 * @param callerBundle - the bundle initiating the change in start level
-	 */
-	public void doSetStartLevel(int newSL) {
+	public void update() {
+		doSetStartLevel(0, FrameworkEvent.STOPPED_UPDATE);
+	}
+
+	private void doSetStartLevel(int newSL, int frameworkEvent) {
 		synchronized (lock) {
 			ClassLoader previousTCCL = Thread.currentThread().getContextClassLoader();
 			ClassLoader contextFinder = framework.getContextFinder();
@@ -261,7 +259,7 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 					}
 					if (newSL == 0) {
 						// stop and unload all bundles
-						stopSystemBundle();
+						stopSystemBundle(frameworkEvent);
 						unloadAllBundles(framework.bundles);
 					}
 				}
@@ -274,6 +272,16 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 					Thread.currentThread().setContextClassLoader(previousTCCL);
 			}
 		}
+	}
+
+	/**
+	 *  Internal worker method to set the startlevel
+	 *
+	 * @param newSL start level value                  
+	 * @param callerBundle - the bundle initiating the change in start level
+	 */
+	public void doSetStartLevel(int newSL) {
+		doSetStartLevel(newSL, FrameworkEvent.STOPPED);
 	}
 
 	/** 
@@ -602,7 +610,7 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 	/**
 	 *  Stop the system bundle
 	 */
-	private void stopSystemBundle() {
+	private void stopSystemBundle(int frameworkEvent) {
 		try {
 			systemBundle.context.stop();
 		} catch (BundleException sbe) {
@@ -617,7 +625,7 @@ public class StartLevelManager implements EventDispatcher, EventListener, StartL
 		framework.publishBundleEvent(BundleEvent.STOPPED, systemBundle);
 		if (systemBundle.getCompositeId() > 0) {
 			// TODO warning this is hacky should encapsulate this in CompositeImpl somehow
-			framework.publishFrameworkEvent(FrameworkEvent.STOPPED, systemBundle, null);
+			framework.publishFrameworkEvent(frameworkEvent, systemBundle, null);
 			systemBundle.state = Bundle.STARTING;
 			framework.publishBundleEvent(BundleEvent.STARTING, systemBundle);
 		}

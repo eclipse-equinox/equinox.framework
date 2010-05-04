@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,10 +24,10 @@ import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
 
 public class BundleUpdate implements BundleOperation {
-	private BaseData data;
+	private final BaseData data;
+	private final URLConnection source;
+	private final BaseStorage storage;
 	private BaseData newData;
-	private URLConnection source;
-	private BaseStorage storage;
 
 	public BundleUpdate(BaseData data, URLConnection source, BaseStorage storage) {
 		this.data = data;
@@ -42,6 +42,10 @@ public class BundleUpdate implements BundleOperation {
 	 * @throws BundleException if an error occurs
 	 */
 	public BundleData begin() throws BundleException {
+		if (source == null) {
+			newData = data;
+			return newData;
+		}
 		try {
 			newData = storage.createBaseData(data.getBundleID(), data.getCompositeID(), data.getLocation());
 			newData.setLastModified(System.currentTimeMillis());
@@ -115,6 +119,10 @@ public class BundleUpdate implements BundleOperation {
 	 */
 
 	public void commit(boolean postpone) throws BundleException {
+		if (newData == data) {
+			storage.updateState(newData, BundleEvent.UPDATED);
+			return;
+		}
 		storage.processExtension(data, BaseStorage.EXTENSION_UNINSTALLED); // remove the old extension
 		storage.processExtension(newData, BaseStorage.EXTENSION_UPDATED); // update to the new one
 		try {
@@ -138,6 +146,8 @@ public class BundleUpdate implements BundleOperation {
 	 * @throws BundleException If a failure occured modifiying peristent storage.
 	 */
 	public void undo() throws BundleException {
+		if (newData == data)
+			return;
 		if (newData != null) {
 			BaseStorageHook newStorageHook = (BaseStorageHook) newData.getStorageHook(BaseStorageHook.KEY);
 			try {
