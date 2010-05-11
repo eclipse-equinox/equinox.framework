@@ -705,19 +705,26 @@ public class Framework implements EventDispatcher, EventPublisher, Runnable {
 	 */
 	AbstractBundle createAndVerifyBundle(BundleData bundledata, boolean setBundle) throws BundleException {
 		// Check for a bundle already installed with the same symbolic name and version.
-		if (bundledata.getSymbolicName() != null) {
-			synchronized (bundles) {
-				AbstractBundle[] sameBSNs = bundles.getBundles(bundledata.getSymbolicName());
-				if (sameBSNs != null)
-					for (int i = 0; i < sameBSNs.length; i++) {
-						if (sameBSNs[i].getVersion().equals(bundledata.getVersion()) && sameBSNs[i].getBundleId() != bundledata.getBundleID() && sameBSNs[i].getCompositeId() == bundledata.getCompositeID()) {
+		validateNameAndVersion(bundledata);
+		return AbstractBundle.createBundle(bundledata, this, setBundle);
+	}
+
+	public void validateNameAndVersion(BundleData bundledata) throws DuplicateBundleException {
+		if (bundledata.getSymbolicName() == null)
+			return;
+		synchronized (bundles) {
+			AbstractBundle[] sameBSNs = bundles.getBundles(bundledata.getSymbolicName());
+			if (sameBSNs != null)
+				for (int i = 0; i < sameBSNs.length; i++) {
+					if (sameBSNs[i].getVersion().equals(bundledata.getVersion()) && sameBSNs[i].getBundleId() != bundledata.getBundleID()) {
+						ScopePolicy policy = getCompositeSupport().getCompositePolicy();
+						if (policy.isVisible(bundledata, sameBSNs[i].getBundleData()) || policy.isVisible(sameBSNs[i].getBundleData(), bundledata)) {
 							String msg = NLS.bind(Msg.BUNDLE_INSTALL_SAME_UNIQUEID, new Object[] {sameBSNs[i].getSymbolicName(), sameBSNs[i].getVersion().toString(), sameBSNs[i].bundledata.getLocation()});
 							throw new DuplicateBundleException(msg, sameBSNs[i]);
 						}
 					}
-			}
+				}
 		}
-		return AbstractBundle.createBundle(bundledata, this, setBundle);
 	}
 
 	private class DuplicateBundleException extends BundleException implements StatusException {

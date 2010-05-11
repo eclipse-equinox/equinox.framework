@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.osgi.framework.internal.core;
 
+import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.service.resolver.BaseDescription;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.Bundle;
@@ -44,10 +45,19 @@ public interface ScopePolicy {
 	 * Determines if the specified client should have visibility to the 
 	 * specified constraint provider (exported package, bundle symbolic name etc.).
 	 * @param client the potential client bundle
-	 * @param constraintProvider the service reference to determine visibility of
+	 * @param constraintProvider the baseDescription to determine visibility of
 	 * @return true if the client has visibility according to this scope policy; false otherwise
 	 */
 	boolean isVisible(Bundle client, BaseDescription constraintProvider);
+
+	/**
+	 * Determines if the specified client should have visibility to the 
+	 * specified bundle data.  This only checks the bundle require/provide policy
+	 * @param client the potential client bundle
+	 * @param provider the bundle data to determine visibility of
+	 * @return true if the client has visibility according to this scope policy; false otherwise
+	 */
+	boolean isVisible(BundleData client, BundleData provider);
 
 	/**
 	 * Determines if the specified singleton bundle has a visibility policy

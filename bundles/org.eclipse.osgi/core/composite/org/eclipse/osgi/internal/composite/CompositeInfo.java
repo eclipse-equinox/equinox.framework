@@ -40,6 +40,17 @@ class CompositeInfo {
 		this.exportServicePolicy = exportServicePolicy;
 	}
 
+	synchronized void update(CompositeInfo updatedInfo) {
+		this.name = updatedInfo.name;
+		this.version = updatedInfo.version;
+		this.importPackagePolicy = updatedInfo.importPackagePolicy;
+		this.exportPackagePolicy = updatedInfo.exportPackagePolicy;
+		this.requireBundlePolicy = updatedInfo.requireBundlePolicy;
+		this.provideBundlePolicy = updatedInfo.provideBundlePolicy;
+		this.importServicePolicy = updatedInfo.importServicePolicy;
+		this.exportServicePolicy = updatedInfo.exportServicePolicy;
+	}
+
 	boolean isVisible(Object provider, CompositeInfo origin, CompositeInfo providerComposite) {
 		return isVisible0(provider, origin, null, providerComposite);
 	}
@@ -146,17 +157,6 @@ class CompositeInfo {
 
 	boolean noChildren() {
 		return children.isEmpty();
-	}
-
-	synchronized void update(CompositeInfo updatedInfo) {
-		this.name = updatedInfo.name;
-		this.version = updatedInfo.version;
-		this.importPackagePolicy = updatedInfo.importPackagePolicy;
-		this.exportPackagePolicy = updatedInfo.exportPackagePolicy;
-		this.requireBundlePolicy = updatedInfo.requireBundlePolicy;
-		this.provideBundlePolicy = updatedInfo.provideBundlePolicy;
-		this.importServicePolicy = updatedInfo.importServicePolicy;
-		this.exportServicePolicy = updatedInfo.exportServicePolicy;
 	}
 
 	long getId() {

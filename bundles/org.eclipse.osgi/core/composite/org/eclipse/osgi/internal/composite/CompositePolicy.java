@@ -11,6 +11,7 @@
 package org.eclipse.osgi.internal.composite;
 
 import java.net.ContentHandler;
+import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.internal.serviceregistry.ServiceReferenceImpl;
@@ -43,6 +44,14 @@ public class CompositePolicy implements ScopePolicy {
 		return noScopes() || isVisible0((AbstractBundle) client, null, null, constraintProvider);
 	}
 
+	public boolean isVisible(BundleData client, BundleData provider) {
+		return noScopes() || isVisible0(client.getBundleID(), client.getCompositeID(), provider.getBundleID(), provider.getCompositeID(), null, null, createBundleDescription(provider));
+	}
+
+	private BundleDescription createBundleDescription(BundleData provider) {
+		return CompositeImpl.stateFactory.createBundleDescription(provider.getBundleID(), provider.getSymbolicName(), provider.getVersion(), provider.getLocation(), null, null, null, null, false, true, true, null, null, null, null);
+	}
+
 	public boolean noScopes() {
 		return rootCompositeInfo.noChildren();
 	}
@@ -52,9 +61,6 @@ public class CompositePolicy implements ScopePolicy {
 			throw new IllegalArgumentException("Client cannot be null"); //$NON-NLS-1$
 		if (serviceProvider == null && constraintProvider == null)
 			throw new IllegalArgumentException("Provider cannot be null"); //$NON-NLS-1$
-		if (serviceProvider != null && client.getBundleId() == 0 && client.getCompositeId() == 0 && !scopedSystemService(clazzes))
-			// root system bundle sees every service
-			return true;
 		AbstractBundle providerBundle = null;
 		if (serviceProvider != null)
 			// Need to access internals incase the reference has been unregistered (in this case getBundle returns null)
@@ -63,15 +69,23 @@ public class CompositePolicy implements ScopePolicy {
 			providerBundle = framework.getBundle(constraintProvider.getSupplier().getBundleId());
 		if (providerBundle == null)
 			return false; // we assume the bundle is uninstalled and should not be visible
-		if (providerBundle.getBundleId() == 0 && providerBundle.getCompositeId() == 0 && !scopedSystemService(clazzes))
+		return isVisible0(client.getBundleId(), client.getCompositeId(), providerBundle.getBundleId(), providerBundle.getCompositeId(), serviceProvider, clazzes, constraintProvider);
+	}
+
+	private boolean isVisible0(long clientID, long clientCompositeID, long providerID, long providerCompositeID, ServiceReference<?> serviceProvider, String[] clazzes, BaseDescription constraintProvider) {
+		if (serviceProvider == null && constraintProvider == null)
+			throw new IllegalArgumentException("Provider cannot be null"); //$NON-NLS-1$
+		if (serviceProvider != null && clientID == 0 && clientCompositeID == 0 && !scopedSystemService(clazzes))
+			// root system bundle sees every service
+			return true;
+
+		if (providerID == 0 && providerCompositeID == 0 && !scopedSystemService(clazzes))
 			// Everyone sees the root system bundle' services and packages
 			return true;
-		long clientCompID = client.getCompositeId();
-		long providerCompID = providerBundle.getCompositeId();
-		if (clientCompID == providerCompID)
+		if (clientCompositeID == providerCompositeID)
 			return true; // in the same composite
-		CompositeInfo clientInfo = getCompositeInfo(clientCompID);
-		CompositeInfo providerInfo = getCompositeInfo(providerCompID);
+		CompositeInfo clientInfo = getCompositeInfo(clientCompositeID);
+		CompositeInfo providerInfo = getCompositeInfo(providerCompositeID);
 		if (providerInfo == null || clientInfo == providerInfo)
 			return true;
 		return clientInfo.isVisible(serviceProvider != null ? (Object) serviceProvider : (Object) constraintProvider, clientInfo, providerInfo);

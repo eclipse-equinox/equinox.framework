@@ -38,8 +38,8 @@ import org.osgi.service.composite.CompositeConstants;
 import org.osgi.service.condpermadmin.ConditionalPermissionUpdate;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle {
-	private static final StateObjectFactory stateFactory = new StateObjectFactoryImpl();
-	private static final ThreadLocal<Boolean> updating = new ThreadLocal<Boolean>() {
+	static final StateObjectFactory stateFactory = new StateObjectFactoryImpl();
+	private final ThreadLocal<Boolean> updating = new ThreadLocal<Boolean>() {
 		public Boolean initialValue() {
 			return Boolean.FALSE;
 		}
@@ -58,7 +58,12 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	public CompositeImpl(BundleData bundledata, Framework framework, boolean setCompositeParent) throws BundleException {
 		super(bundledata, framework);
 		compositeSystemBundle = new CompositeSystemBundle((BundleHost) framework.getBundle(0), framework);
-		compositeInfo = createCompositeInfo(bundledata.getBundleID(), setCompositeParent);
+		compositeInfo = createCompositeInfo(setCompositeParent);
+		Object existing = framework.getBundle(bundledata.getBundleID());
+		if (existing != null && existing instanceof CompositeImpl) {
+			checkBSNAndVersions((CompositeImpl) existing, compositeInfo);
+		}
+
 		startLevelManager = new StartLevelManager(framework, bundledata.getBundleID(), compositeSystemBundle);
 		startLevelManager.initialize();
 		configuration = loadCompositeConfiguration();
@@ -77,6 +82,31 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			securityAdmin = null;
 			streamHandlerFactory = null;
 			contentHandlerFactory = null;
+		}
+	}
+
+	private void checkBSNAndVersions(CompositeImpl existing, CompositeInfo compositeInfo) throws BundleException {
+		// save off original policy
+		CompositeInfo original = new CompositeInfo(existing.getBundleId(), null, null, null, null, null, null, null, null, null);
+		original.update(existing.compositeInfo);
+		// update current policy
+		existing.compositeInfo.update(compositeInfo);
+		try {
+			validateBSNAndVersions(existing);
+		} finally {
+			existing.compositeInfo.update(original);
+		}
+	}
+
+	private void validateBSNAndVersions(CompositeImpl composite) throws BundleException {
+		AbstractBundle[] bundles = framework.getBundles(composite.getBundleId());
+		// check that we still have valid BSN/Version consistency
+		for (AbstractBundle bundle : bundles) {
+			if (bundle.getBundleId() == 0) // not the system bundle
+				continue;
+			framework.validateNameAndVersion(bundle.getBundleData());
+			if (bundle instanceof CompositeImpl)
+				validateBSNAndVersions((CompositeImpl) bundle);
 		}
 	}
 
@@ -109,7 +139,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		return result;
 	}
 
-	private CompositeInfo createCompositeInfo(long id, boolean setParent) throws BundleException {
+	private CompositeInfo createCompositeInfo(boolean setParent) throws BundleException {
 		Dictionary manifest = bundledata.getManifest();
 		String importPackage = (String) manifest.get(CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY);
 		String exportPackage = (String) manifest.get(CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY);
@@ -132,7 +162,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 		if (setParent) {
 			parentInfo = framework.getCompositeSupport().compositPolicy.getCompositeInfo(bundledata.getCompositeID());
 		}
-		CompositeInfo result = new CompositeInfo(id, bundledata.getSymbolicName(), bundledata.getVersion(), parentInfo, imports, exports, requires, provides, importServiceFilter, exportServiceFilter);
+		CompositeInfo result = new CompositeInfo(bundledata.getBundleID(), bundledata.getSymbolicName(), bundledata.getVersion(), parentInfo, imports, exports, requires, provides, importServiceFilter, exportServiceFilter);
 		if (setParent) {
 			// add the the composite info as a child of the parent.
 			parentInfo.addChild(result);
@@ -194,19 +224,21 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 
 	@Override
 	protected void updateWorkerPrivileged(URLConnection source, AccessControlContext callerContext) throws BundleException {
+		CompositeInfo originalInfo = createCompositeInfo(false);
 		super.updateWorkerPrivileged(source, callerContext);
 		// update the composite info with the new data.
-		CompositeInfo updatedInfo = createCompositeInfo(getBundleId(), false);
+		CompositeInfo updatedInfo = createCompositeInfo(false);
 		compositeInfo.update(updatedInfo);
 		AbstractBundle[] bundles = framework.getBundles(getBundleId());
 		// reload all the constituents 
 		for (AbstractBundle bundle : bundles) {
-			if (bundle.getBundleId() != 0) // not the system bundle
-				try {
-					bundle.reload();
-				} catch (BundleException e) {
-					framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundle, e);
-				}
+			if (bundle.getBundleId() == 0) // not the system bundle
+				continue;
+			try {
+				bundle.reload();
+			} catch (BundleException e) {
+				framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundle, e);
+			}
 		}
 	}
 
