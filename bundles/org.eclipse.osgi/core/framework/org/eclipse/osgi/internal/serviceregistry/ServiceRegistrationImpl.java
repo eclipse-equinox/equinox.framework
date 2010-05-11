@@ -614,7 +614,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 	 * We keep ServiceRegistationImpls in sorted lists such that the highest
 	 * ranked service is at element 0 for quick retrieval.
 	 * 
-	 * @param object The <code>ServiceRegistrationImpl</code> to be compared.
+	 * @param other The <code>ServiceRegistrationImpl</code> to be compared.
 	 * @return Returns a negative integer, zero, or a positive integer if this
 	 *         <code>ServiceRegistrationImpl</code> is greater than, equal to, or
 	 *         less than the specified <code>ServiceRegistrationImpl</code>.

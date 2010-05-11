@@ -377,9 +377,9 @@ public class ServiceRegistry {
 	 * <p>
 	 * A bundle's use of a service is tracked by the bundle's use count of that
 	 * service. Each time a service's service object is returned by
-	 * {@link #getService(ServiceReference)} the context bundle's use count for
+	 * {@link #getService(BundleContextImpl, ServiceReferenceImpl)} the context bundle's use count for
 	 * that service is incremented by one. Each time the service is released by
-	 * {@link #ungetService(ServiceReference)} the context bundle's use count
+	 * {@link #ungetService(BundleContextImpl, ServiceReferenceImpl)} the context bundle's use count
 	 * for that service is decremented by one.
 	 * <p>
 	 * When a bundle's use count for a service drops to zero, the bundle should
@@ -428,7 +428,7 @@ public class ServiceRegistry {
 	 *         and the Java Runtime Environment supports permissions.
 	 * @throws java.lang.IllegalStateException If this BundleContext is no
 	 *         longer valid.
-	 * @see #ungetService(ServiceReference)
+	 * @see #ungetService(BundleContextImpl, ServiceReferenceImpl)
 	 * @see ServiceFactory
 	 */
 	public Object getService(BundleContextImpl context, ServiceReferenceImpl<?> reference) {
