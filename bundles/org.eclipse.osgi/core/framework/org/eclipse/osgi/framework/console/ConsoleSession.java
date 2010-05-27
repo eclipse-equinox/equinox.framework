@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,8 +40,16 @@ public abstract class ConsoleSession implements ServiceFactory {
 	public final void close() {
 		doClose();
 		ServiceRegistration current = sessionRegistration;
-		if (current != null)
-			current.unregister();
+		if (current != null) {
+			sessionRegistration = null;
+			try {
+				current.unregister();
+			} catch (IllegalStateException e) {
+				// This can happen if the service is in the process of being 
+				// unregistered or if another thread unregistered the service.
+				// Ignoring the exception.
+			}
+		}
 	}
 
 	/**
@@ -72,7 +80,7 @@ public abstract class ConsoleSession implements ServiceFactory {
 	 * @noreference This method is not intended to be referenced by clients.
 	 */
 	public final Object getService(Bundle bundle, ServiceRegistration registration) {
-		if (sessionRegistration != null)
+		if (sessionRegistration == null)
 			sessionRegistration = registration;
 		return this;
 	}
