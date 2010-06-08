@@ -473,9 +473,9 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			for (int j = 0; j < filters.length; j++) {
 				Filter filter = null;
 				try {
-					filter = context.createFilter(filters[i]);
+					filter = context.createFilter(filters[j]);
 				} catch (InvalidSyntaxException e) {
-					throw new BundleException("Invalid service sharing policy: " + filters[i], BundleException.MANIFEST_ERROR, e); //$NON-NLS-1$
+					throw new BundleException("Invalid service sharing policy: " + filters[j], BundleException.MANIFEST_ERROR, e); //$NON-NLS-1$
 				}
 				result.add(new ServicePolicyInfo(compositeAffinityName, compositeAffinityVersion, filter));
 			}
