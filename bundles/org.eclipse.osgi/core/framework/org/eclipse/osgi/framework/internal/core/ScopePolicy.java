@@ -26,11 +26,12 @@ public interface ScopePolicy {
 	 * Determines if the specified client should have visibility to the 
 	 * specified service reference.
 	 * @param client the potential client bundle
-	 * @param serviceProvider the service reference to determine visibility of
+	 * @param provider the provider of the service reference
+	 * @param reference the service reference to determine visibility of
 	 * @param clazzes The class names under which the service is registered
 	 * @return true if the client has visibility according to this scope policy; false otherwise
 	 */
-	boolean isVisible(Bundle client, ServiceReference<?> serviceProvider, String clazzes[]);
+	boolean isVisible(Bundle client, Bundle provider, ServiceReference<?> reference, String clazzes[]);
 
 	/**
 	 * Determines if the specified client should have visibility to the 

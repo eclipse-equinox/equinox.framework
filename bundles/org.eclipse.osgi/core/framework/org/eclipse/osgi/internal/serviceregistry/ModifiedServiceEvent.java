@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,13 +11,14 @@
 
 package org.eclipse.osgi.internal.serviceregistry;
 
+import java.util.Set;
 import org.osgi.framework.*;
 
 /**
  * ServiceEvent subtype for MODIFIED_ENDMATCH computation.
  *
  */
-class ModifiedServiceEvent extends ServiceEvent {
+class ModifiedServiceEvent extends ServiceEvent implements ServiceReference {
 	private static final long serialVersionUID = -5373850978543026102L;
 	private final ServiceEvent modified;
 	private final ServiceEvent modifiedEndMatch;
@@ -67,5 +68,30 @@ class ModifiedServiceEvent extends ServiceEvent {
 		 * does case insensitive lookup.
 		 */
 		return filter.matchCase(previousProperties);
+	}
+
+	public Object getProperty(String key) {
+		return previousProperties.get(key);
+	}
+
+	public String[] getPropertyKeys() {
+		Set<String> keys = previousProperties.keySet();
+		return keys.toArray(new String[keys.size()]);
+	}
+
+	public Bundle getBundle() {
+		return modified.getServiceReference().getBundle();
+	}
+
+	public Bundle[] getUsingBundles() {
+		return modified.getServiceReference().getUsingBundles();
+	}
+
+	public boolean isAssignableTo(Bundle bundle, String className) {
+		return modified.getServiceReference().isAssignableTo(bundle, className);
+	}
+
+	public int compareTo(Object reference) {
+		return modified.getServiceReference().compareTo(reference);
 	}
 }

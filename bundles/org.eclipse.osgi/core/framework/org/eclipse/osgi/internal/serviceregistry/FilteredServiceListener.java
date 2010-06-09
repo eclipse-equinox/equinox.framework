@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2009 IBM Corporation and others.
+ * Copyright (c) 2003, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -115,29 +115,38 @@ class FilteredServiceListener implements ServiceListener, ListenerHook.ListenerI
 	private ServiceEvent filterMatch(ServiceEvent delivered, ServiceReferenceImpl<?> reference) {
 		boolean modified = delivered.getType() == ServiceEvent.MODIFIED;
 		ServiceEvent event = modified ? ((ModifiedServiceEvent) delivered).getModifiedEvent() : delivered;
-		if (filter == null) {
-			// check sharing policy
-			return checkSharingPolicy(event, reference);
+		Bundle providerBundle = reference.getRegistration().getBundle();
+		boolean filterMatchCurrent = filter == null || filter.match(reference);
+		boolean policyMatchCurrent = checkSharingPolicy(reference, providerBundle, reference.getClasses());
+		if (!modified) {
+			// Simple case; fire the event if we match.
+			// check the filter and sharing policy
+			return filterMatchCurrent && policyMatchCurrent ? event : null;
 		}
-		if (filter.match(reference)) {
-			// check sharing policy
-			return checkSharingPolicy(event, reference);
-		}
-		if (modified) {
-			ModifiedServiceEvent modifiedServiceEvent = (ModifiedServiceEvent) delivered;
-			if (modifiedServiceEvent.matchPreviousProperties(filter)) {
-				// check sharing policy
-				// TODO we have an issue with dynamically changing sharing policies here, unless we force all constituents to stop/restart on update of policy
-				return checkSharingPolicy(modifiedServiceEvent.getModifiedEndMatchEvent(), reference);
-			}
-		}
-		// does not match and did not match previous properties; do not send event
+
+		// this is for the modified case
+		if (filterMatchCurrent && policyMatchCurrent)
+			// always fire the modified event if both match current
+			return event;
+
+		// We get here if the service has been modified and it no longer is visible
+		// to the listener either because the filter does not match or the policy does not match.
+		// We need to do an extra check to see if this service was previously visible to the listener.
+		// If so then an end match event is fired; otherwise no event is fired.
+		ModifiedServiceEvent modifiedServiceEvent = (ModifiedServiceEvent) delivered;
+		boolean filterMatchPrevious = modifiedServiceEvent.matchPreviousProperties(filter);
+		boolean policyMatchPrevious = checkSharingPolicy(modifiedServiceEvent, providerBundle, reference.getClasses());
+
+		// fire end match only if both the filter and policy previously matched;
+		// otherwise do not fire any event because the service was not visible previously
+		if (filterMatchPrevious && policyMatchPrevious)
+			return modifiedServiceEvent.getModifiedEndMatchEvent();
 		return null;
 	}
 
-	private ServiceEvent checkSharingPolicy(ServiceEvent event, ServiceReferenceImpl<?> reference) {
+	private boolean checkSharingPolicy(ServiceReference<?> reference, Bundle providerBundle, String[] classes) {
 		ScopePolicy scopePolicy = context.getFramework().getCompositeSupport().getCompositePolicy();
-		return scopePolicy.isVisible(context.getBundle(), event.getServiceReference(), reference.getClasses()) ? event : null;
+		return scopePolicy.isVisible(context.getBundle(), providerBundle, reference, classes);
 	}
 
 	/**

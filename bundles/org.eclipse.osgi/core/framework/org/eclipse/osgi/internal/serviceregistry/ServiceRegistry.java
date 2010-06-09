@@ -1076,7 +1076,7 @@ public class ServiceRegistry {
 	}
 
 	boolean isInScope(Bundle bundle, ServiceReferenceImpl<?> reference) {
-		return framework.getCompositeSupport().getCompositePolicy().isVisible(bundle, reference, reference.getClasses());
+		return framework.getCompositeSupport().getCompositePolicy().isVisible(bundle, reference.getRegistration().getBundle(), reference, reference.getClasses());
 	}
 
 	/**

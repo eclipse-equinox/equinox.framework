@@ -14,7 +14,6 @@ import java.net.ContentHandler;
 import org.eclipse.osgi.framework.adaptor.BundleData;
 import org.eclipse.osgi.framework.internal.core.*;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
-import org.eclipse.osgi.internal.serviceregistry.ServiceReferenceImpl;
 import org.eclipse.osgi.service.resolver.BaseDescription;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.*;
@@ -32,16 +31,16 @@ public class CompositePolicy implements ScopePolicy {
 		this.framework = framework;
 	}
 
-	public boolean isVisible(Bundle client, ServiceReference<?> serviceProvider, String[] clazzes) {
-		return noScopes() || isVisible0((AbstractBundle) client, serviceProvider, clazzes, null);
+	public boolean isVisible(Bundle client, Bundle provider, ServiceReference<?> serviceProvider, String[] clazzes) {
+		return noScopes() || isVisible0((AbstractBundle) client, (AbstractBundle) provider, serviceProvider, clazzes, null);
 	}
 
 	public boolean isVisible(BundleDescription client, BaseDescription constraintProvider) {
-		return noScopes() || isVisible0(framework.getBundle(client.getBundleId()), null, null, constraintProvider);
+		return noScopes() || isVisible0(framework.getBundle(client.getBundleId()), null, null, null, constraintProvider);
 	}
 
 	public boolean isVisible(Bundle client, BaseDescription constraintProvider) {
-		return noScopes() || isVisible0((AbstractBundle) client, null, null, constraintProvider);
+		return noScopes() || isVisible0((AbstractBundle) client, null, null, null, constraintProvider);
 	}
 
 	public boolean isVisible(BundleData client, BundleData provider) {
@@ -56,17 +55,17 @@ public class CompositePolicy implements ScopePolicy {
 		return rootCompositeInfo.noChildren();
 	}
 
-	private boolean isVisible0(AbstractBundle client, ServiceReference<?> serviceProvider, String[] clazzes, BaseDescription constraintProvider) {
+	private boolean isVisible0(AbstractBundle client, AbstractBundle providerBundle, ServiceReference<?> serviceProvider, String[] clazzes, BaseDescription constraintProvider) {
 		if (client == null)
 			throw new IllegalArgumentException("Client cannot be null"); //$NON-NLS-1$
 		if (serviceProvider == null && constraintProvider == null)
 			throw new IllegalArgumentException("Provider cannot be null"); //$NON-NLS-1$
-		AbstractBundle providerBundle = null;
-		if (serviceProvider != null)
-			// Need to access internals incase the reference has been unregistered (in this case getBundle returns null)
-			providerBundle = (AbstractBundle) ((ServiceReferenceImpl<?>) serviceProvider).getRegistration().getRegisteringBundle();
-		else
+		if (serviceProvider != null) {
+			if (providerBundle == null)
+				throw new IllegalArgumentException("The service provider bundle must be specified."); //$NON-NLS-1$
+		} else {
 			providerBundle = framework.getBundle(constraintProvider.getSupplier().getBundleId());
+		}
 		if (providerBundle == null)
 			return false; // we assume the bundle is uninstalled and should not be visible
 		return isVisible0(client.getBundleId(), client.getCompositeId(), providerBundle.getBundleId(), providerBundle.getCompositeId(), serviceProvider, clazzes, constraintProvider);
