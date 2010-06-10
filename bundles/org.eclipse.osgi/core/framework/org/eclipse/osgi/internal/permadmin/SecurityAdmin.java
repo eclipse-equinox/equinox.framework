@@ -52,9 +52,12 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 	private final Framework framework;
 	private final PermissionInfo[] impliedPermissionInfos;
 	private final long scopeId;
+	// only used for test purposes
+	private final EquinoxSecurityManager testSM;
 
-	private SecurityAdmin(Framework framework, PermissionInfo[] impliedPermissionInfos, PermissionInfoCollection permAdminDefaults, long scopeId) {
+	private SecurityAdmin(Framework framework, PermissionInfo[] impliedPermissionInfos, PermissionInfoCollection permAdminDefaults, long scopeId, EquinoxSecurityManager testSM) {
 		this.framework = framework;
+		this.testSM = testSM;
 		this.impliedPermissionInfos = impliedPermissionInfos;
 		this.permAdminDefaults = permAdminDefaults;
 		this.permissionStorage = null;
@@ -62,7 +65,12 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 	}
 
 	public SecurityAdmin(Framework framework, PermissionStorage permissionStorage, long scopeId) throws IOException {
+		this(framework, permissionStorage, scopeId, null);
+	}
+
+	public SecurityAdmin(Framework framework, PermissionStorage permissionStorage, long scopeId, EquinoxSecurityManager testSM) throws IOException {
 		this.framework = framework;
+		this.testSM = testSM;
 		permissionStorage = new SecurePermissionStorage(permissionStorage);
 		this.permissionStorage = permissionStorage;
 		this.impliedPermissionInfos = SecurityAdmin.getPermissionInfos(getClass().getResource(Constants.OSGI_BASE_IMPLIED_PERMISSIONS), framework);
@@ -279,7 +287,7 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 	private SecurityAdmin getSnapShot() {
 		SecurityAdmin sa;
 		synchronized (lock) {
-			sa = new SecurityAdmin(framework, impliedPermissionInfos, permAdminDefaults, scopeId);
+			sa = new SecurityAdmin(framework, impliedPermissionInfos, permAdminDefaults, scopeId, testSM);
 			SecurityRow[] rows = condAdminTable.getRows();
 			SecurityRow[] rowsSnapShot = new SecurityRow[rows.length];
 			for (int i = 0; i < rows.length; i++)
@@ -412,6 +420,8 @@ public final class SecurityAdmin implements PermissionAdmin, ConditionalPermissi
 	}
 
 	EquinoxSecurityManager getSupportedSecurityManager() {
+		if (testSM != null)
+			return testSM;
 		return getSupportedSystemSecurityManager();
 	}
 
