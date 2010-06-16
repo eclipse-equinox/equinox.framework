@@ -32,7 +32,7 @@ import java.util.EventObject;
  * 
  * @Immutable
  * @see FrameworkListener
- * @version $Revision: 8271 $
+ * @version $Id: 5e35a44f59290d8b1faf1310d144323ba7ebaa1d $
  */
 
 public class FrameworkEvent extends EventObject {

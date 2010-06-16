@@ -58,7 +58,7 @@ import java.util.Map;
  * 
  * @since 1.3
  * @ThreadSafe
- * @version $Revision: 8338 $
+ * @version $Id: 914b70d0244d2e7d3237f97861f0c0b828fe1a92 $
  */
 
 public final class BundlePermission extends BasicPermission {

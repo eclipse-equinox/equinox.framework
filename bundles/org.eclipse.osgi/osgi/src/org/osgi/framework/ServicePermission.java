@@ -51,7 +51,7 @@ import java.util.Map;
  * <code>ServicePermission</code> to get the specific service.
  * 
  * @ThreadSafe
- * @version $Revision: 8338 $
+ * @version $Id: c45fd8b0f10d8174ae66a3a804e8ed20185768aa $
  */
 
 public final class ServicePermission extends BasicPermission {

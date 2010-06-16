@@ -31,7 +31,7 @@ package org.osgi.framework;
  * <p>
  * This exception conforms to the general purpose exception chaining mechanism.
  * 
- * @version $Revision: 6518 $
+ * @version $Id: f37d384e19c196178805f15fc9ff030cf11cb58d $
  * @since 1.5
  */
 

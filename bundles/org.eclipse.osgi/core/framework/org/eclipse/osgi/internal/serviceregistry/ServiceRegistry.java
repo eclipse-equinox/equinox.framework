@@ -159,7 +159,7 @@ public class ServiceRegistry {
 	 * @see ServiceRegistration
 	 * @see ServiceFactory
 	 */
-	public ServiceRegistrationImpl<?> registerService(BundleContextImpl context, String[] clazzes, Object service, Dictionary<String, Object> properties) {
+	public ServiceRegistrationImpl<?> registerService(BundleContextImpl context, String[] clazzes, Object service, Dictionary<String, ?> properties) {
 		if (service == null) {
 			if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
 				Debug.println("Service object is null"); //$NON-NLS-1$

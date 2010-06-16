@@ -73,7 +73,7 @@ import java.util.Map;
  * bundle id.
  * 
  * @ThreadSafe
- * @version $Revision: 8569 $
+ * @version $Id: d60d1e52f20d538dbbe68eb58c1c30f13391b611 $
  */
 public interface Bundle extends Comparable<Bundle> {
 	/**

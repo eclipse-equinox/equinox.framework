@@ -89,7 +89,7 @@ import java.util.Map;
  * Filter attribute names are processed in a case sensitive manner.
  * 
  * @ThreadSafe
- * @version $Revision: 8912 $
+ * @version $Id: f07ad80b4d397b6726b11e9731081a94d87da729 $
  */
 
 public final class AdminPermission extends BasicPermission {

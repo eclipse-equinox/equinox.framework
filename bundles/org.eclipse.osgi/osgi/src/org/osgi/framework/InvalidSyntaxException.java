@@ -28,7 +28,7 @@ package org.osgi.framework;
  * <p>
  * This exception conforms to the general purpose exception chaining mechanism.
  * 
- * @version $Revision: 8344 $
+ * @version $Id: 7171159a5db48459afb88859b26fda2fc98e5bbe $
  */
 
 public class InvalidSyntaxException extends Exception {

@@ -35,7 +35,7 @@ import java.util.EventListener;
  * 
  * @see FrameworkEvent
  * @NotThreadSafe
- * @version $Revision: 5673 $
+ * @version $Id: 4588fba69bf30c393121cfb55926b92d36af7658 $
  */
 
 public interface FrameworkListener extends EventListener {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2009 IBM Corporation and others.
+ * Copyright (c) 2003, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -513,7 +513,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 * @see ServiceRegistration
 	 * @see ServiceFactory
 	 */
-	public ServiceRegistration<?> registerService(String[] clazzes, Object service, Dictionary<String, Object> properties) {
+	public ServiceRegistration<?> registerService(String[] clazzes, Object service, Dictionary<String, ?> properties) {
 		checkValid();
 
 		return framework.getServiceRegistry().registerService(this, clazzes, service, properties);
@@ -531,7 +531,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 	 *
 	 * @see #registerService(java.lang.String[], java.lang.Object, java.util.Dictionary)
 	 */
-	public ServiceRegistration<?> registerService(String clazz, Object service, Dictionary<String, Object> properties) {
+	public ServiceRegistration<?> registerService(String clazz, Object service, Dictionary<String, ?> properties) {
 		String[] clazzes = new String[] {clazz};
 
 		return registerService(clazzes, service, properties);
@@ -1044,7 +1044,7 @@ public class BundleContextImpl implements BundleContext, EventDispatcher {
 		return framework;
 	}
 
-	public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, Object> properties) {
+	public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties) {
 		@SuppressWarnings("unchecked")
 		ServiceRegistration<S> registration = (ServiceRegistration<S>) registerService(clazz.getName(), service, properties);
 		return registration;

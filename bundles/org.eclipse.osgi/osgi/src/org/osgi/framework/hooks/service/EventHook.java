@@ -29,7 +29,7 @@ import org.osgi.framework.ServiceEvent;
  * (register, modify, and unregister service) operations.
  * 
  * @ThreadSafe
- * @version $Revision: 8093 $
+ * @version $Id: db372723645aa4e601e2dc817b37b10280892854 $
  */
 
 public interface EventHook {

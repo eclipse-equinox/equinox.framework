@@ -112,7 +112,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 	/**
 	 * Call after constructing this object to complete the registration.
 	 */
-	void register(Dictionary<String, Object> props) {
+	void register(Dictionary<String, ?> props) {
 		final ServiceReferenceImpl<S> ref;
 		synchronized (registry) {
 			context.checkValid();
@@ -152,7 +152,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 	 * @exception IllegalArgumentException If the <tt>properties</tt>
 	 * parameter contains case variants of the same key name.
 	 */
-	public void setProperties(Dictionary<String, Object> props) {
+	public void setProperties(Dictionary<String, ?> props) {
 		final ServiceReferenceImpl<S> ref;
 		final ServiceProperties previousProperties;
 		synchronized (registry) {
@@ -289,7 +289,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 	 * @return A Properties object for this ServiceRegistration.
 	 */
 	/* @GuardedBy("registrationLock") */
-	private ServiceProperties createProperties(Dictionary<String, Object> p) {
+	private ServiceProperties createProperties(Dictionary<String, ?> p) {
 		assert Thread.holdsLock(registrationLock);
 		ServiceProperties props = new ServiceProperties(p);
 

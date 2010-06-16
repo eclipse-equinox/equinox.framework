@@ -56,7 +56,7 @@ import java.util.Map;
  * which is deprecated, implies the <code>import</code> action.
  * 
  * @ThreadSafe
- * @version $Revision: 8338 $
+ * @version $Id: 978eff3f6d36ba4808be15bcf2a9a802e888b5f7 $
  */
 
 public final class PackagePermission extends BasicPermission {

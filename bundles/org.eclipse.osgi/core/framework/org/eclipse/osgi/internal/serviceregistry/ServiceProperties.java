@@ -27,7 +27,7 @@ class ServiceProperties extends Headers<String, Object> {
 	 *
 	 * @param props The properties for this service.
 	 */
-	private ServiceProperties(int size, Dictionary<String, Object> props) {
+	private ServiceProperties(int size, Dictionary<String, ?> props) {
 		super(size);
 
 		if (props == null) {
@@ -53,7 +53,7 @@ class ServiceProperties extends Headers<String, Object> {
 	 *
 	 * @param props The properties for this service.
 	 */
-	ServiceProperties(Dictionary<String, Object> props) {
+	ServiceProperties(Dictionary<String, ?> props) {
 		this((props == null) ? 2 : props.size() + 2, props);
 	}
 

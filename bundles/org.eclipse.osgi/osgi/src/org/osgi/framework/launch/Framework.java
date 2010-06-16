@@ -34,7 +34,7 @@ import org.osgi.framework.FrameworkEvent;
  * instance.
  * 
  * @ThreadSafe
- * @version $Revision: 8906 $
+ * @version $Id: 9f12a777696295ad9d6e9134c40dccfd7ae1df98 $
  */
 public interface Framework extends Bundle {
 
@@ -42,6 +42,8 @@ public interface Framework extends Bundle {
 	 * Initialize this Framework. After calling this method, this Framework
 	 * must:
 	 * <ul>
+	 * <li>Have generated a new {@link Constants#FRAMEWORK_UUID framework UUID}.
+	 * </li>
 	 * <li>Be in the {@link #STARTING} state.</li>
 	 * <li>Have a valid Bundle Context.</li>
 	 * <li>Be at start level 0.</li>
