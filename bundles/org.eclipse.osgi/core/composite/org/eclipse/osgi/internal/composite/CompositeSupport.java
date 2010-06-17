@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import java.security.AllPermission;
 import java.util.*;
 import java.util.jar.*;
 import org.eclipse.osgi.framework.internal.core.*;
+import org.eclipse.osgi.service.composite.CompositePolicyAdmin;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
@@ -22,6 +23,7 @@ import org.osgi.service.composite.*;
 
 public class CompositeSupport implements ServiceFactory, SynchronousBundleListener {
 	private static final String[] INVALID_COMPOSITE_HEADERS = new String[] {Constants.DYNAMICIMPORT_PACKAGE, Constants.IMPORT_PACKAGE, Constants.EXPORT_PACKAGE, Constants.REQUIRE_BUNDLE, Constants.FRAGMENT_HOST, Constants.BUNDLE_NATIVECODE, Constants.BUNDLE_CLASSPATH, Constants.BUNDLE_ACTIVATOR, Constants.BUNDLE_LOCALIZATION, Constants.BUNDLE_ACTIVATIONPOLICY};
+	private static final String[] VALID_POLICY_UPDATE_HEADERS = new String[] {CompositeConstants.COMPOSITE_PACKAGE_IMPORT_POLICY, CompositeConstants.COMPOSITE_BUNDLE_REQUIRE_POLICY, CompositeConstants.COMPOSITE_SERVICE_IMPORT_POLICY, CompositeConstants.COMPOSITE_PACKAGE_EXPORT_POLICY, CompositeConstants.COMPOSITE_SERVICE_EXPORT_POLICY};
 	public static String COMPOSITE_CONFIGURATION = "compositeConfig.properties"; //$NON-NLS-1$
 
 	final Framework framework;
@@ -70,7 +72,7 @@ public class CompositeSupport implements ServiceFactory, SynchronousBundleListen
 		composite.addConstituent(bundle.getBundleDescription());
 	}
 
-	class EquinoxCompositeAdmin implements CompositeAdmin {
+	class EquinoxCompositeAdmin implements CompositeAdmin, CompositePolicyAdmin {
 		private final BundleHost bundle;
 
 		public EquinoxCompositeAdmin(BundleHost bundle) {
@@ -105,6 +107,10 @@ public class CompositeSupport implements ServiceFactory, SynchronousBundleListen
 			} catch (IOException e) {
 				throw new BundleException("Error creating composite bundle", e); //$NON-NLS-1$
 			}
+		}
+
+		public void updateSharingPolicy(CompositeBundle composite, Map<String, String> policy) throws BundleException {
+			((CompositeImpl) composite).dynamicPolicyUpdate(policy);
 		}
 	}
 
@@ -146,7 +152,8 @@ public class CompositeSupport implements ServiceFactory, SynchronousBundleListen
 		attributes.putValue(Constants.BUNDLE_MANIFESTVERSION, manifestVersion);
 		for (Iterator<Map.Entry<String, String>> entries = compositeManifest.entrySet().iterator(); entries.hasNext();) {
 			Map.Entry<String, String> entry = entries.next();
-			attributes.putValue(entry.getKey(), entry.getValue());
+			if (entry.getValue() != null)
+				attributes.putValue(entry.getKey(), entry.getValue());
 		}
 		return manifest;
 	}
@@ -181,5 +188,25 @@ public class CompositeSupport implements ServiceFactory, SynchronousBundleListen
 				throw new BundleException("Invalid Bundle-ManifestVersion: " + manifestVersion); //$NON-NLS-1$
 			}
 		}
+	}
+
+	public static Map<String, String> validateUpdatePolicyHeaders(Dictionary manifest, Map<String, String> policy) throws BundleException {
+		int size = 0;
+		Map<String, String> result = new HashMap<String, String>(manifest.size());
+		for (Enumeration<String> keys = manifest.keys(); keys.hasMoreElements();) {
+			String key = keys.nextElement();
+			result.put(key, (String) manifest.get(key));
+		}
+		for (String header : VALID_POLICY_UPDATE_HEADERS) {
+			result.remove(header);
+			if (policy.containsKey(header)) {
+				result.put(header, policy.get(header));
+				size++;
+			}
+		}
+		if (size < policy.size())
+			throw new BundleException("Invalid headers for appending to sharing policy."); //$NON-NLS-1$
+
+		return result;
 	}
 }

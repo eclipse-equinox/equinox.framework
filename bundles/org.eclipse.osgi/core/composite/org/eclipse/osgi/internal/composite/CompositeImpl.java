@@ -39,11 +39,9 @@ import org.osgi.service.condpermadmin.ConditionalPermissionUpdate;
 
 public class CompositeImpl extends BundleHost implements CompositeBundle {
 	static final StateObjectFactory stateFactory = new StateObjectFactoryImpl();
-	private final ThreadLocal<Boolean> updating = new ThreadLocal<Boolean>() {
-		public Boolean initialValue() {
-			return Boolean.FALSE;
-		}
-	};
+	private static final Object UPDATING_COMPOSITE = new Object();
+	private static final Object UPDATING_POLICY = new Object();
+	private final ThreadLocal<Object> updating = new ThreadLocal<Object>();
 
 	private final CompositeSystemBundle compositeSystemBundle;
 	private final CompositeInfo compositeInfo;
@@ -194,6 +192,10 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	}
 
 	public void update(Map<String, String> compositeManifest) throws BundleException {
+		doUpdate(compositeManifest, UPDATING_COMPOSITE);
+	}
+
+	private void doUpdate(Map<String, String> compositeManifest, Object type) throws BundleException {
 		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
 			Debug.println("update location " + bundledata.getLocation()); //$NON-NLS-1$
 			Debug.println("   from: " + compositeManifest); //$NON-NLS-1$
@@ -212,44 +214,59 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 			config.load(configURL.openStream());
 			// get an in memory input stream to jar content of the composite we want to install
 			InputStream content = CompositeSupport.getCompositeInput(config, compositeManifest);
-			updating.set(true);
+			updating.set(type);
 			// update with the new content
 			super.update(content);
 		} catch (IOException e) {
 			throw new BundleException("Error creating composite bundle", e); //$NON-NLS-1$
 		} finally {
-			updating.set(false);
+			updating.set(null);
 		}
+	}
+
+	void dynamicPolicyUpdate(Map<String, String> policy) throws BundleException {
+		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+			Debug.println("Dynamic update to sharing policy " + bundledata.getLocation()); //$NON-NLS-1$
+			Debug.println("   from: " + policy); //$NON-NLS-1$
+		}
+
+		// make sure the policy is valid, should only contain import sharing policies
+		policy = CompositeSupport.validateUpdatePolicyHeaders(getHeaders(""), policy); //$NON-NLS-1$
+		doUpdate(policy, UPDATING_POLICY);
 	}
 
 	@Override
 	protected void updateWorkerPrivileged(URLConnection source, AccessControlContext callerContext) throws BundleException {
-		CompositeInfo originalInfo = createCompositeInfo(false);
 		super.updateWorkerPrivileged(source, callerContext);
 		// update the composite info with the new data.
 		CompositeInfo updatedInfo = createCompositeInfo(false);
 		compositeInfo.update(updatedInfo);
-		AbstractBundle[] bundles = framework.getBundles(getBundleId());
-		// reload all the constituents 
-		for (AbstractBundle bundle : bundles) {
-			if (bundle.getBundleId() == 0) // not the system bundle
-				continue;
-			try {
-				bundle.reload();
-			} catch (BundleException e) {
-				framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundle, e);
+		if (updating.get() != UPDATING_POLICY) {
+			AbstractBundle[] bundles = framework.getBundles(getBundleId());
+			// reload all the constituents 
+			for (AbstractBundle bundle : bundles) {
+				if (bundle.getBundleId() == 0) // not the system bundle
+					continue;
+				try {
+					bundle.reload();
+				} catch (BundleException e) {
+					framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundle, e);
+				}
 			}
 		}
 	}
 
 	protected void startHook() {
-		startLevelManager.doSetStartLevel(beginningStartLevel);
+		if (updating.get() != UPDATING_POLICY)
+			startLevelManager.doSetStartLevel(beginningStartLevel);
 	}
 
 	protected void stopHook() {
-		if (updating.get())
+		if (updating.get() == UPDATING_COMPOSITE)
 			startLevelManager.update();
-		else
+		else if (updating.get() == UPDATING_POLICY) {
+			// nothing for APPENDING
+		} else
 			startLevelManager.shutdown();
 	}
 
