@@ -29,6 +29,8 @@ import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
 import org.eclipse.osgi.internal.permadmin.SecurityAdmin;
 import org.eclipse.osgi.internal.resolver.StateBuilder;
 import org.eclipse.osgi.internal.resolver.StateObjectFactoryImpl;
+import org.eclipse.osgi.internal.serviceregistry.ServicePolicyChangeEvent;
+import org.eclipse.osgi.internal.serviceregistry.ServiceRegistry;
 import org.eclipse.osgi.service.resolver.*;
 import org.eclipse.osgi.util.ManifestElement;
 import org.osgi.framework.*;
@@ -237,11 +239,27 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 
 	@Override
 	protected void updateWorkerPrivileged(URLConnection source, AccessControlContext callerContext) throws BundleException {
-		super.updateWorkerPrivileged(source, callerContext);
-		// update the composite info with the new data.
-		CompositeInfo updatedInfo = createCompositeInfo(false);
-		compositeInfo.update(updatedInfo);
-		if (updating.get() != UPDATING_POLICY) {
+		Object updateType = updating.get();
+		ServiceRegistry serviceRegistry = framework.getServiceRegistry();
+		List<ServicePolicyChangeEvent> syntheticEvents = null;
+		synchronized (serviceRegistry) {
+			boolean[] prePolicyUpdateFlag = {true};
+			if (updateType == UPDATING_POLICY) {
+				syntheticEvents = serviceRegistry.getServicePropertyChangeEvents(prePolicyUpdateFlag);
+				collectListeners(syntheticEvents, serviceRegistry);
+			}
+			super.updateWorkerPrivileged(source, callerContext);
+			// update the composite info with the new data.
+			CompositeInfo updatedInfo = createCompositeInfo(false);
+			compositeInfo.update(updatedInfo);
+			if (updateType == UPDATING_POLICY) {
+				prePolicyUpdateFlag[0] = false;
+				collectListeners(syntheticEvents, serviceRegistry);
+			}
+		}
+		if (updateType == UPDATING_POLICY) {
+			fireSyntheticEvents(syntheticEvents, serviceRegistry);
+		} else {
 			AbstractBundle[] bundles = framework.getBundles(getBundleId());
 			// reload all the constituents 
 			for (AbstractBundle bundle : bundles) {
@@ -253,6 +271,18 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 					framework.publishFrameworkEvent(FrameworkEvent.ERROR, bundle, e);
 				}
 			}
+		}
+	}
+
+	private void fireSyntheticEvents(List<ServicePolicyChangeEvent> syntheticEvents, ServiceRegistry serviceRegistry) {
+		for (ServicePolicyChangeEvent event : syntheticEvents) {
+			event.fireSyntheticEvents(serviceRegistry);
+		}
+	}
+
+	private void collectListeners(List<ServicePolicyChangeEvent> syntheticEvents, ServiceRegistry registry) {
+		for (ServicePolicyChangeEvent event : syntheticEvents) {
+			registry.publishServiceEvent(event);
 		}
 	}
 

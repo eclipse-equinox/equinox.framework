@@ -14,6 +14,7 @@ package org.eclipse.osgi.framework.internal.core;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import org.eclipse.osgi.framework.debug.FrameworkDebugOptions;
+import org.eclipse.osgi.service.composite.CompositePolicyAdmin;
 import org.osgi.framework.*;
 import org.osgi.service.composite.CompositeAdmin;
 import org.osgi.service.condpermadmin.ConditionalPermissionAdmin;
@@ -51,7 +52,7 @@ public class SystemBundleActivator implements BundleActivator {
 			securityAdmin = register(new String[] {PermissionAdmin.class.getName(), ConditionalPermissionAdmin.class.getName()}, factory, null);
 		}
 		if (framework.compositeSupport != null)
-			compositeAdmin = register(new String[] {CompositeAdmin.class.getName()}, framework.compositeSupport, null);
+			compositeAdmin = register(new String[] {CompositeAdmin.class.getName(), CompositePolicyAdmin.class.getName()}, framework.compositeSupport, null);
 		FrameworkDebugOptions dbgOptions = null;
 		if ((dbgOptions = FrameworkDebugOptions.getDefault()) != null) {
 			dbgOptions.start(context);

@@ -597,6 +597,13 @@ public class ServiceRegistry {
 		return references.toArray(new ServiceReferenceImpl[size]);
 	}
 
+	public synchronized List<ServicePolicyChangeEvent> getServicePropertyChangeEvents(boolean[] prePolicyChangeFlag) {
+		List<ServicePolicyChangeEvent> result = new ArrayList<ServicePolicyChangeEvent>(allPublishedServices.size());
+		for (ServiceRegistrationImpl<?> registration : allPublishedServices)
+			result.add(new ServicePolicyChangeEvent(registration.getReference(), registration.getProperties(), prePolicyChangeFlag));
+		return result;
+	}
+
 	/**
 	 * Called when the BundleContext is closing to unregister all services
 	 * currently registered by the bundle.
@@ -740,7 +747,7 @@ public class ServiceRegistry {
 	 * 
 	 * @param event The ServiceEvent to deliver.
 	 */
-	void publishServiceEvent(final ServiceEvent event) {
+	public void publishServiceEvent(final ServiceEvent event) {
 		if (System.getSecurityManager() == null) {
 			publishServiceEventPrivileged(event);
 		} else {

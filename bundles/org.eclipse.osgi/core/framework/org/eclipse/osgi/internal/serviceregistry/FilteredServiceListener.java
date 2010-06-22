@@ -100,8 +100,10 @@ class FilteredServiceListener implements ServiceListener, ListenerHook.ListenerI
 				String listenerName = listener.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(listener)); //$NON-NLS-1$
 				Debug.println("dispatchFilteredServiceEvent(" + listenerName + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-
-			listener.serviceChanged(event);
+			if (event.getType() == ServiceEvent.MODIFIED && (event instanceof ServicePolicyChangeEvent))
+				((ServicePolicyChangeEvent) event).addListener(this);
+			else
+				listener.serviceChanged(event);
 		}
 	}
 
@@ -114,7 +116,11 @@ class FilteredServiceListener implements ServiceListener, ListenerHook.ListenerI
 	 */
 	private ServiceEvent filterMatch(ServiceEvent delivered, ServiceReferenceImpl<?> reference) {
 		boolean modified = delivered.getType() == ServiceEvent.MODIFIED;
-		ServiceEvent event = modified ? ((ModifiedServiceEvent) delivered).getModifiedEvent() : delivered;
+		ServiceEvent event;
+		if (!modified || delivered instanceof ServicePolicyChangeEvent)
+			event = delivered;
+		else
+			event = ((ModifiedServiceEvent) delivered).getModifiedEvent();
 		Bundle providerBundle = reference.getRegistration().getBundle();
 		boolean filterMatchCurrent = filter == null || filter.match(reference);
 		boolean policyMatchCurrent = checkSharingPolicy(reference, providerBundle, reference.getClasses());
@@ -215,5 +221,10 @@ class FilteredServiceListener implements ServiceListener, ListenerHook.ListenerI
 			return null;
 		}
 		return "(" + Constants.OBJECTCLASS + "=" + className + ")"; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+	}
+
+	void fireSyntheticEvent(ServiceEvent event) {
+		// no checks necessary, this event must be fired
+		listener.serviceChanged(event);
 	}
 }
