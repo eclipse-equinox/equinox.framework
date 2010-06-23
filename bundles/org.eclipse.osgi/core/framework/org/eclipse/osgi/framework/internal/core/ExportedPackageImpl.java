@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2008 IBM Corporation and others.
+ * Copyright (c) 2003, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,15 +11,14 @@
 package org.eclipse.osgi.framework.internal.core;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import org.eclipse.osgi.internal.loader.*;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.ExportPackageDescription;
 import org.osgi.framework.*;
 import org.osgi.framework.Constants;
-import org.osgi.service.packageadmin.*;
+import org.osgi.service.packageadmin.ExportedPackage;
 
-public class ExportedPackageImpl implements ExportedPackage, PackageExport {
+public class ExportedPackageImpl implements ExportedPackage {
 
 	private final String specVersion;
 	private final ExportPackageDescription exportedPackage;
@@ -96,15 +95,5 @@ public class ExportedPackageImpl implements ExportedPackage, PackageExport {
 			result.append("=\"").append(specVersion).append("\""); //$NON-NLS-1$//$NON-NLS-2$
 		}
 		return result.toString();
-	}
-
-	public BundleWiring getExporter() {
-		// TODO need to implement
-		throw new UnsupportedOperationException("need to implement");
-	}
-
-	public Collection<BundleWiring> getImporters() {
-		// TODO need to implement
-		throw new UnsupportedOperationException("need to implement");
 	}
 }

@@ -12,8 +12,6 @@
 package org.eclipse.osgi.framework.internal.core;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
 import org.eclipse.osgi.internal.composite.CompositeImpl;
 import org.eclipse.osgi.internal.permadmin.SecurityAdmin;
 import org.osgi.framework.*;
@@ -126,31 +124,6 @@ public class CoreServicesFactory implements ServiceFactory {
 
 		public boolean resolveBundles(Bundle[] bundles) {
 			return packageAdminImpl.resolveBundles(bundles);
-		}
-
-		public Collection<Bundle> getDependencyClosure(Collection<Bundle> bundles) {
-			// TODO need to implement
-			throw new UnsupportedOperationException("need to implement");
-		}
-
-		public List<PackageExport> getPackageExports(String name) {
-			// TODO need to implement
-			throw new UnsupportedOperationException("need to implement");
-		}
-
-		public Collection<Bundle> getRemovalPendingBundles() {
-			// TODO need to implement
-			throw new UnsupportedOperationException("need to implement");
-		}
-
-		public void refreshBundles(Collection<Bundle> bundles, FrameworkListener... listeners) {
-			// TODO need to implement
-			throw new UnsupportedOperationException("need to implement");
-		}
-
-		public boolean resolveBundles(Collection<Bundle> bundles) {
-			// TODO need to implement
-			throw new UnsupportedOperationException("need to implement");
 		}
 	}
 }

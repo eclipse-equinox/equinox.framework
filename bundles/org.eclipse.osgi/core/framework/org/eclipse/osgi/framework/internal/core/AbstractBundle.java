@@ -27,14 +27,13 @@ import org.eclipse.osgi.service.resolver.ResolverError;
 import org.eclipse.osgi.signedcontent.*;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
-import org.osgi.service.startlevel.BundleStartLevel;
 
 /**
  * This object is given out to bundles and wraps the internal Bundle object. It
  * is destroyed when a bundle is uninstalled and reused if a bundle is updated.
  * This class is abstract and is extended by BundleHost and BundleFragment.
  */
-public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, KeyedElement, BundleStartLevel {
+public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, KeyedElement {
 	protected static final InputStream RELOAD = new ByteArrayInputStream(new byte[0]);
 	/** The Framework this bundle is part of */
 	protected final Framework framework;
