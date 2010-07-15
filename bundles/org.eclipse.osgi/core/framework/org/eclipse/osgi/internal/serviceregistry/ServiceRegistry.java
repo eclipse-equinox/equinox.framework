@@ -1133,12 +1133,14 @@ public class ServiceRegistry {
 				if (findHook instanceof FindHook) { // if the hook is usable
 					// only allow hooks that are visible to the context's bundle
 					ServiceReferenceImpl<?> reference;
+					Bundle bundle;
 					try {
 						reference = registration.getReferenceImpl();
+						bundle = context.getBundle();
 					} catch (IllegalStateException e) {
-						continue; // service unregistered after we got it
+						continue; // service unregistered or bundle stopped after we got it
 					}
-					if (isInScope(context.getBundle(), reference)) {
+					if (isInScope(bundle, reference)) {
 						((FindHook) findHook).find(context, clazz, filterstring, allservices, result);
 					}
 				}
@@ -1344,7 +1346,13 @@ public class ServiceRegistry {
 						continue; // service unregistered after we got it
 					}
 					// All listeners here are from the same context and there is at least one
-					Bundle listenerBundle = listeners.iterator().next().getBundleContext().getBundle();
+					Bundle listenerBundle;
+					try {
+						listenerBundle = listeners.iterator().next().getBundleContext().getBundle();
+					} catch (IllegalStateException e) {
+						// this can happen if the bundle is stopped.
+						continue;
+					}
 					if (isInScope(listenerBundle, reference)) {
 						if (added) {
 							((ListenerHook) listenerHook).added(listeners);
