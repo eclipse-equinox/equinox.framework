@@ -113,7 +113,7 @@ public class ServiceUse<S> {
 			return cachedService;
 		}
 
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("getService[factory=" + registration.getBundle() + "](" + context.getBundleImpl() + "," + registration + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		final S service;
@@ -124,7 +124,7 @@ public class ServiceUse<S> {
 				}
 			});
 		} catch (Throwable t) {
-			if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+			if (Debug.DEBUG_SERVICES) {
 				Debug.println(factory + ".getService() exception: " + t.getMessage()); //$NON-NLS-1$
 				Debug.printStackTrace(t);
 			}
@@ -136,7 +136,7 @@ public class ServiceUse<S> {
 		}
 
 		if (service == null) {
-			if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+			if (Debug.DEBUG_SERVICES) {
 				Debug.println(factory + ".getService() returned null."); //$NON-NLS-1$
 			}
 
@@ -148,7 +148,7 @@ public class ServiceUse<S> {
 		String[] clazzes = registration.getClasses();
 		String invalidService = ServiceRegistry.checkServiceClass(clazzes, service);
 		if (invalidService != null) {
-			if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+			if (Debug.DEBUG_SERVICES) {
 				Debug.println("Service object is not an instanceof " + invalidService); //$NON-NLS-1$
 			}
 			ServiceException se = new ServiceException(NLS.bind(Msg.SERVICE_FACTORY_NOT_INSTANCEOF_CLASS_EXCEPTION, factory.getClass().getName(), invalidService), ServiceException.FACTORY_ERROR);
@@ -209,7 +209,7 @@ public class ServiceUse<S> {
 		final S service = cachedService;
 		cachedService = null;
 
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("ungetService[factory=" + registration.getBundle() + "](" + context.getBundleImpl() + "," + registration + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		try {
@@ -220,7 +220,7 @@ public class ServiceUse<S> {
 				}
 			});
 		} catch (Throwable t) {
-			if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+			if (Debug.DEBUG_GENERAL) {
 				Debug.println(factory + ".ungetService() exception"); //$NON-NLS-1$
 				Debug.printStackTrace(t);
 			}
@@ -251,7 +251,7 @@ public class ServiceUse<S> {
 		cachedService = null;
 		useCount = 0;
 
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("releaseService[factory=" + registration.getBundle() + "](" + context.getBundleImpl() + "," + registration + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		try {
@@ -262,7 +262,7 @@ public class ServiceUse<S> {
 				}
 			});
 		} catch (Throwable t) {
-			if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+			if (Debug.DEBUG_SERVICES) {
 				Debug.println(factory + ".ungetService() exception"); //$NON-NLS-1$
 				Debug.printStackTrace(t);
 			}

@@ -243,7 +243,7 @@ public class PackageAdminImpl {
 			BundleDelta[] delta = systemState.resolve(descriptions).getChanges();
 			processDelta(delta, refreshPackages, systemState);
 		} catch (Throwable t) {
-			if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
+			if (Debug.DEBUG_PACKAGEADMIN) {
 				Debug.println("PackageAdminImpl.doResolveBundles: Error occured :"); //$NON-NLS-1$
 				Debug.printStackTrace(t);
 			}
@@ -287,7 +287,7 @@ public class PackageAdminImpl {
 	}
 
 	private void resumeBundles(AbstractBundle[] bundles, boolean refreshPackages, int[] previousStates) {
-		if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
+		if (Debug.DEBUG_PACKAGEADMIN) {
 			Debug.println("PackageAdminImpl: restart the bundles"); //$NON-NLS-1$
 		}
 		if (bundles == null)
@@ -323,7 +323,7 @@ public class PackageAdminImpl {
 				}
 		}
 
-		if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
+		if (Debug.DEBUG_PACKAGEADMIN) {
 			if (bundle.stateChanging == null) {
 				Debug.println("Bundle state change lock is clear! " + bundle); //$NON-NLS-1$
 				Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
@@ -336,7 +336,7 @@ public class PackageAdminImpl {
 			BundleDescription bundle = bundleDelta.getBundle();
 			if (bundle.getDependents() != null && bundle.getDependents().length > 0) {
 				/* Reaching here is an internal error */
-				if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
+				if (Debug.DEBUG_PACKAGEADMIN) {
 					Debug.println("Bundles still depend on removed bundle! " + bundle); //$NON-NLS-1$
 					Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
 				}
@@ -433,7 +433,7 @@ public class PackageAdminImpl {
 		int[] previousStates = new int[refresh.length];
 		try {
 			try {
-				if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
+				if (Debug.DEBUG_PACKAGEADMIN) {
 					Debug.println("refreshPackages: Suspend each bundle and acquire its state change lock"); //$NON-NLS-1$
 				}
 				// find which bundles were previously resolved and handle extension bundles
@@ -465,7 +465,7 @@ public class PackageAdminImpl {
 				 * Refresh the bundles which will unexport the packages.
 				 * This will move RESOLVED bundles to the INSTALLED state.
 				 */
-				if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
+				if (Debug.DEBUG_PACKAGEADMIN) {
 					Debug.println("refreshPackages: refresh the bundles"); //$NON-NLS-1$
 				}
 
@@ -484,7 +484,7 @@ public class PackageAdminImpl {
 				/*
 				 * apply Deltas.
 				 */
-				if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
+				if (Debug.DEBUG_PACKAGEADMIN) {
 					Debug.println("refreshPackages: applying deltas to bundles"); //$NON-NLS-1$
 				}
 				synchronized (framework.bundles) {
@@ -495,7 +495,7 @@ public class PackageAdminImpl {
 				/*
 				 * Release the state change locks.
 				 */
-				if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
+				if (Debug.DEBUG_PACKAGEADMIN) {
 					Debug.println("refreshPackages: release the state change locks"); //$NON-NLS-1$
 				}
 				if (refreshPackages)
@@ -508,12 +508,12 @@ public class PackageAdminImpl {
 			 * Take this opportunity to clean up the adaptor storage.
 			 */
 			if (refreshPackages) {
-				if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN)
+				if (Debug.DEBUG_PACKAGEADMIN)
 					Debug.println("refreshPackages: clean up adaptor storage"); //$NON-NLS-1$
 				try {
 					framework.adaptor.compactStorage();
 				} catch (IOException e) {
-					if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
+					if (Debug.DEBUG_PACKAGEADMIN) {
 						Debug.println("refreshPackages exception: " + e.getMessage()); //$NON-NLS-1$
 						Debug.printStackTrace(e);
 					}
@@ -521,7 +521,7 @@ public class PackageAdminImpl {
 				}
 			}
 		} catch (BundleException e) {
-			if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN) {
+			if (Debug.DEBUG_PACKAGEADMIN) {
 				Debug.println("refreshPackages exception: " + e.getMessage()); //$NON-NLS-1$
 				Debug.printStackTrace(e.getNestedException() == null ? e : e.getNestedException());
 			}
@@ -529,7 +529,7 @@ public class PackageAdminImpl {
 		}
 
 		// send out any resolved.  This must be done after the state change locks have been release.
-		if (Debug.DEBUG && Debug.DEBUG_PACKAGEADMIN)
+		if (Debug.DEBUG_PACKAGEADMIN)
 			Debug.println("refreshPackages: send out RESOLVED events"); //$NON-NLS-1$
 		for (int i = 0; i < refresh.length; i++)
 			if (refresh[i].isResolved())

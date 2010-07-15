@@ -48,7 +48,7 @@ public class BundleHost extends AbstractBundle {
 	 * Load the bundle.
 	 */
 	protected void load() {
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			if ((state & (INSTALLED)) == 0) {
 				Debug.println("Bundle.load called when state != INSTALLED: " + this); //$NON-NLS-1$
 				Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
@@ -77,7 +77,7 @@ public class BundleHost extends AbstractBundle {
 	 * @return  true if an exported package is "in use". i.e. it has been imported by a bundle
 	 */
 	protected boolean reload(AbstractBundle newBundle) {
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			if ((state & (INSTALLED | RESOLVED)) == 0) {
 				Debug.println("Bundle.reload called when state != INSTALLED | RESOLVED: " + this); //$NON-NLS-1$
 				Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
@@ -125,7 +125,7 @@ public class BundleHost extends AbstractBundle {
 	 * This method must be called while holding the bundles lock.
 	 */
 	protected void refresh() {
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			if ((state & (UNINSTALLED | INSTALLED | RESOLVED)) == 0) {
 				Debug.println("Bundle.reload called when state != UNINSTALLED | INSTALLED | RESOLVED: " + this); //$NON-NLS-1$
 				Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
@@ -149,7 +149,7 @@ public class BundleHost extends AbstractBundle {
 	 * @return  true if an exported package is "in use". i.e. it has been imported by a bundle
 	 */
 	protected boolean unload() {
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			if ((state & (UNINSTALLED | INSTALLED | RESOLVED)) == 0) {
 				Debug.println("Bundle.unload called when state != UNINSTALLED | INSTALLED | RESOLVED: " + this); //$NON-NLS-1$
 				Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
@@ -195,7 +195,7 @@ public class BundleHost extends AbstractBundle {
 				return null;
 			}
 		}
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			if ((state & (STARTING | ACTIVE | STOPPING | RESOLVED)) == 0) {
 				Debug.println("Bundle.checkLoader() called when state != STARTING | ACTIVE | STOPPING | RESOLVED: " + this); //$NON-NLS-1$ 
 				Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
@@ -204,7 +204,7 @@ public class BundleHost extends AbstractBundle {
 
 		BundleLoader loader = getBundleLoader();
 		if (loader == null) {
-			if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+			if (Debug.DEBUG_GENERAL) {
 				Debug.println("Bundle.checkLoader() called when loader == null: " + this); //$NON-NLS-1$ 
 				Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
 			}
@@ -303,7 +303,7 @@ public class BundleHost extends AbstractBundle {
 		if ((options & START_TRANSIENT) == 0) {
 			setStatus(Constants.BUNDLE_STARTED, true);
 			setStatus(Constants.BUNDLE_ACTIVATION_POLICY, (options & START_ACTIVATION_POLICY) != 0);
-			if (Debug.DEBUG && Debug.MONITOR_ACTIVATION)
+			if (Debug.MONITOR_ACTIVATION)
 				new Exception("A persistent start has been called on bundle: " + getBundleData()).printStackTrace(); //$NON-NLS-1$
 		}
 		if (!framework.active || (state & ACTIVE) != 0)
@@ -335,7 +335,7 @@ public class BundleHost extends AbstractBundle {
 			return;
 		}
 
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			Debug.println("Bundle: Active sl = " + framework.getStartLevelManager(this).getStartLevel() + "; Bundle " + getBundleId() + " sl = " + getStartLevel0()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
@@ -361,14 +361,12 @@ public class BundleHost extends AbstractBundle {
 		context = getContext();
 		//STARTUP TIMING Start here		
 		long start = 0;
-		if (Debug.DEBUG) {
-			BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
-			if (bundleStats != null)
-				bundleStats.watchBundle(this, BundleWatcher.START_ACTIVATION);
-			if (Debug.DEBUG_BUNDLE_TIME) {
-				start = System.currentTimeMillis();
-				System.out.println("Starting " + getSymbolicName()); //$NON-NLS-1$
-			}
+		BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
+		if (bundleStats != null)
+			bundleStats.watchBundle(this, BundleWatcher.START_ACTIVATION);
+		if (Debug.DEBUG_BUNDLE_TIME) {
+			start = System.currentTimeMillis();
+			System.out.println("Starting " + getSymbolicName()); //$NON-NLS-1$
 		}
 		try {
 			context.start();
@@ -376,7 +374,7 @@ public class BundleHost extends AbstractBundle {
 			if (framework.active) {
 				state = ACTIVE;
 
-				if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+				if (Debug.DEBUG_GENERAL) {
 					Debug.println("->started " + this); //$NON-NLS-1$
 				}
 				// release the state change lock before sending lazy activation event (bug 258659)
@@ -399,13 +397,10 @@ public class BundleHost extends AbstractBundle {
 			framework.publishBundleEvent(BundleEvent.STOPPED, this);
 			throw e;
 		} finally {
-			if (Debug.DEBUG) {
-				BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
-				if (bundleStats != null)
-					bundleStats.watchBundle(this, BundleWatcher.END_ACTIVATION);
-				if (Debug.DEBUG_BUNDLE_TIME)
-					System.out.println("End starting " + getSymbolicName() + " " + (System.currentTimeMillis() - start)); //$NON-NLS-1$ //$NON-NLS-2$
-			}
+			if (bundleStats != null)
+				bundleStats.watchBundle(this, BundleWatcher.END_ACTIVATION);
+			if (Debug.DEBUG_BUNDLE_TIME)
+				System.out.println("End starting " + getSymbolicName() + " " + (System.currentTimeMillis() - start)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		if (state == UNINSTALLED) {
@@ -485,18 +480,16 @@ public class BundleHost extends AbstractBundle {
 		if ((options & STOP_TRANSIENT) == 0) {
 			setStatus(Constants.BUNDLE_STARTED, false);
 			setStatus(Constants.BUNDLE_ACTIVATION_POLICY, false);
-			if (Debug.DEBUG && Debug.MONITOR_ACTIVATION)
+			if (Debug.MONITOR_ACTIVATION)
 				new Exception("A persistent start has been called on bundle: " + getBundleData()).printStackTrace(); //$NON-NLS-1$
 		}
 		if (framework.active) {
 			if ((state & (STOPPING | RESOLVED | INSTALLED)) != 0) {
 				return;
 			}
-			if (Debug.DEBUG) {
-				BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
-				if (bundleStats != null)
-					bundleStats.watchBundle(this, BundleWatcher.START_DEACTIVATION);
-			}
+			BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
+			if (bundleStats != null)
+				bundleStats.watchBundle(this, BundleWatcher.START_DEACTIVATION);
 			state = STOPPING;
 			framework.publishBundleEvent(BundleEvent.STOPPING, this);
 			try {
@@ -514,16 +507,13 @@ public class BundleHost extends AbstractBundle {
 
 				state = RESOLVED;
 
-				if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+				if (Debug.DEBUG_GENERAL) {
 					Debug.println("->stopped " + this); //$NON-NLS-1$
 				}
 
 				framework.publishBundleEvent(BundleEvent.STOPPED, this);
-				if (Debug.DEBUG) {
-					BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
-					if (bundleStats != null)
-						bundleStats.watchBundle(this, BundleWatcher.END_DEACTIVATION);
-				}
+				if (bundleStats != null)
+					bundleStats.watchBundle(this, BundleWatcher.END_DEACTIVATION);
 			}
 		}
 	}

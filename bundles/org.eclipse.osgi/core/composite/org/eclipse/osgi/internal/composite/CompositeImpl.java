@@ -198,7 +198,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	}
 
 	private void doUpdate(Map<String, String> compositeManifest, Object type) throws BundleException {
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			Debug.println("update location " + bundledata.getLocation()); //$NON-NLS-1$
 			Debug.println("   from: " + compositeManifest); //$NON-NLS-1$
 		}
@@ -227,7 +227,7 @@ public class CompositeImpl extends BundleHost implements CompositeBundle {
 	}
 
 	void dynamicPolicyUpdate(Map<String, String> policy) throws BundleException {
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			Debug.println("Dynamic update to sharing policy " + bundledata.getLocation()); //$NON-NLS-1$
 			Debug.println("   from: " + policy); //$NON-NLS-1$
 		}

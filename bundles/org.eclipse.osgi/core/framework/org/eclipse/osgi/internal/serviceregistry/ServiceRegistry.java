@@ -161,7 +161,7 @@ public class ServiceRegistry {
 	 */
 	public ServiceRegistrationImpl<?> registerService(BundleContextImpl context, String[] clazzes, Object service, Dictionary<String, ?> properties) {
 		if (service == null) {
-			if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+			if (Debug.DEBUG_SERVICES) {
 				Debug.println("Service object is null"); //$NON-NLS-1$
 			}
 
@@ -171,7 +171,7 @@ public class ServiceRegistry {
 		int size = clazzes.length;
 
 		if (size == 0) {
-			if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+			if (Debug.DEBUG_SERVICES) {
 				Debug.println("Classes array is empty"); //$NON-NLS-1$
 			}
 
@@ -196,7 +196,7 @@ public class ServiceRegistry {
 		if (!(service instanceof ServiceFactory<?>)) {
 			String invalidService = checkServiceClass(clazzes, service);
 			if (invalidService != null) {
-				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+				if (Debug.DEBUG_SERVICES) {
 					Debug.println("Service object is not an instanceof " + invalidService); //$NON-NLS-1$
 				}
 				throw new IllegalArgumentException(NLS.bind(Msg.SERVICE_NOT_INSTANCEOF_CLASS_EXCEPTION, invalidService));
@@ -284,7 +284,7 @@ public class ServiceRegistry {
 	 *         longer valid.
 	 */
 	public ServiceReferenceImpl<?>[] getServiceReferences(final BundleContextImpl context, final String clazz, final String filterstring, final boolean allservices) throws InvalidSyntaxException {
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println((allservices ? "getAllServiceReferences(" : "getServiceReferences(") + clazz + ", \"" + filterstring + "\")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		Filter filter = (filterstring == null) ? null : context.createFilter(filterstring);
@@ -350,7 +350,7 @@ public class ServiceRegistry {
 	 *         longer valid.
 	 */
 	public ServiceReferenceImpl<?> getServiceReference(BundleContextImpl context, String clazz) {
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("getServiceReference(" + clazz + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
@@ -363,7 +363,7 @@ public class ServiceRegistry {
 				return references[0];
 			}
 		} catch (InvalidSyntaxException e) {
-			if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+			if (Debug.DEBUG_GENERAL) {
 				Debug.println("InvalidSyntaxException w/ null filter" + e.getMessage()); //$NON-NLS-1$
 				Debug.printStackTrace(e);
 			}
@@ -639,7 +639,7 @@ public class ServiceRegistry {
 			}
 			registrations = new ArrayList<ServiceRegistrationImpl<?>>(servicesInUse.keySet());
 		}
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("Releasing services"); //$NON-NLS-1$
 		}
 		for (ServiceRegistrationImpl<?> registration : registrations) {
@@ -656,7 +656,7 @@ public class ServiceRegistry {
 	 * @throws InvalidSyntaxException If the filter string is invalid.
 	 */
 	public void addServiceListener(BundleContextImpl context, ServiceListener listener, String filter) throws InvalidSyntaxException {
-		if (Debug.DEBUG && Debug.DEBUG_EVENTS) {
+		if (Debug.DEBUG_EVENTS) {
 			String listenerName = listener.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(listener)); //$NON-NLS-1$
 			Debug.println("addServiceListener[" + context.getBundleImpl() + "](" + listenerName + ", \"" + filter + "\")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
@@ -689,7 +689,7 @@ public class ServiceRegistry {
 	 * @param listener Service Listener to be removed.
 	 */
 	public void removeServiceListener(BundleContextImpl context, ServiceListener listener) {
-		if (Debug.DEBUG && Debug.DEBUG_EVENTS) {
+		if (Debug.DEBUG_EVENTS) {
 			String listenerName = listener.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(listener)); //$NON-NLS-1$
 			Debug.println("removeServiceListener[" + context.getBundleImpl() + "](" + listenerName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
@@ -1116,7 +1116,7 @@ public class ServiceRegistry {
 			return;
 		}
 
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("notifyFindHooks(" + context.getBundleImpl() + "," + clazz + "," + filterstring + "," + allservices + "," + result + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 		}
 
@@ -1145,7 +1145,7 @@ public class ServiceRegistry {
 					}
 				}
 			} catch (Throwable t) {
-				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+				if (Debug.DEBUG_SERVICES) {
 					Debug.println(findHook + ".find() exception: " + t.getMessage()); //$NON-NLS-1$
 					Debug.printStackTrace(t);
 				}
@@ -1173,7 +1173,7 @@ public class ServiceRegistry {
 			return;
 		}
 
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("notifyEventHooks(" + event.getType() + ":" + event.getServiceReference() + "," + result + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
 		}
 
@@ -1200,7 +1200,7 @@ public class ServiceRegistry {
 					}
 				}
 			} catch (Throwable t) {
-				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+				if (Debug.DEBUG_SERVICES) {
 					Debug.println(eventHook + ".event() exception: " + t.getMessage()); //$NON-NLS-1$
 					Debug.printStackTrace(t);
 				}
@@ -1240,7 +1240,7 @@ public class ServiceRegistry {
 			return;
 		}
 
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("notifyNewListenerHook(" + registration + ")"); //$NON-NLS-1$ //$NON-NLS-2$ 
 		}
 
@@ -1280,7 +1280,7 @@ public class ServiceRegistry {
 				((ListenerHook) listenerHook).added(addedListeners);
 			}
 		} catch (Throwable t) {
-			if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+			if (Debug.DEBUG_SERVICES) {
 				Debug.println(listenerHook + ".added() exception: " + t.getMessage()); //$NON-NLS-1$
 				Debug.printStackTrace(t);
 			}
@@ -1324,7 +1324,7 @@ public class ServiceRegistry {
 			return;
 		}
 
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("notifyListenerHooks(" + listeners + "," + (added ? "added" : "removed") + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 		}
 
@@ -1362,7 +1362,7 @@ public class ServiceRegistry {
 					}
 				}
 			} catch (Throwable t) {
-				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+				if (Debug.DEBUG_SERVICES) {
 					Debug.println(listenerHook + "." + (added ? "added" : "removed") + "() exception: " + t.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					Debug.printStackTrace(t);
 				}

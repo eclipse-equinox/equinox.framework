@@ -120,7 +120,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 				ref = reference; /* used to publish event outside sync */
 				this.properties = createProperties(props); /* must be valid after unregister is called. */
 			}
-			if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+			if (Debug.DEBUG_SERVICES) {
 				Debug.println("registerService[" + bundle + "](" + this + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 			registry.addServiceRegistration(context, this);
@@ -210,7 +210,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 				}
 
 				/* remove this object from the service registry */
-				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+				if (Debug.DEBUG_SERVICES) {
 					Debug.println("unregisterService[" + bundle + "](" + this + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				}
 
@@ -233,7 +233,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 
 			size = contextsUsing.size();
 			if (size > 0) {
-				if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+				if (Debug.DEBUG_SERVICES) {
 					Debug.println("unregisterService: releasing users"); //$NON-NLS-1$
 				}
 				users = contextsUsing.toArray(new BundleContextImpl[size]);
@@ -415,7 +415,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 				return null;
 			}
 		}
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("getService[" + user.getBundleImpl() + "](" + this + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
@@ -488,7 +488,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 			}
 		}
 
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("ungetService[" + user.getBundleImpl() + "](" + this + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
@@ -531,7 +531,7 @@ public class ServiceRegistrationImpl<S> implements ServiceRegistration<S>, Compa
 			}
 		}
 
-		if (Debug.DEBUG && Debug.DEBUG_SERVICES) {
+		if (Debug.DEBUG_SERVICES) {
 			Debug.println("releaseService[" + user.getBundleImpl() + "](" + this + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 

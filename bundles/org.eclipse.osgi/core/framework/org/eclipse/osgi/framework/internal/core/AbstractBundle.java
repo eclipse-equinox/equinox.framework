@@ -126,7 +126,7 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 	 *  
 	 */
 	protected void close() {
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			if ((state & (INSTALLED)) == 0) {
 				Debug.println("Bundle.close called when state != INSTALLED: " + this); //$NON-NLS-1$
 				Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
@@ -147,7 +147,7 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 				/* Create the activator for the bundle */
 				return (BundleActivator) (activatorClass.newInstance());
 			} catch (Throwable t) {
-				if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+				if (Debug.DEBUG_GENERAL) {
 					Debug.printStackTrace(t);
 				}
 				throw new BundleException(NLS.bind(Msg.BUNDLE_INVALID_ACTIVATOR_EXCEPTION, activatorClassName, bundledata.getSymbolicName()), BundleException.ACTIVATOR_ERROR, t);
@@ -561,7 +561,7 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 	}
 
 	public void update(final InputStream in) throws BundleException {
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			Debug.println("update location " + bundledata.getLocation()); //$NON-NLS-1$
 			Debug.println("   from: " + in); //$NON-NLS-1$
 		}
@@ -582,7 +582,7 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 						String updateLocation = (String) bundledata.getManifest().get(Constants.BUNDLE_UPDATELOCATION);
 						if (updateLocation == null)
 							updateLocation = bundledata.getLocation();
-						if (Debug.DEBUG && Debug.DEBUG_GENERAL)
+						if (Debug.DEBUG_GENERAL)
 							Debug.println("   from location: " + updateLocation); //$NON-NLS-1$
 						/* Map the update location to a URLConnection */
 						source = framework.adaptor.mapLocationToURLConnection(updateLocation);
@@ -759,7 +759,7 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 	 * @see #stop()
 	 */
 	public void uninstall() throws BundleException {
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			Debug.println("uninstall location: " + bundledata.getLocation()); //$NON-NLS-1$
 		}
 		framework.checkAdminPermission(this, AdminPermission.LIFECYCLE);
@@ -817,11 +817,9 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 	 * Uninstall worker. Assumes the caller has the state change lock.
 	 */
 	protected void uninstallWorkerPrivileged() throws BundleException {
-		if (Debug.DEBUG) {
-			BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
-			if (bundleStats != null)
-				bundleStats.watchBundle(this, BundleWatcher.START_UNINSTALLING);
-		}
+		BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
+		if (bundleStats != null)
+			bundleStats.watchBundle(this, BundleWatcher.START_UNINSTALLING);
 		boolean unloaded = false;
 		//cache the bundle's headers
 		getHeaders();
@@ -859,11 +857,8 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 			}
 			throw e;
 		} finally {
-			if (Debug.DEBUG) {
-				BundleWatcher bundleStats = framework.adaptor.getBundleWatcher();
-				if (bundleStats != null)
-					bundleStats.watchBundle(this, BundleWatcher.END_UNINSTALLING);
-			}
+			if (bundleStats != null)
+				bundleStats.watchBundle(this, BundleWatcher.END_UNINSTALLING);
 		}
 	}
 
@@ -1093,7 +1088,7 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 				}
 				try {
 					long start = 0;
-					if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+					if (Debug.DEBUG_GENERAL) {
 						Debug.println(" Waiting for state to change in bundle " + this); //$NON-NLS-1$
 						start = System.currentTimeMillis();
 					}
@@ -1102,7 +1097,7 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 					 * wait for other thread to
 					 * finish changing state
 					 */
-					if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+					if (Debug.DEBUG_GENERAL) {
 						long end = System.currentTimeMillis();
 						if (end - start > 0)
 							System.out.println("Waiting... : " + getSymbolicName() + ' ' + (end - start)); //$NON-NLS-1$
@@ -1281,7 +1276,7 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 	 * Mark this bundle as resolved.
 	 */
 	protected void resolve() {
-		if (Debug.DEBUG && Debug.DEBUG_GENERAL) {
+		if (Debug.DEBUG_GENERAL) {
 			if ((state & (INSTALLED)) == 0) {
 				Debug.println("Bundle.resolve called when state != INSTALLED: " + this); //$NON-NLS-1$
 				Debug.printStackTrace(new Exception("Stack trace")); //$NON-NLS-1$
