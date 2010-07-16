@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.FrameworkAdaptor;
 import org.eclipse.osgi.framework.internal.core.AbstractBundle;
-import org.eclipse.osgi.framework.internal.core.BundleContextImpl;
+import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -34,7 +34,7 @@ public abstract class MultiplexingFactory {
 	private final long compositeId;
 
 	// used to get access to the protected SecurityManager#getClassContext method
-	private static class InternalSecurityManager extends SecurityManager {
+	static class InternalSecurityManager extends SecurityManager {
 		public Class[] getClassContext() {
 			return super.getClassContext();
 		}
@@ -92,7 +92,7 @@ public abstract class MultiplexingFactory {
 		factories.add(factory);
 		// always reset the handers so we can force in multiplexing ones
 		try {
-			((BundleContextImpl) context).getFramework().resetURLStreamHandlers();
+			Framework.resetURLStreamHandlers();
 		} catch (IllegalAccessException e) {
 			// TODO log
 		}

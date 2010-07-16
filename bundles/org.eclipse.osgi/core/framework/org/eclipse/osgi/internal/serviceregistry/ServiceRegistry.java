@@ -1125,7 +1125,7 @@ public class ServiceRegistry {
 		// in the proper order.
 
 		for (ServiceRegistrationImpl<?> registration : hooks) {
-			Object findHook = registration.getService(systemBundleContext);
+			Object findHook = registration.getSafeService(systemBundleContext);
 			if (findHook == null) { // if the hook is null
 				continue;
 			}
@@ -1182,7 +1182,7 @@ public class ServiceRegistry {
 		// in the proper order.
 
 		for (ServiceRegistrationImpl<?> registration : hooks) {
-			Object eventHook = registration.getService(systemBundleContext);
+			Object eventHook = registration.getSafeService(systemBundleContext);
 			if (eventHook == null) { // if the hook is null
 				continue;
 			}
@@ -1271,7 +1271,7 @@ public class ServiceRegistry {
 		}
 		addedListeners = Collections.unmodifiableCollection(addedListeners);
 
-		Object listenerHook = registration.getService(systemBundleContext);
+		Object listenerHook = registration.getSafeService(systemBundleContext);
 		if (listenerHook == null) { // if the hook is null
 			return;
 		}
@@ -1333,7 +1333,7 @@ public class ServiceRegistry {
 		// in the proper order.
 
 		for (ServiceRegistrationImpl<?> registration : hooks) {
-			Object listenerHook = registration.getService(systemBundleContext);
+			Object listenerHook = registration.getSafeService(systemBundleContext);
 			if (listenerHook == null) { // if the hook is null
 				continue;
 			}

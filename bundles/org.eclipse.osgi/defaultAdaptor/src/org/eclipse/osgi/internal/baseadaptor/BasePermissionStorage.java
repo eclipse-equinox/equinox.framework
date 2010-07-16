@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -98,6 +98,9 @@ public class BasePermissionStorage implements PermissionStorage {
 		}
 	}
 
+	/**
+	 * @throws IOException
+	 */
 	public String[] getLocations(long scopeId) throws IOException {
 		synchronized (locations) {
 			HashMap<String, String[]> scopedLocations = locations.get(scopeId);
@@ -115,6 +118,9 @@ public class BasePermissionStorage implements PermissionStorage {
 		}
 	}
 
+	/**
+	 * @throws IOException
+	 */
 	public String[] getPermissionData(String location, long scopeId) throws IOException {
 		synchronized (locations) {
 			HashMap<String, String[]> scopedLocations = locations.get(scopeId);
@@ -124,6 +130,9 @@ public class BasePermissionStorage implements PermissionStorage {
 		}
 	}
 
+	/**
+	 * @throws IOException
+	 */
 	public void setPermissionData(String location, String[] data, long scopeId) throws IOException {
 		synchronized (locations) {
 			HashMap<String, String[]> scopedLocations = locations.get(scopeId);
@@ -145,6 +154,9 @@ public class BasePermissionStorage implements PermissionStorage {
 		storage.requestSave();
 	}
 
+	/**
+	 * @throws IOException
+	 */
 	public void saveConditionalPermissionInfos(String[] infos, long scopeId) throws IOException {
 		synchronized (condPermInfos) {
 			if (infos == null || infos.length == 0)
@@ -156,6 +168,9 @@ public class BasePermissionStorage implements PermissionStorage {
 		storage.requestSave();
 	}
 
+	/**
+	 * @throws IOException
+	 */
 	public String[] getConditionalPermissionInfos(long scopeId) throws IOException {
 		synchronized (condPermInfos) {
 			return condPermInfos.get(scopeId);

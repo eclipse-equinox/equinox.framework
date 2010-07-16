@@ -73,6 +73,9 @@ public class ExportedPackageImpl implements ExportedPackage {
 		return (Bundle[]) importers.toArray(new Bundle[importers.size()]);
 	}
 
+	/**
+	 * @deprecated
+	 */
 	public String getSpecificationVersion() {
 		return specVersion;
 	}
