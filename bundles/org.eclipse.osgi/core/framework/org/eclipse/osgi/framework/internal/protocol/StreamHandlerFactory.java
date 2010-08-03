@@ -217,7 +217,7 @@ public class StreamHandlerFactory extends MultiplexingFactory implements URLStre
 	@Override
 	protected void resetHandlers() {
 		try {
-			((BundleContextImpl) context).getFramework().resetURLStreamHandlers();
+			Framework.resetURLStreamHandlers();
 		} catch (IllegalAccessException e) {
 			// TODO log
 		}

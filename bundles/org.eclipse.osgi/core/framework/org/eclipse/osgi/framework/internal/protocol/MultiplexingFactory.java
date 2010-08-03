@@ -12,7 +12,6 @@ import java.lang.reflect.Method;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.FrameworkAdaptor;
 import org.eclipse.osgi.framework.internal.core.AbstractBundle;
-import org.eclipse.osgi.framework.internal.core.Framework;
 import org.eclipse.osgi.framework.log.FrameworkLogEntry;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -54,32 +53,24 @@ public abstract class MultiplexingFactory {
 
 	abstract public Object getParentFactory();
 
-	public synchronized boolean isMultiplexing() {
-		return factories != null || composites != null;
+	public boolean isMultiplexing() {
+		return getFactories() != null || getComposites() != null;
 	}
 
-	public synchronized void registerComposite(MultiplexingFactory compositeFactory) {
-		if (composites == null)
-			composites = new LinkedList<MultiplexingFactory>();
-		compositeFactory.setParentFactory(getParentFactory());
-		composites.add(compositeFactory);
+	public void registerComposite(MultiplexingFactory compositeFactory) {
+		addComposite(compositeFactory);
 		// always reset the handers so we can force in multiplexing ones
 		resetHandlers();
 	}
 
 	protected abstract void resetHandlers();
 
-	public synchronized void unregisterComposite(MultiplexingFactory compositeFactory) {
-		composites.remove(compositeFactory);
-		if (composites.isEmpty())
-			composites = null;
+	public void unregisterComposite(MultiplexingFactory compositeFactory) {
+		removeComposite(compositeFactory);
 		compositeFactory.closePackageAdminTracker();
 	}
 
-	public synchronized void register(Object factory) {
-		if (factories == null)
-			factories = new LinkedList();
-
+	public void register(Object factory) {
 		// set parent for each factory so they can do proper delegation
 		try {
 			Class clazz = factory.getClass();
@@ -89,19 +80,13 @@ public abstract class MultiplexingFactory {
 			adaptor.getFrameworkLog().log(new FrameworkLogEntry(MultiplexingFactory.class.getName(), FrameworkLogEntry.ERROR, 0, "register", FrameworkLogEntry.ERROR, e, null)); //$NON-NLS-1$
 			throw new RuntimeException(e.getMessage(), e);
 		}
-		factories.add(factory);
+		addFactory(factory);
 		// always reset the handers so we can force in multiplexing ones
-		try {
-			Framework.resetURLStreamHandlers();
-		} catch (IllegalAccessException e) {
-			// TODO log
-		}
+		resetHandlers();
 	}
 
-	public synchronized void unregister(Object factory) {
-		factories.remove(factory);
-		if (factories.isEmpty())
-			factories = null;
+	public void unregister(Object factory) {
+		removeFactory(factory);
 		// close the service tracker
 		try {
 			// this is brittle; if class does not directly extend MultplexingFactory then this method will not exist, but we do not want a public method here
@@ -114,23 +99,29 @@ public abstract class MultiplexingFactory {
 		}
 	}
 
-	public synchronized Object designateSuccessor() {
-		Object parentFactory = getParentFactory();
-		if (factories == null || factories.isEmpty())
-			return parentFactory;
-
-		Object successor = factories.remove(0);
+	public Object designateSuccessor() {
+		List released = releaseFactories();
+		// Note that we do this outside of the sync block above.
+		// This is only possible because we do additional locking outside of
+		// this class to ensure no other threads are trying to manipulate the
+		// list of registered factories.  See Framework class the following methods:
+		// Framework.installURLStreamHandlerFactory(BundleContext, FrameworkAdaptor)
+		// Framework.installContentHandlerFactory(BundleContext, FrameworkAdaptor)
+		// Framework.uninstallURLStreamHandlerFactory
+		// Framework.uninstallContentHandlerFactory()
+		if (released == null || released.isEmpty())
+			return getParentFactory();
+		Object successor = released.remove(0);
 		try {
 			Class clazz = successor.getClass();
 			Method register = clazz.getMethod("register", new Class[] {Object.class}); //$NON-NLS-1$		
-			for (Iterator it = factories.iterator(); it.hasNext();) {
+			for (Iterator it = released.iterator(); it.hasNext();) {
 				register.invoke(successor, new Object[] {it.next()});
 			}
 		} catch (Exception e) {
 			adaptor.getFrameworkLog().log(new FrameworkLogEntry(MultiplexingFactory.class.getName(), FrameworkLogEntry.ERROR, 0, "designateSuccessor", FrameworkLogEntry.ERROR, e, null)); //$NON-NLS-1$
 			throw new RuntimeException(e.getMessage(), e);
 		}
-		factories = null;
 		closePackageAdminTracker(); // close tracker
 		return successor;
 	}
@@ -139,7 +130,9 @@ public abstract class MultiplexingFactory {
 		packageAdminTracker.close();
 	}
 
-	public synchronized Object findAuthorizedFactory(List ignoredClasses) {
+	public Object findAuthorizedFactory(List ignoredClasses) {
+		List currentFactories = getFactories();
+		List<MultiplexingFactory> currentComposites = getComposites();
 		Class[] classStack = internalSecurityManager.getClassContext();
 		for (int i = 0; i < classStack.length; i++) {
 			Class clazz = classStack[i];
@@ -147,14 +140,14 @@ public abstract class MultiplexingFactory {
 				continue;
 			if (hasAuthority(clazz))
 				return this;
-			if (composites != null)
-				for (Iterator<MultiplexingFactory> iComposites = composites.iterator(); iComposites.hasNext();) {
+			if (currentComposites != null)
+				for (Iterator<MultiplexingFactory> iComposites = currentComposites.iterator(); iComposites.hasNext();) {
 					MultiplexingFactory composite = iComposites.next();
 					if (composite.hasAuthority(clazz))
 						return composite;
 				}
-			if (factories != null)
-				for (Iterator it = factories.iterator(); it.hasNext();) {
+			if (currentFactories != null)
+				for (Iterator it = currentFactories.iterator(); it.hasNext();) {
 					Object factory = it.next();
 					try {
 						Method hasAuthorityMethod = factory.getClass().getMethod("hasAuthority", new Class[] {Class.class}); //$NON-NLS-1$
@@ -193,8 +186,49 @@ public abstract class MultiplexingFactory {
 	 * Returns the composite id for this factory.  If this is not part of any composites -1 is returned.
 	 * @return the composite id for this factory
 	 */
-	protected synchronized long getCompositeId() {
-		return (composites == null && compositeId == 0) ? -1 : compositeId;
+	protected long getCompositeId() {
+		return (getComposites() == null && compositeId == 0) ? -1 : compositeId;
 
+	}
+
+	private synchronized List getFactories() {
+		return factories;
+	}
+
+	private synchronized List releaseFactories() {
+		if (factories == null)
+			return null;
+
+		List released = new LinkedList(factories);
+		factories = null;
+		return released;
+	}
+
+	private synchronized void addFactory(Object factory) {
+		List updated = (factories == null) ? new LinkedList() : new LinkedList(factories);
+		updated.add(factory);
+		factories = updated;
+	}
+
+	private synchronized void removeFactory(Object factory) {
+		List updated = new LinkedList(factories);
+		updated.remove(factory);
+		factories = updated.isEmpty() ? null : updated;
+	}
+
+	private synchronized List<MultiplexingFactory> getComposites() {
+		return composites;
+	}
+
+	private synchronized void addComposite(MultiplexingFactory composite) {
+		List<MultiplexingFactory> updated = (composites == null) ? new LinkedList<MultiplexingFactory>() : new LinkedList<MultiplexingFactory>(composites);
+		updated.add(composite);
+		composites = updated;
+	}
+
+	private synchronized void removeComposite(MultiplexingFactory composite) {
+		List<MultiplexingFactory> updated = new LinkedList<MultiplexingFactory>(composites);
+		updated.remove(composite);
+		composites = updated.isEmpty() ? null : updated;
 	}
 }
