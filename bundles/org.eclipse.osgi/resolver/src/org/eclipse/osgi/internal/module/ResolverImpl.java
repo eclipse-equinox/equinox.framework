@@ -1578,7 +1578,7 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 					resolverImports[j].setName(null);
 					if (!found) {
 						// not found or there was a conflict; reset the suppliers and return null
-						resolverImports[j].setPossibleSuppliers(null);
+						resolverImports[j].clearPossibleSuppliers();
 						return null;
 					}
 					// If the import resolved then return it's matching export
@@ -1588,7 +1588,7 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 					// If it is a wildcard import then clear the wire, so other
 					// exported packages can be found for it
 					if (importName.endsWith("*")) //$NON-NLS-1$
-						resolverImports[j].setPossibleSuppliers(null);
+						resolverImports[j].clearPossibleSuppliers();
 					return matchingExport;
 				}
 			}
