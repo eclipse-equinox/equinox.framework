@@ -332,6 +332,7 @@ static _TCHAR** getRelaunchCommand( _TCHAR **vmCommand );
 
 #ifdef _WIN32
 static void     createConsole();
+static void 	fixDLLSearchPath();
 #endif
 
 /* Record the arguments that were used to start the original executable */
@@ -370,6 +371,9 @@ JNIEXPORT int run(int argc, _TCHAR* argv[], _TCHAR* vmArgs[])
    	 * it now.
    	 */
     initWindowSystem( &argc, argv, !noSplash );
+#elif _WIN32
+    /* fix the DLL search path for security reasons  */
+    fixDLLSearchPath();
 #endif
     
     /* Find the directory where the Eclipse program is installed. */
@@ -1184,6 +1188,22 @@ static void createConsole() {
 	if (conHandle != -1) {
 		fp = _fdopen(conHandle, "r");
 		*stderr = *fp;
+	}
+}
+
+static void fixDLLSearchPath() {
+#ifdef UNICODE
+	_TCHAR* functionName = _T_ECLIPSE("SetDllDirectoryW");
+#else
+	_TCHAR* functionName = _T_ECLIPSE("SetDllDirectoryA");
+#endif
+
+	BOOL (WINAPI *SetDLLDirectory)(LPCTSTR);
+	void * handle = loadLibrary(_T_ECLIPSE("Kernel32.dll"));
+	if (handle != NULL) {
+		if ( (SetDLLDirectory = findSymbol(handle, functionName)) != NULL) {
+			SetDLLDirectory(_T_ECLIPSE(""));
+		}
 	}
 }
 #endif
