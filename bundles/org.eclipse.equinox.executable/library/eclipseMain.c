@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at 
@@ -397,7 +397,7 @@ static _TCHAR* findLibrary(_TCHAR* library, _TCHAR* program)
 	struct _stat stats;
 	
 	if (library != NULL) {
-		path = checkPath(library, programDir, 0);
+		path = checkPath(library, programDir, 1);
 		if (_tstat(path, &stats) == 0 && (stats.st_mode & S_IFDIR) != 0) 
         {
             /* directory, find the highest version eclipse_* library */

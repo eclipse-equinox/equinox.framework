@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at 
@@ -1069,7 +1069,7 @@ static _TCHAR* findStartupJar(){
 		/* startup jar was specified on the command line */
 		ch = _tcsdup(startupArg);
 		/* check path will check relative paths against programDir and workingDir */
-		file = checkPath(ch, programDir, 0);
+		file = checkPath(ch, programDir, 1);
 		if(file != ch)
 			free(ch);
 		/* check existence */
@@ -1101,7 +1101,7 @@ static _TCHAR* findStartupJar(){
 		return file;
 	
 	/* old startup.jar? */
-	file = checkPath(OLD_STARTUP, programDir, 0);
+	file = checkPath(OLD_STARTUP, programDir, 1);
 	if (_tstat( file, &stats ) == 0)
 		return (file == OLD_STARTUP) ? _tcsdup(OLD_STARTUP) : file;
 		
@@ -1209,7 +1209,7 @@ static int determineVM(_TCHAR** msg) {
     		vmName[length - 1] = 0;
     	}
     	
-    	vmName = checkPath(vmName, programDir, 0);
+    	vmName = checkPath(vmName, programDir, 1);
     	type = checkProvidedVMType(vmName);
     	switch (type) {
     	case VM_DIRECTORY:
