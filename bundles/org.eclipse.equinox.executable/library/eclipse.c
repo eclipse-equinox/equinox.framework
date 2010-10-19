@@ -1183,7 +1183,7 @@ static _TCHAR* findStartupJar(){
 		/* startup jar was specified on the command line */
 		ch = _tcsdup(startupArg);
 		/* check path will check relative paths against programDir and workingDir */
-		file = checkPath(ch, programDir, 0);
+		file = checkPath(ch, programDir, 1);
 		if(file != ch)
 			free(ch);
 		/* check existence */
@@ -1216,7 +1216,7 @@ static _TCHAR* findStartupJar(){
 	
 	/* old startup.jar? */
 	ch = OLD_STARTUP;
-	file = checkPath(ch, programDir, 0);
+	file = checkPath(ch, programDir, 1);
 	if (_tstat( file, &stats ) == 0)
 		return (file == ch) ? _tcsdup(ch) : file;
 		
@@ -1373,7 +1373,7 @@ static int determineVM(_TCHAR** msg) {
     		vmName[length - 1] = 0;
     	}
     	
-    	vmName = checkPath(vmName, programDir, 0);
+    	vmName = checkPath(vmName, programDir, 1);
     	type = checkProvidedVMType(vmName);
     	switch (type) {
     	case VM_DIRECTORY:
