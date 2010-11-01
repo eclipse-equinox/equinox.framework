@@ -1383,11 +1383,14 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 		if (filePattern != null)
 			try {
 				// create a file pattern filter with 'filename' as the key
-				patternFilter = FilterImpl.newInstance("(filename=" + filePattern + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+				patternFilter = FilterImpl.newInstance("(filename=" + sanitizeFilterInput(filePattern) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 				// create a single hashtable to be shared during the recursive search
 				patternProps = new Hashtable(2);
 			} catch (InvalidSyntaxException e) {
-				// cannot happen
+				// something unexpected happened; log error and return nothing
+				Bundle b = framework.systemBundle;
+				framework.publishFrameworkEvent(FrameworkEvent.ERROR, b, e);
+				return null;
 			}
 		// find the local entries of this bundle
 		findLocalEntryPaths(path, patternFilter, patternProps, recurse, pathList);
@@ -1448,6 +1451,46 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 			}
 
 		};
+	}
+
+	private String sanitizeFilterInput(String filePattern) throws InvalidSyntaxException {
+		StringBuffer buffer = null;
+		boolean foundEscape = false;
+		for (int i = 0; i < filePattern.length(); i++) {
+			char c = filePattern.charAt(i);
+			switch (c) {
+				case '\\' :
+					// we either used the escape found or found a new escape.
+					foundEscape = foundEscape ? false : true;
+					if (buffer != null)
+						buffer.append(c);
+					break;
+				case '(' :
+				case ')' :
+					if (!foundEscape) {
+						if (buffer == null) {
+							buffer = new StringBuffer(filePattern.length() + 16);
+							buffer.append(filePattern.substring(0, i));
+						}
+						// must escape with '\'
+						buffer.append('\\');
+					} else {
+						foundEscape = false; // used the escape found
+					}
+					if (buffer != null)
+						buffer.append(c);
+					break;
+				default :
+					// if we found an escape it has been used
+					foundEscape = false;
+					if (buffer != null)
+						buffer.append(c);
+					break;
+			}
+		}
+		if (foundEscape)
+			throw new InvalidSyntaxException("Trailing escape characters must be escaped.", filePattern); //$NON-NLS-1$
+		return buffer == null ? filePattern : buffer.toString();
 	}
 
 	protected void findLocalEntryPaths(String path, Filter patternFilter, Hashtable patternProps, boolean recurse, List pathList) {
