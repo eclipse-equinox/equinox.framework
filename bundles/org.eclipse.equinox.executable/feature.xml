@@ -2,7 +2,7 @@
 <feature
       id="org.eclipse.equinox.executable"
       label="%featureName"
-      version="3.4.1.qualifier">
+      version="3.4.2.qualifier">
 
    <description>
       %description
@@ -139,6 +139,16 @@
          fragment="true"/>
          
 	<plugin
+         id="org.eclipse.equinox.launcher.gtk.aix.ppc64"
+         os="aix"
+         ws="gtk"
+         arch="ppc64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
          id="org.eclipse.equinox.launcher.motif.hpux.ia64_32"
          os="hpux"
          ws="motif"
