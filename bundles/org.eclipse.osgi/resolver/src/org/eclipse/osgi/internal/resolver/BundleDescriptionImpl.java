@@ -912,6 +912,18 @@ public final class BundleDescriptionImpl extends BaseDescriptionImpl implements 
 		}
 	}
 
+	public Collection<BundleWiring> getHostWirings() {
+		@SuppressWarnings("unchecked")
+		Collection<BundleWiring> result = Collections.EMPTY_LIST;
+		if (!isResolved() || (getTypes() & BundleRevision.TYPE_FRAGMENT) == 0)
+			return result;
+		BundleDescription[] hosts = host.getHosts();
+		result = new ArrayList<BundleWiring>(hosts.length);
+		for (BundleDescription hostDesc : hosts)
+			result.add(hostDesc.getBundleWiring());
+		return result;
+	}
+
 	// Note that description wiring are identity equality based
 	class DescriptionWiring implements BundleWiring {
 		private volatile boolean valid = true;

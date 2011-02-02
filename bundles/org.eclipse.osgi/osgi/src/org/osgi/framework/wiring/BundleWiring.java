@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2011). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,12 +40,6 @@ import org.osgi.framework.BundleReference;
  * by the framework.
  * 
  * <p>
- * A list of all in use bundle wirings for a bundle can be obtained by calling
- * {@link Bundle#adapt(Class) bundle.adapt}({@link BundleWirings}.class).
- * {@link BundleWirings#getWirings() getWirings()}. For non-fragment bundles,
- * the first item in the returned list is the current bundle wiring.
- * 
- * <p>
  * The current bundle wiring for a non-fragment bundle can be obtained by
  * calling {@link Bundle#adapt(Class) bundle.adapt}(BundleWiring.class). A
  * fragment bundle does not itself have bundle wirings. So calling
@@ -54,7 +48,7 @@ import org.osgi.framework.BundleReference;
  * 
  * @ThreadSafe
  * @noimplement
- * @version $Id: 77da60ad2f9fdeea7bd9465b633b35f8a06c6cdf $
+ * @version $Id: 2a2dc2113c066c3c591a0e54325272d29fcd6d7b $
  */
 public interface BundleWiring extends BundleReference {
 	/**
@@ -126,6 +120,7 @@ public interface BundleWiring extends BundleReference {
 	 * may refer to an older revision of the bundle.
 	 * 
 	 * @return The bundle revision for this bundle wiring.
+	 * @see BundleRevision#getBundleWiring()
 	 */
 	BundleRevision getBundleRevision();
 
@@ -145,6 +140,7 @@ public interface BundleWiring extends BundleReference {
 	 *         empty list if this bundle wiring does not have any attached
 	 *         fragments. If this bundle wiring is not {@link #isInUse() in use}
 	 *         , {@code null} will be returned.
+	 * @see BundleRevision#getHostWirings()
 	 */
 	List<BundleRevision> getFragmentRevisions();
 

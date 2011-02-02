@@ -30,8 +30,7 @@ import org.eclipse.osgi.signedcontent.*;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
 import org.osgi.framework.startlevel.BundleStartLevel;
-import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.framework.wiring.*;
 
 /**
  * This object is given out to bundles and wraps the internal Bundle object. It
@@ -1473,7 +1472,28 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 			BundleDescription description = getBundleDescription();
 			return (A) description.getBundleWiring();
 		}
+		if (BundleRevisions.class.equals(adapterType)) {
+			return (A) new BundleRevisions() {
+				public Bundle getBundle() {
+					return AbstractBundle.this;
+				}
 
+				public List<BundleRevision> getRevisions() {
+					List<BundleRevision> revisions = new ArrayList<BundleRevision>();
+					BundleDescription current = getBundleDescription();
+					if (current != null)
+						revisions.add(current);
+					BundleDescription[] removals = framework.adaptor.getState().getRemovalPending();
+					for (BundleDescription removed : removals) {
+						if (removed.getBundleId() == getBundleId() && removed != current) {
+							revisions.add(removed);
+						}
+					}
+					return revisions;
+				}
+
+			};
+		}
 		if (BundleRevision.class.equals(adapterType)) {
 			return (A) getBundleDescription();
 		}

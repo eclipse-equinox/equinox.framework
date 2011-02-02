@@ -419,6 +419,13 @@
 </message_arguments>
 </filter>
 </resource>
+<resource path="osgi/src/org/osgi/framework/AdaptPermission.java" type="org.osgi.framework.AdaptPermission">
+<filter comment="Ignore OSGi API" id="1110441988">
+<message_arguments>
+<message_argument value="org.osgi.framework.AdaptPermission"/>
+</message_arguments>
+</filter>
+</resource>
 <resource path="osgi/src/org/osgi/framework/AdminPermission.java" type="org.osgi.framework.AdminPermission">
 <filter comment="Ignore OSGi API" id="1141899266">
 <message_arguments>
@@ -976,17 +983,17 @@
 </message_arguments>
 </filter>
 </resource>
+<resource path="osgi/src/org/osgi/framework/wiring/BundleRevisions.java" type="org.osgi.framework.wiring.BundleRevisions">
+<filter comment="Ignore OSGi API" id="1110441988">
+<message_arguments>
+<message_argument value="org.osgi.framework.wiring.BundleRevisions"/>
+</message_arguments>
+</filter>
+</resource>
 <resource path="osgi/src/org/osgi/framework/wiring/BundleWiring.java" type="org.osgi.framework.wiring.BundleWiring">
 <filter comment="Ignore OSGi API" id="1110441988">
 <message_arguments>
 <message_argument value="org.osgi.framework.wiring.BundleWiring"/>
-</message_arguments>
-</filter>
-</resource>
-<resource path="osgi/src/org/osgi/framework/wiring/BundleWirings.java" type="org.osgi.framework.wiring.BundleWirings">
-<filter comment="Ignore OSGi API" id="1110441988">
-<message_arguments>
-<message_argument value="org.osgi.framework.wiring.BundleWirings"/>
 </message_arguments>
 </filter>
 </resource>
