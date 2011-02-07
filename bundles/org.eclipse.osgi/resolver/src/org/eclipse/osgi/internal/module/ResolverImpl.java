@@ -435,6 +435,10 @@ public class ResolverImpl implements Resolver {
 
 			usesCalculationTimeout = false;
 			resolveBundles(bundles, platformProperties, hookDisabled);
+			// reorder exports and bundles after resolving the bundles
+			resolverExports.reorder();
+			resolverBundles.reorder();
+			reorderGenerics();
 			if (resolveOptional)
 				resolveOptionalConstraints(currentlyResolved);
 			if (DEBUG)
