@@ -406,7 +406,7 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 			return (A) fsl;
 		else if (FrameworkWiring.class.equals(adapterType))
 			return (A) framework.getPackageAdmin();
-		return super.adapt(adapterType);
+		return super.adapt0(adapterType);
 	}
 
 	class EquinoxStartLevel implements FrameworkStartLevel {
