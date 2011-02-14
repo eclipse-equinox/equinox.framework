@@ -115,7 +115,7 @@ public final class WovenClassImpl implements WovenClass, HookContext {
 	}
 
 	public BundleWiring getBundleWiring() {
-		return loader.getLoaderProxy().getBundleDescription().getBundleWiring();
+		return loader.getLoaderProxy().getBundleDescription().getWiring();
 	}
 
 	public void call(final Object hook, ServiceRegistration<?> hookRegistration) throws Exception {

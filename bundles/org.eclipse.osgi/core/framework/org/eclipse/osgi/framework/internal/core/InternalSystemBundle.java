@@ -401,7 +401,7 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <A> A adapt(Class<A> adapterType) {
+	protected <A> A adapt0(Class<A> adapterType) {
 		if (FrameworkStartLevel.class.equals(adapterType))
 			return (A) fsl;
 		else if (FrameworkWiring.class.equals(adapterType))

@@ -1452,8 +1452,13 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 		}
 	}
 
+	public final <A> A adapt(Class<A> adapterType) {
+		checkAdaptPermission(adapterType);
+		return adapt0(adapterType);
+	}
+
 	@SuppressWarnings("unchecked")
-	public <A> A adapt(Class<A> adapterType) {
+	protected <A> A adapt0(Class<A> adapterType) {
 		if (adapterType.isInstance(this))
 			return (A) this;
 		if (BundleContext.class.equals(adapterType)) {
@@ -1467,10 +1472,10 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 			return (A) this;
 
 		if (BundleWiring.class.equals(adapterType)) {
-			if (state == UNINSTALLED || isFragment())
+			if (state == UNINSTALLED)
 				return null;
 			BundleDescription description = getBundleDescription();
-			return (A) description.getBundleWiring();
+			return (A) description.getWiring();
 		}
 		if (BundleRevisions.class.equals(adapterType)) {
 			return (A) new BundleRevisions() {
@@ -1495,9 +1500,22 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 			};
 		}
 		if (BundleRevision.class.equals(adapterType)) {
+			if (state == UNINSTALLED)
+				return null;
 			return (A) getBundleDescription();
 		}
 		return null;
+	}
+
+	/**
+	 * Check for permission to get a service.
+	 */
+	private <A> void checkAdaptPermission(Class<A> adapterType) {
+		SecurityManager sm = System.getSecurityManager();
+		if (sm == null) {
+			return;
+		}
+		sm.checkPermission(new AdaptPermission(adapterType.getName(), this, AdaptPermission.ADAPT));
 	}
 
 	public File getDataFile(String filename) {

@@ -13,14 +13,14 @@ package org.eclipse.osgi.internal.module;
 import org.eclipse.osgi.service.resolver.BaseDescription;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.osgi.framework.Version;
-import org.osgi.framework.wiring.Capability;
+import org.osgi.framework.wiring.BundleCapability;
 
 /*
  * A companion to BaseDescription from the state used while resolving.
  */
 public abstract class VersionSupplier {
 	final protected BaseDescription base;
-	final private Capability capability;
+	final private BundleCapability capability;
 	private VersionSupplier substitute;
 
 	VersionSupplier(BaseDescription base) {
@@ -65,7 +65,7 @@ public abstract class VersionSupplier {
 		return base.toString();
 	}
 
-	Capability getCapability() {
+	BundleCapability getCapability() {
 		return capability;
 	}
 }

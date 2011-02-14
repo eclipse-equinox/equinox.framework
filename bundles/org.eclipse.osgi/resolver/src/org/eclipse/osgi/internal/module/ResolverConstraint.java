@@ -10,6 +10,7 @@ package org.eclipse.osgi.internal.module;
 
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.VersionConstraint;
+import org.osgi.framework.wiring.BundleRequirement;
 
 /*
  * A companion to VersionConstraint from the state used while resolving
@@ -17,12 +18,14 @@ import org.eclipse.osgi.service.resolver.VersionConstraint;
 public abstract class ResolverConstraint {
 	final protected ResolverBundle bundle;
 	protected VersionConstraint constraint;
+	private BundleRequirement requrement;
 	private VersionSupplier[] possibleSuppliers;
 	private int selectedSupplierIndex = 0;
 
 	ResolverConstraint(ResolverBundle bundle, VersionConstraint constraint) {
 		this.bundle = bundle;
 		this.constraint = constraint;
+		this.requrement = constraint.getRequirement();
 	}
 
 	// returns the Resolver bundle requiring the ResolverConstraint
@@ -139,5 +142,10 @@ public abstract class ResolverConstraint {
 
 	void setVersionConstraint(VersionConstraint constraint) {
 		this.constraint = constraint;
+		this.requrement = constraint.getRequirement();
+	}
+
+	BundleRequirement getRequirement() {
+		return requrement;
 	}
 }

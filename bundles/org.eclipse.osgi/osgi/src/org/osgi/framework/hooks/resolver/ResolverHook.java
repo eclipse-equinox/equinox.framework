@@ -19,8 +19,9 @@ package org.osgi.framework.hooks.resolver;
 import java.util.Collection;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.framework.wiring.Capability;
 import org.osgi.framework.wiring.FrameworkWiring;
 
 /**
@@ -67,23 +68,23 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * <li>For each bundle revision {@code B} left in the shrinkable collection
  * {@code R} that represents a singleton bundle do the following:<br/>
  * Determine the collection of available capabilities that have a name space of
- * {@link Capability#BUNDLE_CAPABILITY osgi.wiring.bundle}, are singletons, and
- * have the same symbolic name as the singleton bundle revision {@code B} and
- * place each of the matching capabilities into a shrinkable collection
+ * {@link BundleRevision#BUNDLE_NAMESPACE osgi.wiring.bundle}, are singletons,
+ * and have the same symbolic name as the singleton bundle revision {@code B}
+ * and place each of the matching capabilities into a shrinkable collection
  * {@code S}.
  * 
- * Remove the {@link Capability#BUNDLE_CAPABILITY osgi.wiring.bundle} capability
- * provided by bundle revision {@code B} from shrinkable collection {@code S}. A
- * singleton bundle cannot collide with itself.
+ * Remove the {@link BundleRevision#BUNDLE_NAMESPACE osgi.wiring.bundle}
+ * capability provided by bundle revision {@code B} from shrinkable collection
+ * {@code S}. A singleton bundle cannot collide with itself.
  * 
  * For each resolver hook call the
- * {@link #filterSingletonCollisions(Capability, Collection)} with the
- * {@link Capability#BUNDLE_CAPABILITY osgi.wiring.bundle} capability provided
- * by bundle revision {@code B} and the shrinkable collection {@code S}
+ * {@link #filterSingletonCollisions(BundleCapability, Collection)} with the
+ * {@link BundleRevision#BUNDLE_NAMESPACE osgi.wiring.bundle} capability
+ * provided by bundle revision {@code B} and the shrinkable collection {@code S}
  * 
  * The shrinkable collection {@code S} now contains all singleton
- * {@link Capability#BUNDLE_CAPABILITY osgi.wiring.bundle} capabilities that can
- * influence the ability of bundle revision {@code B} to resolve.</li>
+ * {@link BundleRevision#BUNDLE_NAMESPACE osgi.wiring.bundle} capabilities that
+ * can influence the ability of bundle revision {@code B} to resolve.</li>
  * <li>During a resolve process a framework is free to attempt to resolve any or
  * all bundles contained in shrinkable collection {@code R}. For each bundle
  * revision {@code B} left in the shrinkable collection {@code R} which the
@@ -98,8 +99,8 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * 
  * <p/>
  * For each resolver hook call the
- * {@link #filterMatches(BundleRevision, Collection)} with the bundle revision
- * {@code B} and the shrinkable collection {@code C}.
+ * {@link #filterMatches(BundleRequirement, Collection)} with the requirement
+ * {@code T} and the shrinkable collection {@code C}.
  * 
  * <p/>
  * The shrinkable collection {@code C} now contains all the capabilities that
@@ -124,7 +125,7 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * 
  * @see ResolverHookFactory
  * @NotThreadSafe
- * @version $Id: 751ae50939ddda900146ce9a14aa5363f4ab57a3 $
+ * @version $Id: ea23400257d780706250f8825ec886aaebb0e5d8 $
  */
 public interface ResolverHook {
 	/**
@@ -148,16 +149,16 @@ public interface ResolverHook {
 	 * candidates must all use the same name space.
 	 * <p>
 	 * Currently only capabilities with the name space of
-	 * {@link Capability#BUNDLE_CAPABILITY osgi.wiring.bundle} can be
+	 * {@link BundleRevision#BUNDLE_NAMESPACE osgi.wiring.bundle} can be
 	 * singletons. In that case all the collision candidates have the name space
-	 * of {@link Capability#BUNDLE_CAPABILITY osgi.wiring.bundle}, are
+	 * of {@link BundleRevision#BUNDLE_NAMESPACE osgi.wiring.bundle}, are
 	 * singletons, and have the same symbolic name as the specified singleton
 	 * capability.
 	 * <p>
 	 * In the future, capabilities in other name spaces may support the
 	 * singleton concept. Hook implementations should be prepared to receive
 	 * calls to this method for capabilities in name spaces other than
-	 * {@link Capability#BUNDLE_CAPABILITY osgi.wiring.bundle}.
+	 * {@link BundleRevision#BUNDLE_NAMESPACE osgi.wiring.bundle}.
 	 * <p>
 	 * This method can filter the list of collision candidates by removing
 	 * potential collisions. Removing a collision candidate will allow the
@@ -167,25 +168,25 @@ public interface ResolverHook {
 	 * @param singleton the singleton involved in a resolve process
 	 * @param collisionCandidates a collection of singleton collision candidates
 	 */
-	void filterSingletonCollisions(Capability singleton, Collection<Capability> collisionCandidates);
+	void filterSingletonCollisions(BundleCapability singleton, Collection<BundleCapability> collisionCandidates);
 
 	/**
 	 * Filter matches hook method. This method is called during the resolve process for the 
-	 * specified requirer.  The collection of candidates match a requirement for the requirer.
+	 * specified requirement.  The collection of candidates match the specified requirement.
 	 * This method can filter the collection of matching candidates by removing candidates from 
 	 * the collection.  Removing a candidate will prevent the resolve process from choosing the 
-	 * removed candidate to satisfy a requirement for the requirer.
+	 * removed candidate to satisfy the requirement.
 	 * <p>
 	 * All of the candidates will have the same name space and will 
-	 * match a requirement of the requirer.
+	 * match the specified requirement.
 	 * <p>
 	 * If the Java Runtime Environment supports permissions then the collection of 
 	 * candidates will only contain candidates for which the requirer has permission to
 	 * access.
-	 * @param requirer the bundle revision which contains a requirement
-	 * @param candidates a collection of candidates that match a requirement of the requirer
+	 * @param requirement the requirement to filter candidates for
+	 * @param candidates a collection of candidates that match the requirement
 	 */
-	void filterMatches(BundleRevision requirer, Collection<Capability> candidates);
+	void filterMatches(BundleRequirement requirement, Collection<BundleCapability> candidates);
 
 	/**
 	 * This method is called once at the end of the resolve process.
