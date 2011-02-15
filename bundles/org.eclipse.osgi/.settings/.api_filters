@@ -927,6 +927,13 @@
 </message_arguments>
 </filter>
 </resource>
+<resource path="osgi/src/org/osgi/framework/hooks/service/ListenerHook.java" type="org.osgi.framework.hooks.service.ListenerHook$ListenerInfo">
+<filter comment="Ignore OSGi APIs" id="403853384">
+<message_arguments>
+<message_argument value="org.osgi.framework.hooks.service.ListenerHook.ListenerInfo"/>
+</message_arguments>
+</filter>
+</resource>
 <resource path="osgi/src/org/osgi/framework/hooks/weaving/WeavingException.java" type="org.osgi.framework.hooks.weaving.WeavingException">
 <filter comment="Ignore OSGi API" id="1110441988">
 <message_arguments>
