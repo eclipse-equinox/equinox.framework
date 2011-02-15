@@ -1685,7 +1685,7 @@ public class ResolverImpl implements Resolver {
 								newSelectedCapabilities = hostBundles[i].getSelectedGenericCapabilities();
 							if (newSelectedExports == null)
 								newSelectedExports = hostBundles[i].getSelectedExports();
-							state.resolveBundle(hostBundles[i], true, null, newSelectedExports, hostBundles[i].getSubstitutedExports(), newSelectedCapabilities, hostBundles[i].getResolvedRequires(), hostBundles[i].getResolvedImports(), hostBundles[i].getResolvedGenericRequires(), hostBundles[i].getWires());
+							state.resolveBundle(hostBundles[i], true, null, newSelectedExports, hostBundles[i].getSubstitutedExports(), newSelectedCapabilities, hostBundles[i].getResolvedRequires(), hostBundles[i].getResolvedImports(), hostBundles[i].getResolvedGenericRequires(), ((BundleDescriptionImpl) hostBundles[i]).getWires());
 						}
 					}
 				}
@@ -1762,7 +1762,7 @@ public class ResolverImpl implements Resolver {
 	}
 
 	private void addStateWire(BundleDescription importingBundle, VersionConstraint requirement, BundleDescription capabilityHost, ExportPackageDescription capability) {
-		Map<String, List<StateWire>> wires = importingBundle.getWires();
+		Map<String, List<StateWire>> wires = ((BundleDescriptionImpl) importingBundle).getWires();
 		List<StateWire> imports = wires.get(BundleRevision.PACKAGE_NAMESPACE);
 		if (imports == null) {
 			imports = new ArrayList<StateWire>();

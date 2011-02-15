@@ -74,6 +74,11 @@ public interface VersionConstraint extends Cloneable {
 	public BaseDescription getSupplier();
 
 	/**
+	 * Returns the requirement represented by this constraint.
+	 * Some constraint types may not be able to represent 
+	 * a requirement.  In such cases <code>null</code> is
+	 * returned.
+	 * @return the requirement represented by this constraint
 	 * @since 3.7
 	 */
 	public BundleRequirement getRequirement();

@@ -257,12 +257,19 @@ public final class BundleDescriptionImpl extends BaseDescriptionImpl implements 
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public Map<String, List<StateWire>> getWires() {
 		LazyData currentData = loadLazyData();
 		synchronized (this.monitor) {
-			if (currentData.stateWires == null)
-				return Collections.EMPTY_MAP;
+			if (currentData.stateWires == null) {
+				currentData.stateWires = new HashMap<String, List<StateWire>>(0);
+			}
+			return currentData.stateWires;
+		}
+	}
+
+	Map<String, List<StateWire>> getWiresInternal() {
+		LazyData currentData = loadLazyData();
+		synchronized (this.monitor) {
 			return currentData.stateWires;
 		}
 	}
