@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2008 IBM Corporation and others.
+ * Copyright (c) 2003, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,6 +30,20 @@ import org.osgi.framework.*;
  * This class is abstract and is extended by BundleHost and BundleFragment.
  */
 public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement {
+	private final static long STATE_CHANGE_TIMEOUT;
+	static {
+		long stateChangeWait = 5000;
+		try {
+			String prop = FrameworkProperties.getProperty("equinox.statechange.timeout"); //$NON-NLS-1$
+			if (prop != null)
+				stateChangeWait = Long.parseLong(prop);
+		} catch (Throwable t) {
+			// use default 5000
+			stateChangeWait = 5000;
+		}
+		STATE_CHANGE_TIMEOUT = stateChangeWait;
+	}
+
 	/** The Framework this bundle is part of */
 	protected Framework framework;
 	/** The state of the bundle. */
@@ -1149,7 +1163,7 @@ public abstract class AbstractBundle implements Bundle, Comparable, KeyedElement
 						Debug.println(" Waiting for state to change in bundle " + this); //$NON-NLS-1$
 						start = System.currentTimeMillis();
 					}
-					statechangeLock.wait(5000);
+					statechangeLock.wait(STATE_CHANGE_TIMEOUT);
 					/*
 					 * wait for other thread to
 					 * finish changing state

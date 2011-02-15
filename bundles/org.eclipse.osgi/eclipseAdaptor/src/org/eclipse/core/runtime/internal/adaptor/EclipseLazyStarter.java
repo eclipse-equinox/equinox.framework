@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2008 IBM Corporation and others.
+ * Copyright (c) 2006, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -105,7 +105,8 @@ public class EclipseLazyStarter implements ClassLoadingStatsHook, AdaptorHook, H
 			AbstractBundle bundle = (AbstractBundle) managers[i].getBaseData().getBundle();
 			// The bundle must be started.
 			// Note that another thread may already be starting this bundle;
-			// In this case we will timeout after 5 seconds and record the BundleException
+			// In this case we will timeout after a default of 5 seconds and record the BundleException
+			long startTime = System.currentTimeMillis();
 			try {
 				// do not persist the start of this bundle
 				secureAction.start(bundle, Bundle.START_TRANSIENT);
@@ -115,7 +116,7 @@ public class EclipseLazyStarter implements ClassLoadingStatsHook, AdaptorHook, H
 					StatusException status = (StatusException) cause;
 					if ((status.getStatusCode() & StatusException.CODE_ERROR) == 0) {
 						if (status.getStatus() instanceof Thread) {
-							String message = NLS.bind(EclipseAdaptorMsg.ECLIPSE_CLASSLOADER_CONCURRENT_STARTUP, new Object[] {Thread.currentThread(), name, status.getStatus(), bundle, new Integer(5000)});
+							String message = NLS.bind(EclipseAdaptorMsg.ECLIPSE_CLASSLOADER_CONCURRENT_STARTUP, new Object[] {Thread.currentThread(), name, status.getStatus(), bundle, new Long(System.currentTimeMillis() - startTime)});
 							adaptor.getFrameworkLog().log(new FrameworkLogEntry(FrameworkAdaptor.FRAMEWORK_SYMBOLICNAME, FrameworkLogEntry.WARNING, 0, message, 0, e, null));
 						}
 						continue;
