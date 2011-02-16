@@ -136,10 +136,4 @@ public class HostSpecificationImpl extends VersionConstraintImpl implements Host
 	protected String getInternalNameSpace() {
 		return BundleRevision.HOST_NAMESPACE;
 	}
-
-	@Override
-	protected Object clone() throws CloneNotSupportedException {
-		// TODO Auto-generated method stub
-		return super.clone();
-	}
 }
