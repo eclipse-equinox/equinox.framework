@@ -37,7 +37,7 @@ import org.osgi.framework.wiring.*;
  * is destroyed when a bundle is uninstalled and reused if a bundle is updated.
  * This class is abstract and is extended by BundleHost and BundleFragment.
  */
-public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, KeyedElement, BundleStartLevel, BundleReference {
+public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, KeyedElement, BundleStartLevel, BundleReference, BundleRevisions {
 	private final static long STATE_CHANGE_TIMEOUT;
 	static {
 		long stateChangeWait = 5000;
@@ -1457,6 +1457,20 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 		return adapt0(adapterType);
 	}
 
+	public List<BundleRevision> getRevisions() {
+		List<BundleRevision> revisions = new ArrayList<BundleRevision>();
+		BundleDescription current = getBundleDescription();
+		if (current != null)
+			revisions.add(current);
+		BundleDescription[] removals = framework.adaptor.getState().getRemovalPending();
+		for (BundleDescription removed : removals) {
+			if (removed.getBundleId() == getBundleId() && removed != current) {
+				revisions.add(removed);
+			}
+		}
+		return revisions;
+	}
+
 	@SuppressWarnings("unchecked")
 	protected <A> A adapt0(Class<A> adapterType) {
 		if (adapterType.isInstance(this))
@@ -1468,37 +1482,13 @@ public abstract class AbstractBundle implements Bundle, Comparable<Bundle>, Keye
 				return null;
 			}
 		}
-		if (BundleStartLevel.class.equals(adapterType))
-			return (A) this;
-
 		if (BundleWiring.class.equals(adapterType)) {
 			if (state == UNINSTALLED)
 				return null;
 			BundleDescription description = getBundleDescription();
 			return (A) description.getWiring();
 		}
-		if (BundleRevisions.class.equals(adapterType)) {
-			return (A) new BundleRevisions() {
-				public Bundle getBundle() {
-					return AbstractBundle.this;
-				}
 
-				public List<BundleRevision> getRevisions() {
-					List<BundleRevision> revisions = new ArrayList<BundleRevision>();
-					BundleDescription current = getBundleDescription();
-					if (current != null)
-						revisions.add(current);
-					BundleDescription[] removals = framework.adaptor.getState().getRemovalPending();
-					for (BundleDescription removed : removals) {
-						if (removed.getBundleId() == getBundleId() && removed != current) {
-							revisions.add(removed);
-						}
-					}
-					return revisions;
-				}
-
-			};
-		}
 		if (BundleRevision.class.equals(adapterType)) {
 			if (state == UNINSTALLED)
 				return null;
