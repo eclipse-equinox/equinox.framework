@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2010 IBM Corporation and others. All rights reserved.
+ * Copyright (c) 2004, 2011 IBM Corporation and others. All rights reserved.
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
@@ -1584,11 +1584,14 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 					// If the import resolved then return it's matching export
 					if (DEBUG_IMPORTS)
 						ResolverImpl.log("Resolved dynamic import: " + rb + ":" + resolverImports[j].getName() + " -> " + ((ResolverExport) resolverImports[j].getSelectedSupplier()).getExporter() + ":" + requestedPackage); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-					ExportPackageDescription matchingExport = ((ResolverExport) resolverImports[j].getSelectedSupplier()).getExportPackageDescription();
+					ResolverExport export = (ResolverExport) resolverImports[j].getSelectedSupplier();
+					ExportPackageDescription matchingExport = export.getExportPackageDescription();
 					// If it is a wildcard import then clear the wire, so other
 					// exported packages can be found for it
 					if (importName.endsWith("*")) //$NON-NLS-1$
 						resolverImports[j].clearPossibleSuppliers();
+					// now that we have an export to wire to; populate the roots for that package for the bundle
+					groupingChecker.populateRoots(rb, export);
 					return matchingExport;
 				}
 			}
@@ -1602,13 +1605,20 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 			ImportPackageSpecification packageSpec = state.getFactory().createImportPackageSpecification(requestedPackage, null, null, null, directives, null, importingBundle);
 			ResolverImport newImport = new ResolverImport(rb, packageSpec);
 			if (resolveImport(newImport, new ArrayList())) {
+				// populate the grouping checker with current imports
+				groupingChecker.populateRoots(rb);
 				while (newImport.getSelectedSupplier() != null) {
 					if (groupingChecker.isDynamicConsistent(rb, (ResolverExport) newImport.getSelectedSupplier()) != null)
 						newImport.selectNextSupplier();
 					else
 						break;
 				}
-				return ((ResolverExport) newImport.getSelectedSupplier()).getExportPackageDescription();
+				ResolverExport export = (ResolverExport) newImport.getSelectedSupplier();
+				if (export != null) {
+					// now that we have an export to wire to; populate the roots for that package for the bundle
+					groupingChecker.populateRoots(rb, export);
+					return export.getExportPackageDescription();
+				}
 			}
 		}
 		if (DEBUG || DEBUG_IMPORTS)
