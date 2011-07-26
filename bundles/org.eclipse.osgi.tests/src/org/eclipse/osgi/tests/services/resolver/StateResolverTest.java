@@ -2096,6 +2096,15 @@ public class StateResolverTest extends AbstractStateTest {
 		manifest.put(Constants.IMPORT_PACKAGE, "b, c"); //$NON-NLS-1$
 		BundleDescription aFrag3 = state.getFactory().createBundleDescription(state, manifest, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME) + "_" + manifest.get(Constants.BUNDLE_VERSION), id++); //$NON-NLS-1$
 
+		// Bug 353103 need to create a bundle that has the same unresolved imports as other bundles
+		manifest = new Hashtable();
+		manifest.put(Constants.BUNDLE_MANIFESTVERSION, "2"); //$NON-NLS-1$
+		manifest.put(Constants.BUNDLE_SYMBOLICNAME, "aFrag4"); //$NON-NLS-1$
+		manifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
+		manifest.put(Constants.FRAGMENT_HOST, "a"); //$NON-NLS-1$
+		manifest.put(Constants.IMPORT_PACKAGE, "b, c, d, e"); //$NON-NLS-1$
+		BundleDescription aFrag4 = state.getFactory().createBundleDescription(state, manifest, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME) + "_" + manifest.get(Constants.BUNDLE_VERSION), id++); //$NON-NLS-1$
+
 		manifest = new Hashtable();
 		manifest.put(Constants.BUNDLE_MANIFESTVERSION, "2"); //$NON-NLS-1$
 		manifest.put(Constants.BUNDLE_SYMBOLICNAME, "b"); //$NON-NLS-1$
@@ -2107,6 +2116,7 @@ public class StateResolverTest extends AbstractStateTest {
 		state.addBundle(aFrag1);
 		state.addBundle(aFrag2);
 		state.addBundle(aFrag3);
+		state.addBundle(aFrag4);
 		state.addBundle(b);
 		state.resolve();
 
@@ -2114,7 +2124,8 @@ public class StateResolverTest extends AbstractStateTest {
 		assertFalse("0.2", aFrag1.isResolved()); //$NON-NLS-1$
 		assertFalse("0.3", aFrag2.isResolved()); //$NON-NLS-1$
 		assertTrue("0.4", aFrag3.isResolved()); //$NON-NLS-1$
-		assertTrue("0.5", b.isResolved()); //$NON-NLS-1$
+		assertFalse("0.5", aFrag4.isResolved()); //$NON-NLS-1$
+		assertTrue("0.6", b.isResolved()); //$NON-NLS-1$
 
 		ExportPackageDescription[] aResolvedImports = a.getResolvedImports();
 		ExportPackageDescription[] bSelectedExports = b.getSelectedExports();
@@ -2164,6 +2175,15 @@ public class StateResolverTest extends AbstractStateTest {
 		manifest.put(Constants.IMPORT_PACKAGE, "b, c"); //$NON-NLS-1$
 		BundleDescription aFrag3 = state.getFactory().createBundleDescription(state, manifest, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME) + "_" + manifest.get(Constants.BUNDLE_VERSION), id++); //$NON-NLS-1$
 
+		// Bug 353103 need to create a bundle that has the same unresolved imports as other bundles
+		manifest = new Hashtable();
+		manifest.put(Constants.BUNDLE_MANIFESTVERSION, "2"); //$NON-NLS-1$
+		manifest.put(Constants.BUNDLE_SYMBOLICNAME, "aFrag4"); //$NON-NLS-1$
+		manifest.put(Constants.BUNDLE_VERSION, "1.0.0"); //$NON-NLS-1$
+		manifest.put(Constants.FRAGMENT_HOST, "a"); //$NON-NLS-1$
+		manifest.put(Constants.IMPORT_PACKAGE, "b, c, d, e"); //$NON-NLS-1$
+		BundleDescription aFrag4 = state.getFactory().createBundleDescription(state, manifest, (String) manifest.get(Constants.BUNDLE_SYMBOLICNAME) + "_" + manifest.get(Constants.BUNDLE_VERSION), id++); //$NON-NLS-1$
+
 		manifest = new Hashtable();
 		manifest.put(Constants.BUNDLE_MANIFESTVERSION, "2"); //$NON-NLS-1$
 		manifest.put(Constants.BUNDLE_SYMBOLICNAME, "b"); //$NON-NLS-1$
@@ -2176,6 +2196,7 @@ public class StateResolverTest extends AbstractStateTest {
 		state.addBundle(aFrag1);
 		state.addBundle(aFrag2);
 		state.addBundle(aFrag3);
+		state.addBundle(aFrag4);
 		state.addBundle(b);
 		state.resolve();
 
@@ -2183,7 +2204,8 @@ public class StateResolverTest extends AbstractStateTest {
 		assertFalse("0.2", aFrag1.isResolved()); //$NON-NLS-1$
 		assertFalse("0.3", aFrag2.isResolved()); //$NON-NLS-1$
 		assertTrue("0.4", aFrag3.isResolved()); //$NON-NLS-1$
-		assertTrue("0.5", b.isResolved()); //$NON-NLS-1$
+		assertFalse("0.5", aFrag4.isResolved()); //$NON-NLS-1$
+		assertTrue("0.6", b.isResolved()); //$NON-NLS-1$
 
 		ExportPackageDescription[] aResolvedImports = a.getResolvedImports();
 		ExportPackageDescription[] aSelectedExports = a.getSelectedExports();
