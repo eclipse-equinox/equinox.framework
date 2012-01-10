@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2011 IBM Corporation and others.
+ * Copyright (c) 2004, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -94,8 +94,12 @@ public class ExportPackageDescriptionImpl extends BaseDescriptionImpl implements
 			if (bundleVersion != null)
 				result.put(Constants.BUNDLE_VERSION_ATTRIBUTE, bundleVersion);
 			String symbolicName = getSupplier().getSymbolicName();
-			if (symbolicName != null)
-				result.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, symbolicName);
+			if (symbolicName != null) {
+				if (symbolicName.equals(Constants.getInternalSymbolicName()))
+					result.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, Arrays.asList(Constants.SYSTEM_BUNDLE_SYMBOLICNAME, symbolicName));
+				else
+					result.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, symbolicName);
+			}
 			return Collections.unmodifiableMap(result);
 		}
 	}
