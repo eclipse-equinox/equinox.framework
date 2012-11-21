@@ -20,6 +20,15 @@
 #include <ctype.h>
 #include <locale.h>
 #include <sys/stat.h>
+#ifdef MACOSX
+#include <CoreServices/CoreServices.h>
+#ifdef COCOA
+#include <Cocoa/Cocoa.h>
+#else
+#include <Carbon/Carbon.h>
+#endif
+#include <pthread.h>
+#endif
 
 static _TCHAR* libraryMsg =
 _T_ECLIPSE("The %s executable launcher was unable to locate its \n\
@@ -34,17 +43,20 @@ finding the entry point.");
 /* New arguments have the form --launcher.<arg> to avoid collisions */
 #define LIBRARY		  _T_ECLIPSE("--launcher.library")
 #define SUPRESSERRORS _T_ECLIPSE("--launcher.suppressErrors")
+#define SECOND_THREAD _T_ECLIPSE("--launcher.secondThread")
 #define INI			  _T_ECLIPSE("--launcher.ini")
 
 /* this typedef must match the run method in eclipse.c */
 typedef int (*RunMethod)(int argc, _TCHAR* argv[], _TCHAR* vmArgs[]);
 typedef void (*SetInitialArgs)(int argc, _TCHAR*argv[], _TCHAR* library);
 
+static _TCHAR*  program 	  = NULL;			/* program path */
 static _TCHAR*  name          = NULL;			/* program name */
 static _TCHAR** userVMarg     = NULL;     		/* user specific args for the Java VM  */
 static _TCHAR*  programDir	  = NULL;			/* directory where program resides */
 static _TCHAR*  officialName  = NULL;
 static int      suppressErrors = 0;				/* supress error dialogs */
+static int		secondThread  = 0;				/* True: start the VM on a second thread */
 
 static int 	 	createUserArgs(int configArgc, _TCHAR **configArgv, int *argc, _TCHAR ***argv);
 static void  	parseArgs( int* argc, _TCHAR* argv[] );
@@ -90,18 +102,54 @@ int main(int argc, char* argv[]) {
 #define main mainW
 #endif /* UNICODE */
 
+static int callRunMethod(int argc, _TCHAR* argv[], void* handle, _TCHAR** userVMarg) {
+	RunMethod runMethod = (RunMethod)findSymbol(handle, RUN_METHOD);
+	int exitCd = 0;
+	if(runMethod != NULL)
+		exitCd = runMethod(argc, argv, userVMarg);
+	else { 
+		if(!suppressErrors)
+			displayMessage(officialName, entryMsg);
+		else 
+			_ftprintf(stderr, _T_ECLIPSE("%s:\n%s\n"), officialName, entryMsg);
+		exit(1);
+	}
+	unloadLibrary(handle);
+	free( eclipseLibrary );
+    free( programDir );
+    free( program );
+    free( officialName );
+	return exitCd;
+}
+
+#ifdef MACOSX
+typedef struct {
+	int argc;
+	_TCHAR** argv;	
+	_TCHAR** userVMarg;
+	void* handle;
+} ThreadArgs;
+
+static void * startThread(void * init) {
+	ThreadArgs * args = (ThreadArgs *) init;
+	int exitCode = callRunMethod (args->argc, args->argv, args->handle, args->userVMarg);
+	exit(exitCode);
+	return NULL;
+}
+
+static void dummyCallback(void * info) {}
+#endif
+
 int main( int argc, _TCHAR* argv[] )
 {
 	_TCHAR*  errorMsg;
-	_TCHAR*  program;
 	_TCHAR*  iniFile;
 	_TCHAR*  ch;
 	_TCHAR** configArgv = NULL;
 	int 	 configArgc = 0;
 	int      exitCode = 0;
 	int      ret = 0;
-	void *	 handle = 0;
-	RunMethod 		runMethod;
+	void*	 handle = NULL;
 	SetInitialArgs  setArgs;
 	
 	setlocale(LC_ALL, "");
@@ -181,22 +229,62 @@ int main( int argc, _TCHAR* argv[] )
 		exit(1);
 	}
 	
-	runMethod = (RunMethod)findSymbol(handle, RUN_METHOD);
-	if(runMethod != NULL)
-		exitCode = runMethod(argc, argv, userVMarg);
-	else { 
-		if(!suppressErrors)
-			displayMessage(officialName, entryMsg);
-		else 
-			_ftprintf(stderr, _T_ECLIPSE("%s:\n%s\n"), officialName, entryMsg);
-		exit(1);
+#ifdef MACOSX
+	/* if --launcher.secondThread was specified, create a new thread and run the vm on it.  
+	 * This main thread will run the CFRunLoop 
+	 */
+	if (secondThread != 0) {
+		/* Initialize the application */
+		#ifdef COCOA
+		[NSApplication sharedApplication];
+		#else
+		ClearMenuBar();
+		#endif
+		
+		/* Create and run the sencond thread */
+		struct rlimit limit = {0, 0};
+		int stackSize = 0;
+		if (getrlimit(RLIMIT_STACK, &limit) == 0) {
+			if (limit.rlim_cur != 0) {
+				stackSize = limit.rlim_cur;
+			}
+		}
+		void *status;
+		pthread_t thread;
+		pthread_attr_t attributes;
+		pthread_attr_init(&attributes);
+		pthread_attr_setscope(&attributes, PTHREAD_SCOPE_SYSTEM);
+		pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
+		if (stackSize != 0)
+			pthread_attr_setstacksize(&attributes, stackSize);
+		
+		CFRunLoopSourceContext sourceContext = { 
+			.version = 0, .info = NULL, .retain = NULL, .release = NULL,
+			.copyDescription = NULL, .equal = NULL, .hash = NULL, 
+			.schedule = NULL, .cancel = NULL, .perform = &dummyCallback 
+		};
+		
+		CFRunLoopSourceRef sourceRef = CFRunLoopSourceCreate(NULL, 0, &sourceContext);
+		CFRunLoopAddSource(CFRunLoopGetCurrent(), sourceRef, kCFRunLoopCommonModes);
+		
+		ThreadArgs threadArgs;
+		threadArgs.argc = argc;
+		threadArgs.argv = argv;
+		threadArgs.userVMarg = userVMarg;
+		threadArgs.handle = handle;
+		pthread_create( &thread, &attributes, &startThread, &threadArgs);
+		pthread_attr_destroy(&attributes);
+		
+		CFRunLoopRun();	
+		CFRelease(sourceRef);
+
+		pthread_join(thread, &status);
+	} else {
+		exitCode = callRunMethod(argc, argv, handle, userVMarg);
 	}
-	unloadLibrary(handle);
-	
-	free( eclipseLibrary );
-    free( programDir );
-    free( program );
-    free( officialName );
+#else
+	exitCode = callRunMethod(argc, argv, handle, userVMarg);
+#endif	
     
 	return exitCode;
 }
@@ -261,6 +349,8 @@ static void parseArgs( int* pArgc, _TCHAR* argv[] )
         	eclipseLibrary = argv[++index];
         } else if(_tcsicmp(argv[index], SUPRESSERRORS) == 0) {
         	suppressErrors = 1;
+        } else if(_tcsicmp(argv[index], SECOND_THREAD) == 0) {
+        	secondThread = 1;
         } 
     }
 }

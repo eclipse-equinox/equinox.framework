@@ -250,6 +250,7 @@ char* getVMVersion( char *vmPath )
 
     return version;
 }
+#endif /* AIX */
 
 /* Compare JVM Versions of the form "x.x.x..."
  *     
@@ -287,4 +288,3 @@ int versionCmp(char *ver1, char *ver2)
 
     return versionCmp((char*)(dot1 + 1), (char*)(dot2 + 1) );
 }
-#endif /* AIX */
