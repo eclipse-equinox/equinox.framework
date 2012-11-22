@@ -45,19 +45,24 @@ char *findCommand(char *command);
 /* Global Variables */
 char*  defaultVM     = "java";
 char*  vmLibrary	 = "JavaVM";
-char*  shippedVMDir  = "jre/bin/";
+char*  shippedVMDir  = "../../../jre/Contents/Home/jre/bin/";
+int isSUN = 0;
 
 static void adjustLibraryPath(char * vmLibrary);
 static char * findLib(char * command);
 
 #ifdef i386
 #define JAVA_ARCH "i386"
+#define JAVA_HOME_ARCH "i386"
 #elif defined(__ppc__) || defined(__powerpc64__)
 #define JAVA_ARCH "ppc"
+#define JAVA_HOME_ARCH "ppc"
 #elif defined(__amd64__) || defined(__x86_64__)
 #define JAVA_ARCH "amd64"
+#define JAVA_HOME_ARCH "x86_64"
 #else
 #define JAVA_ARCH DEFAULT_OS_ARCH
+#define JAVA_HOME_ARCH DEFAULT_OS_ARCH
 #endif
 
 #define LIB_PATH_VAR _T_ECLIPSE("LD_LIBRARY_PATH")
@@ -72,15 +77,6 @@ static const char* jvmLibs[] = { "libjvm.dylib", "libjvm.jnilib", "libjvm.so", N
 
 /* Define the window system arguments for the various Java VMs. */
 static char*  argVM_JAVA[] = { "-XstartOnFirstThread", NULL };
-
-/* thread stuff */
-typedef struct {
-	_TCHAR * libPath;
-	_TCHAR ** vmArgs;
-	_TCHAR ** progArgs;
-	_TCHAR * jarFile;
-	JavaResults* result;
-} StartVMArgs;
 
 #ifdef COCOA
 static NSWindow* window = nil;
@@ -151,10 +147,6 @@ static NSWindow* window = nil;
 @end
 #endif
 
-static CFRunLoopRef loopRef = NULL;
-static void * startThread(void * init); 
-static void runEventLoop(CFRunLoopRef ref);
-static void dummyCallback(void * info) {}
 #ifndef COCOA
 static CFMutableArrayRef files;
 static EventHandlerRef appHandler;
@@ -465,10 +457,68 @@ char** getArgVM( char* vm )
 	return result;
 }
 
+char * getJavaVersion(char* command) {
+	FILE *fp;
+	char buffer[4096];
+	char *version = NULL, *firstChar;
+    int numChars = 0;
+	sprintf(buffer,"%s -version 2>&1", command);
+	fp = popen(buffer, "r");
+	if (fp == NULL) {
+		return NULL;
+	}
+	while (fgets(buffer, sizeof(buffer)-1, fp) != NULL) {
+		if (!version) {
+			firstChar = (char *) (strchr(buffer, '"') + 1);
+			if (firstChar != NULL)
+				numChars = (int)  (strrchr(buffer, '"') - firstChar);
+
+			/* Allocate a buffer and copy the version string into it. */
+			if (numChars > 0)
+			{
+				version = malloc( numChars + 1 );
+				strncpy(version, firstChar, numChars);
+				version[numChars] = '\0';
+			}
+		}
+		if (strstr(buffer, "Java HotSpot(TM)") || strstr(buffer, "OpenJDK")) {
+			isSUN = 1;
+			break;
+		}
+		if (strstr(buffer, "IBM") != NULL) {
+			isSUN = 0;
+			break;
+		}
+	}
+	pclose(fp);
+	return version;
+}
+
+char * getJavaHome() {
+	FILE *fp;
+	char path[4096];
+	char *result, *start;
+	sprintf(path, "/usr/libexec/java_home -a %s", JAVA_HOME_ARCH);
+	fp = popen(path, "r");
+	if (fp == NULL) {
+		return NULL;
+	}
+	while (fgets(path, sizeof(path)-1, fp) != NULL) {
+	}
+	result = path;
+	start = strchr(result, '\n');
+	if (start) {
+		start[0] = 0;
+	}
+	sprintf(path, "%s/bin/java", result);
+	pclose(fp);
+	return strdup(path);
+}
+
 char * findVMLibrary( char* command ) {
 	char *start, *end;
 	char *version;
-	int length;
+	int length, isJDK7;
 	
 	/*check first to see if command already points to the library */
 	if (strcmp(command, JAVA_FRAMEWORK) == 0) {
@@ -493,7 +543,23 @@ char * findVMLibrary( char* command ) {
 			
 			free(version);
 		} 
-	} else if (strstr(command, "/JavaVM.framework/") == NULL) {
+	}
+	char *java_home = NULL, *cmd = command;
+	if (strstr(cmd, "/JavaVM.framework/") != NULL && (strstr(cmd, "/Current/") != NULL || strstr(cmd, "/A/") != NULL)) {
+		java_home = cmd = getJavaHome();
+	}
+	version = getJavaVersion(cmd);
+	isJDK7 = version && versionCmp(version, "1.7.0") >= 0;
+	if (version) free(version);
+	if (isJDK7) {
+		start = strstr(cmd, "/Contents/");
+		if (start != NULL){
+			start[0] = 0;
+			return cmd;
+		}
+	}
+	if (java_home) free(java_home);
+	if (strstr(command, "/JavaVM.framework/") == NULL) {
 		char * lib = findLib(command);
 		if (lib != NULL) {
 			adjustLibraryPath(lib);
@@ -635,64 +701,9 @@ JavaResults* startJavaVM( _TCHAR* libPath, _TCHAR* vmArgs[], _TCHAR* progArgs[],
 		char firstThreadEnvVariable[80];
 		sprintf(firstThreadEnvVariable, "JAVA_STARTED_ON_FIRST_THREAD_%d", getpid());
 		setenv(firstThreadEnvVariable, "1", 1);
-		return startJavaJNI(libPath, vmArgs, progArgs, jarFile);
 	}
-
-	/* else, --launcher.secondThread was specified, create a new thread and run the 
-	 * vm on it.  This main thread will run the CFRunLoop 
-	 */
-	pthread_t thread;
-	struct rlimit limit = {0, 0};
-	int stackSize = 0;
-	if (getrlimit(RLIMIT_STACK, &limit) == 0) {
-		if (limit.rlim_cur != 0) {
-			stackSize = limit.rlim_cur;
-		}
-	}
-	
-	/* initialize thread attributes */
-	pthread_attr_t attributes;
-	pthread_attr_init(&attributes);
-	pthread_attr_setscope(&attributes, PTHREAD_SCOPE_SYSTEM);
-	pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
-	if (stackSize != 0)
-		pthread_attr_setstacksize(&attributes, stackSize);
-	
-	/* arguments to start the vm */
-	StartVMArgs args;
-	args.libPath = libPath;
-	args.vmArgs = vmArgs;
-	args.progArgs = progArgs;
-	args.jarFile = jarFile;
-	args.result = 0;
-	
-	loopRef = CFRunLoopGetCurrent();
-	
-	/* create the thread */
-	pthread_create( &thread, &attributes, &startThread, &args);
-	pthread_attr_destroy(&attributes);
-		
-	runEventLoop(loopRef);
-	
-	return args.result;
-}
-
-void * startThread(void * init) {
-	StartVMArgs *args = (StartVMArgs *) init;
-	args->result = startJavaJNI(args->libPath, args->vmArgs, args->progArgs, args->jarFile);
-	return NULL;
-}
-
-void runEventLoop(CFRunLoopRef ref) {
-	CFRunLoopSourceContext sourceContext = { .version = 0, .info = NULL, .retain = NULL, .release = NULL,
-											 .copyDescription = NULL, .equal = NULL, .hash = NULL, 
-											 .schedule = NULL, .cancel = NULL, .perform = &dummyCallback };
-	
-	CFRunLoopSourceRef sourceRef = CFRunLoopSourceCreate(NULL, 0, &sourceContext);
-	CFRunLoopAddSource(ref, sourceRef,  kCFRunLoopCommonModes);
-	
-	CFRunLoopRun();
-	CFRelease(sourceRef);
+	JavaResults* results = startJavaJNI(libPath, vmArgs, progArgs, jarFile);
+	return results;
 }
 
 #ifndef COCOA
@@ -811,6 +822,5 @@ void processVMArgs(char **vmargs[] )
 }
 
 int isSunVM( _TCHAR * javaVM, _TCHAR * jniLib ) {
-	_TCHAR *vm = (jniLib != NULL) ? jniLib : javaVM;
-	return (strncmp(vm, JAVA_FRAMEWORK, strlen(JAVA_FRAMEWORK)) == 0);
+	return isSUN;
 }
