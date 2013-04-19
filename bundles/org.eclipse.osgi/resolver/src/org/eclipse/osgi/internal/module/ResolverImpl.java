@@ -46,6 +46,8 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 	private static int MAX_MULTIPLE_SUPPLIERS_MERGE = 10;
 	private static int MAX_USES_TIME_BASE = 30000; // 30 seconds
 	private static int MAX_USES_TIME_LIMIT = 90000; // 90 seconds
+	private static final String USES_TIMEOUT_PROP = "osgi.usesTimeout"; //$NON-NLS-1$
+	private static final String MULTIPLE_SUPPLIERS_LIMIT_PROP = "osgi.usesLimit"; //$NON-NLS-1$
 	static final SecureAction secureAction = (SecureAction) AccessController.doPrivileged(SecureAction.createSecureAction());
 
 	private String[][] CURRENT_EES;
@@ -73,6 +75,8 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 	private Comparator selectionPolicy;
 	private boolean developmentMode = false;
 	private boolean usesCalculationTimeout = false;
+	private long usesTimeout = -1;
+	private int usesMultipleSuppliersLimit;
 	private volatile CompositeResolveHelperRegistry compositeHelpers;
 
 	public ResolverImpl(BundleContext context, boolean checkPermissions) {
@@ -363,6 +367,9 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 			initialize();
 		// set developmentMode each resolution
 		developmentMode = platformProperties.length == 0 ? false : org.eclipse.osgi.framework.internal.core.Constants.DEVELOPMENT_MODE.equals(platformProperties[0].get(org.eclipse.osgi.framework.internal.core.Constants.OSGI_RESOLVER_MODE));
+		usesTimeout = getUsesTimeout(platformProperties);
+		// set limit for constraints with multiple suppliers each resolution
+		usesMultipleSuppliersLimit = getMultipleSuppliersLimit(platformProperties);
 		reRefresh = addDevConstraints(reRefresh);
 		// Unresolve all the supplied bundles and their dependents
 		if (reRefresh != null)
@@ -414,6 +421,44 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 			resolveOptionalConstraints(currentlyResolved);
 		if (DEBUG)
 			ResolverImpl.log("*** END RESOLUTION ***"); //$NON-NLS-1$
+	}
+
+	private long getUsesTimeout(Dictionary[] platformProperties) {
+		try {
+			Object timeout = platformProperties.length == 0 ? null : platformProperties[0].get(USES_TIMEOUT_PROP);
+			if (timeout != null) {
+				long temp = Long.parseLong(timeout.toString());
+				if (temp < 0) {
+					return -1;
+				} else if (temp == 0) {
+					return Long.MAX_VALUE;
+				} else {
+					return temp;
+				}
+			}
+		} catch (NumberFormatException e) {
+			// nothing;
+		}
+		return -1;
+	}
+
+	private int getMultipleSuppliersLimit(Dictionary[] platformProperties) {
+		try {
+			Object limit = platformProperties.length == 0 ? null : platformProperties[0].get(MULTIPLE_SUPPLIERS_LIMIT_PROP);
+			if (limit != null) {
+				int temp = Integer.parseInt(limit.toString());
+				if (temp < 0) {
+					return MAX_MULTIPLE_SUPPLIERS_MERGE;
+				} else if (temp == 0) {
+					return Integer.MAX_VALUE;
+				} else {
+					return temp;
+				}
+			}
+		} catch (NumberFormatException e) {
+			// nothing;
+		}
+		return MAX_MULTIPLE_SUPPLIERS_MERGE;
 	}
 
 	private BundleDescription[] addDevConstraints(BundleDescription[] reRefresh) {
@@ -667,7 +712,12 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 		// or we have run out of combinations
 		// if all combinations are tried then return the combination with the lowest number of conflicts
 		long initialTime = System.currentTimeMillis();
-		long timeLimit = Math.min(MAX_USES_TIME_BASE + (bundles.length * 30), MAX_USES_TIME_LIMIT);
+		long timeLimit;
+		if (usesTimeout < 0)
+			timeLimit = Math.min(MAX_USES_TIME_BASE + (bundles.length * 30), MAX_USES_TIME_LIMIT);
+		else
+			timeLimit = usesTimeout;
+
 		int bestConflictCount = getConflictCount(bestConflicts);
 		ResolverBundle[] bestConflictBundles = getConflictedBundles(bestConflicts);
 		while (bestConflictCount != 0 && getNextCombination(multipleSuppliers)) {
@@ -864,7 +914,7 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 			}
 		}
 		ArrayList results = new ArrayList();
-		if (multipleImportSupplierList.size() + multipleRequireSupplierList.size() > MAX_MULTIPLE_SUPPLIERS_MERGE) {
+		if (multipleImportSupplierList.size() + multipleRequireSupplierList.size() > usesMultipleSuppliersLimit) {
 			// we have hit a max on the multiple suppliers in the lists without merging.
 			// first merge the identical constraints that have identical suppliers
 			HashMap multipleImportSupplierMaps = new HashMap(1);
@@ -876,7 +926,7 @@ public class ResolverImpl implements org.eclipse.osgi.service.resolver.Resolver 
 			addMergedSuppliers(results, multipleImportSupplierMaps);
 			addMergedSuppliers(results, multipleRequireSupplierMaps);
 			// check the results to see if we have reduced the number enough
-			if (results.size() > MAX_MULTIPLE_SUPPLIERS_MERGE && packageConstraints != null && bundleConstraints != null) {
+			if (results.size() > usesMultipleSuppliersLimit && packageConstraints != null && bundleConstraints != null) {
 				// we still have too big of a list; filter out constraints that are not in conflict
 				Iterator iResults = results.iterator();
 				results = new ArrayList();
