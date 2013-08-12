@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2011 Cognos Incorporated, IBM Corporation and others.
+ * Copyright (c) 2006, 2013 Cognos Incorporated, IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,7 @@
  *******************************************************************************/
 package org.eclipse.osgi.framework.internal.core;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -123,16 +124,30 @@ public class FrameworkProperties {
 				throw new IllegalArgumentException(NLS.bind(EclipseAdaptorMsg.ECLIPSE_STARTUP_PROPS_NOT_SET, PROP_FRAMEWORK + ", " + PROP_INSTALL_AREA)); //$NON-NLS-1$
 			URL url = cs.getLocation();
 			// allow props to be preset
-			if (getProperty(PROP_FRAMEWORK) == null)
-				setProperty(PROP_FRAMEWORK, url.toExternalForm());
+			if (getProperty(PROP_FRAMEWORK) == null) {
+				String externalForm = getFrameworkPath(url.toExternalForm(), false);
+				setProperty(PROP_FRAMEWORK, externalForm);
+			}
 			if (getProperty(PROP_INSTALL_AREA) == null) {
-				String filePart = url.getFile();
-				setProperty(PROP_INSTALL_AREA, filePart.substring(0, filePart.lastIndexOf('/')));
+				String filePart = getFrameworkPath(url.getFile(), true);
+				setProperty(PROP_INSTALL_AREA, filePart);
 			}
 		}
 		// always decode these properties
 		setProperty(PROP_FRAMEWORK, decode(getProperty(PROP_FRAMEWORK)));
 		setProperty(PROP_INSTALL_AREA, decode(getProperty(PROP_INSTALL_AREA)));
+	}
+
+	private static String getFrameworkPath(String path, boolean parent) {
+		if (File.separatorChar == '\\') {
+			// in case on windows the \ is used
+			path = path.replace('\\', '/');
+		}
+		if (parent) {
+			int lastSlash = path.lastIndexOf('/');
+			return lastSlash == -1 ? "/" : path.substring(0, lastSlash); //$NON-NLS-1$
+		}
+		return path;
 	}
 
 	public static String decode(String urlString) {
