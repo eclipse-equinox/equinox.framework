@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2010 IBM Corporation and others.
+ * Copyright (c) 2005, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,8 +18,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.eclipse.osgi.baseadaptor.BaseData;
 import org.eclipse.osgi.framework.debug.Debug;
-import org.eclipse.osgi.internal.baseadaptor.AdaptorMsg;
-import org.eclipse.osgi.internal.baseadaptor.AdaptorUtil;
+import org.eclipse.osgi.internal.baseadaptor.*;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.FrameworkEvent;
 
@@ -259,36 +258,101 @@ public class ZipBundleFile extends BundleFile {
 	}
 
 	public synchronized Enumeration<String> getEntryPaths(String path) {
-		if (!checkedOpen())
-			return null;
+		// Get entry paths. Recurse or not based on caller's thread local
+		// request.
+		Enumeration<String> result = getEntryPaths(path, ListEntryPathsThreadLocal.isRecursive());
+		// Always set the thread local back to its default value. If the caller
+		// requested recursion, this will indicate that recursion was done.
+		// Otherwise, no harm is done.
+		ListEntryPathsThreadLocal.setRecursive(false);
+		return result;
+	}
+
+	// Optimized method allowing this zip bundle file to recursively return 
+	// entry paths when requested.
+	public synchronized Enumeration<String> getEntryPaths(String path, boolean doRecurse) {
 		if (path == null)
 			throw new NullPointerException();
+		// Is the zip file already open or, if not, can it be opened?
+		if (!checkedOpen())
+			return null;
 
+		// Strip any leading '/' off of path.
 		if (path.length() > 0 && path.charAt(0) == '/')
 			path = path.substring(1);
+		// Append a '/', if not already there, to path if not an empty string.
 		if (path.length() > 0 && path.charAt(path.length() - 1) != '/')
 			path = new StringBuffer(path).append("/").toString(); //$NON-NLS-1$
 
-		List<String> vEntries = new ArrayList<String>();
+		LinkedHashSet<String> result = new LinkedHashSet<String>();
+		// Get all zip file entries and add the ones of interest.
 		Enumeration<? extends ZipEntry> entries = zipFile.entries();
 		while (entries.hasMoreElements()) {
 			ZipEntry zipEntry = entries.nextElement();
 			String entryPath = zipEntry.getName();
+			// Is the entry of possible interest? Note that 
+			// string.startsWith("") == true.
 			if (entryPath.startsWith(path)) {
+				// If we get here, we know that the entry is either (1) equal to
+				// path, (2) a file under path, or (3) a subdirectory of path.
 				if (path.length() < entryPath.length()) {
-					if (entryPath.lastIndexOf('/') < path.length()) {
-						vEntries.add(entryPath);
-					} else {
-						entryPath = entryPath.substring(path.length());
-						int slash = entryPath.indexOf('/');
-						entryPath = path + entryPath.substring(0, slash + 1);
-						if (!vEntries.contains(entryPath))
-							vEntries.add(entryPath);
-					}
+					// If we get here, we know that entry is not equal to path.
+					getEntryPaths(path, entryPath.substring(path.length()), doRecurse, result);
 				}
 			}
 		}
-		return vEntries.size() == 0 ? null : Collections.enumeration(vEntries);
+		return result.size() == 0 ? null : Collections.enumeration(result);
+	}
+
+	/**
+	 * Process the given entry by appending it to path and adding the full path
+	 * to entries. If recursive, sub-paths of entry will also be processed.
+	 * 
+	 * For example, given the following parameters:
+	 * 
+	 * path = com/
+	 * entry = foo/bar/X.class
+	 * doRecurse = false
+	 * 
+	 * com/foo/ will be added to entries and the method will return.
+	 * 
+	 * If, instead, doRecurse equals true, the following will be added to
+	 * entries before returning:
+	 * 
+	 * com/foo/
+	 * com/foo/bar/
+	 * com/foo/bar/X.class
+	 * 
+	 * @param path - The requested or already processed path. On the first call
+	 *               to this method, this will be the path requested by the
+	 *               caller of {@link #getEntryPaths(String, boolean)}. On
+	 *               subsequent, recursive calls, this will be the portion of
+	 *               the path already processed.
+	 * @param entry - The entry underneath path to process.
+	 * @param doRecurse - If true, process all path segments under entry
+	 *                    recursively. If false, process only the first path 
+	 *                    segment in entry.
+	 * @param entries - The set of processed entries.
+	 */
+	private void getEntryPaths(String path, String entry, boolean doRecurse, LinkedHashSet<String> entries) {
+		if (entry.length() == 0) // Terminating condition.
+			// The previous entry was a directory with no files.
+			return;
+		int slash = entry.indexOf('/');
+		if (slash == -1) // Terminating condition.
+			// The entry is a file so nothing follows. Add its full path and
+			// return.
+			entries.add(path + entry);
+		else {
+			// Append the entry to the path to track the full path for recursion.
+			path = path + entry.substring(0, slash + 1);
+			// Add the full entry path.
+			entries.add(path);
+			if (doRecurse)
+				// Recurse with the updated path plus the next path segment of
+				// entry.
+				getEntryPaths(path, entry.substring(slash + 1), true, entries);
+		}
 	}
 
 	public synchronized void close() throws IOException {
