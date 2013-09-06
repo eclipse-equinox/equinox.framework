@@ -741,7 +741,9 @@ public class BundleLoader implements ClassLoaderDelegate {
 		}
 
 		boolean localSearch = (options & BundleWiring.LISTRESOURCES_LOCAL) != 0;
-		List<String> result = new ArrayList<String>();
+		// Use LinkedHashSet for optimized performance of contains() plus 
+		// ordering guarantees.
+		LinkedHashSet<String> result = new LinkedHashSet<String>();
 		Set<String> importedPackages = new HashSet<String>(0);
 		for (String name : packages) {
 			// look for import source
@@ -758,8 +760,8 @@ public class BundleLoader implements ClassLoaderDelegate {
 				String packagePath = name.replace('.', '/');
 				Collection<String> externalResources = externalSource.listResources(packagePath, filePattern);
 				for (String resource : externalResources) {
-					if (!result.contains(resource)) // prevent duplicates; could happen if the package is split or exporter has fragments/multiple jars
-						result.add(resource);
+					// Duplicates avoided by using a set.
+					result.add(resource);
 				}
 			}
 		}
@@ -768,7 +770,7 @@ public class BundleLoader implements ClassLoaderDelegate {
 		Collection<String> localResources = createClassLoader().listLocalResources(path, filePattern, options);
 		for (String resource : localResources) {
 			String resourcePkg = getResourcePackageName(resource);
-			if (!importedPackages.contains(resourcePkg) && !result.contains(resource))
+			if (!importedPackages.contains(resourcePkg)) // Duplicates avoided by using a set.
 				result.add(resource);
 		}
 		return result;

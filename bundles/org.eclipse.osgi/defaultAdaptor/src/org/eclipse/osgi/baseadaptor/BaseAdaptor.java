@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2011 IBM Corporation and others.
+ * Copyright (c) 2005, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -580,8 +580,9 @@ public class BaseAdaptor implements FrameworkAdaptor {
 	 * @see BundleWiring#listResources(String, String, int)
 	 */
 	public List<String> listEntryPaths(List<BundleFile> bundleFiles, String path, String filePattern, int options) {
-		// a list used to store the results of the search
-		List<String> pathList = new ArrayList<String>();
+		// Store the results of the search. Use LinkedHashSet for optimized 
+		// performance of contains() plus ordering guarantees.
+		LinkedHashSet<String> pathList = new LinkedHashSet<String>();
 		Filter patternFilter = null;
 		Hashtable<String, String> patternProps = null;
 		if (filePattern != null) {
@@ -596,7 +597,7 @@ public class BaseAdaptor implements FrameworkAdaptor {
 					if (bundleFile.getEntry(path) != null && !pathList.contains(path))
 						pathList.add(path);
 				}
-				return pathList;
+				return new ArrayList<String>(pathList);
 			}
 			// For when the file pattern includes a wildcard.
 			try {
@@ -608,14 +609,14 @@ public class BaseAdaptor implements FrameworkAdaptor {
 				// something unexpected happened; log error and return nothing
 				Bundle b = context == null ? null : context.getBundle();
 				eventPublisher.publishFrameworkEvent(FrameworkEvent.ERROR, b, e);
-				return pathList;
+				return new ArrayList<String>(pathList);
 			}
 		}
 		// find the entry paths for the datas
 		for (BundleFile bundleFile : bundleFiles) {
 			listEntryPaths(bundleFile, path, patternFilter, patternProps, options, pathList);
 		}
-		return pathList;
+		return new ArrayList<String>(pathList);
 	}
 
 	private String sanitizeFilterInput(String filePattern) throws InvalidSyntaxException {
@@ -658,10 +659,35 @@ public class BaseAdaptor implements FrameworkAdaptor {
 		return buffer == null ? filePattern : buffer.toString();
 	}
 
-	private List<String> listEntryPaths(BundleFile bundleFile, String path, Filter patternFilter, Hashtable<String, String> patternProps, int options, List<String> pathList) {
+	// Use LinkedHashSet for optimized performance of contains() plus ordering 
+	// guarantees.
+	private LinkedHashSet<String> listEntryPaths(BundleFile bundleFile, String path, Filter patternFilter, Hashtable<String, String> patternProps, int options, LinkedHashSet<String> pathList) {
 		if (pathList == null)
-			pathList = new ArrayList<String>();
-		Enumeration<String> entryPaths = bundleFile.getEntryPaths(path);
+			pathList = new LinkedHashSet<String>();
+		// Set a local flag indicating whether or not this method should use the
+		// original, unoptimized recursion at the end.
+		boolean isRecursive = false;
+		if ((options & BundleWiring.FINDENTRIES_RECURSE) != 0) {
+			// Recursion was requested. Set the thread local to indicate that
+			// participating bundle files should return entry paths
+			// recursively on the first call.
+			ListEntryPathsThreadLocal.setRecursive(true);
+		}
+		Enumeration<String> entryPaths;
+		// Let the bundle file do its work.
+		try {
+			entryPaths = bundleFile.getEntryPaths(path);
+			if ((options & BundleWiring.FINDENTRIES_RECURSE) != 0) {
+				// Since recursion was requested, set the value of the local
+				// recursion flag to the value of the thread local. If the bundle
+				// file used recursion, it will set the thread local back to false;
+				// otherwise, it will still be true.
+				isRecursive = ListEntryPathsThreadLocal.isRecursive();
+			}
+		} finally {
+			// Reset the thread local value to its default.
+			ListEntryPathsThreadLocal.setRecursive(false);
+		}
 		if (entryPaths == null)
 			return pathList;
 		while (entryPaths.hasMoreElements()) {
@@ -689,8 +715,9 @@ public class BaseAdaptor implements FrameworkAdaptor {
 			// prevent duplicates and match on the patternFilter
 			if (!pathList.contains(entry) && (patternFilter == null || patternFilter.matchCase(patternProps)))
 				pathList.add(entry);
-			// recurse only into entries that are directories
-			if (((options & BundleWiring.FINDENTRIES_RECURSE) != 0) && !entry.equals(path) && entry.length() > 0 && lastSlash == (entry.length() - 1))
+			// recurse only into entries that are directories and only if the
+			// bundle file did not do the recursion itself
+			if (isRecursive && !entry.equals(path) && entry.length() > 0 && lastSlash == (entry.length() - 1))
 				listEntryPaths(bundleFile, entry, patternFilter, patternProps, options, pathList);
 		}
 		return pathList;
