@@ -131,6 +131,16 @@
          fragment="true"/>
 
    <plugin
+         id="org.eclipse.equinox.launcher.gtk.linux.ia64"
+         os="linux"
+         ws="gtk"
+         arch="ia64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
          id="org.eclipse.equinox.launcher.motif.aix.ppc"
          os="aix"
          ws="motif"
