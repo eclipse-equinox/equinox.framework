@@ -573,40 +573,44 @@ public abstract class StateImpl implements State {
 
 	public ExportPackageDescription[] getExportedPackages() {
 		fullyLoad();
-		final List allExportedPackages = new ArrayList();
-		for (Iterator iter = resolvedBundles.iterator(); iter.hasNext();) {
-			BundleDescription bundle = (BundleDescription) iter.next();
-			ExportPackageDescription[] bundlePackages = bundle.getSelectedExports();
-			if (bundlePackages == null)
-				continue;
-			for (int i = 0; i < bundlePackages.length; i++)
-				allExportedPackages.add(bundlePackages[i]);
+		synchronized (this.monitor) {
+			final List allExportedPackages = new ArrayList();
+			for (Iterator iter = resolvedBundles.iterator(); iter.hasNext();) {
+				BundleDescription bundle = (BundleDescription) iter.next();
+				ExportPackageDescription[] bundlePackages = bundle.getSelectedExports();
+				if (bundlePackages == null)
+					continue;
+				for (int i = 0; i < bundlePackages.length; i++)
+					allExportedPackages.add(bundlePackages[i]);
+			}
+			for (Iterator iter = removalPendings.iterator(); iter.hasNext();) {
+				BundleDescription bundle = (BundleDescription) iter.next();
+				ExportPackageDescription[] bundlePackages = bundle.getSelectedExports();
+				if (bundlePackages == null)
+					continue;
+				for (int i = 0; i < bundlePackages.length; i++)
+					allExportedPackages.add(bundlePackages[i]);
+			}
+			return (ExportPackageDescription[]) allExportedPackages.toArray(new ExportPackageDescription[allExportedPackages.size()]);
 		}
-		for (Iterator iter = removalPendings.iterator(); iter.hasNext();) {
-			BundleDescription bundle = (BundleDescription) iter.next();
-			ExportPackageDescription[] bundlePackages = bundle.getSelectedExports();
-			if (bundlePackages == null)
-				continue;
-			for (int i = 0; i < bundlePackages.length; i++)
-				allExportedPackages.add(bundlePackages[i]);
-		}
-		return (ExportPackageDescription[]) allExportedPackages.toArray(new ExportPackageDescription[allExportedPackages.size()]);
 	}
 
 	BundleDescription[] getFragments(final BundleDescription host) {
 		final List fragments = new ArrayList();
-		for (Iterator iter = bundleDescriptions.iterator(); iter.hasNext();) {
-			BundleDescription bundle = (BundleDescription) iter.next();
-			HostSpecification hostSpec = bundle.getHost();
+		synchronized (this.monitor) {
+			for (Iterator iter = bundleDescriptions.iterator(); iter.hasNext();) {
+				BundleDescription bundle = (BundleDescription) iter.next();
+				HostSpecification hostSpec = bundle.getHost();
 
-			if (hostSpec != null) {
-				BundleDescription[] hosts = hostSpec.getHosts();
-				if (hosts != null)
-					for (int i = 0; i < hosts.length; i++)
-						if (hosts[i] == host) {
-							fragments.add(bundle);
-							break;
-						}
+				if (hostSpec != null) {
+					BundleDescription[] hosts = hostSpec.getHosts();
+					if (hosts != null)
+						for (int i = 0; i < hosts.length; i++)
+							if (hosts[i] == host) {
+								fragments.add(bundle);
+								break;
+							}
+				}
 			}
 		}
 		return (BundleDescription[]) fragments.toArray(new BundleDescription[fragments.size()]);
