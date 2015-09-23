@@ -131,5 +131,6 @@
 	<classpathentry kind="src" output="bundle_tests/test.bug449484" path="bundles_src/test.bug449484"/>	
 	<classpathentry kind="src" output="bundle_tests/wrapper.hooks.a" path="bundles_src/wrapper.hooks.a"/>
 	<classpathentry kind="src" output="bundle_tests/test.protocol.handler" path="bundles_src/test.protocol.handler"/>
+	<classpathentry kind="src" output="bundle_tests/test.dynamicimport" path="bundles_src/test.dynamicimport"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
