@@ -14,7 +14,7 @@
   <parent>
     <artifactId>launcher-binary-parent</artifactId>
     <groupId>org.eclipse.equinox.framework</groupId>
-    <version>4.5.1-SNAPSHOT</version>
+    <version>4.5.2-SNAPSHOT</version>
     <relativePath>../../launcher-binary-parent</relativePath>
   </parent>
   <groupId>org.eclipse.equinox</groupId>
