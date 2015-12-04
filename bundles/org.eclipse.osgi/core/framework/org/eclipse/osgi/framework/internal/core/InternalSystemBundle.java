@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2012 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -44,10 +44,13 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 		public String get(Object key) {
 			if (!(key instanceof String))
 				return null;
-			if (org.osgi.framework.Constants.EXPORT_PACKAGE.equalsIgnoreCase((String) key)) {
-				return getExtra(org.osgi.framework.Constants.EXPORT_PACKAGE, org.osgi.framework.Constants.FRAMEWORK_SYSTEMPACKAGES, org.osgi.framework.Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
-			} else if (org.osgi.framework.Constants.PROVIDE_CAPABILITY.equalsIgnoreCase((String) key)) {
-				return getExtra(org.osgi.framework.Constants.PROVIDE_CAPABILITY, org.osgi.framework.Constants.FRAMEWORK_SYSTEMCAPABILITIES, org.osgi.framework.Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
+			if (!Boolean.valueOf(FrameworkProperties.getProperty(Constants.PROP_SYSTEM_ORIGINAL_HEADERS, "false"))) { //$NON-NLS-1$
+				// by default we append the extra capabilities to the Export-Package and Provide-Capability headers
+				if (org.osgi.framework.Constants.EXPORT_PACKAGE.equalsIgnoreCase((String) key)) {
+					return getExtra(org.osgi.framework.Constants.EXPORT_PACKAGE, org.osgi.framework.Constants.FRAMEWORK_SYSTEMPACKAGES, org.osgi.framework.Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
+				} else if (org.osgi.framework.Constants.PROVIDE_CAPABILITY.equalsIgnoreCase((String) key)) {
+					return getExtra(org.osgi.framework.Constants.PROVIDE_CAPABILITY, org.osgi.framework.Constants.FRAMEWORK_SYSTEMCAPABILITIES, org.osgi.framework.Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
+				}
 			}
 			return headers.get(key);
 		}
