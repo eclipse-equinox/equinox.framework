@@ -44,20 +44,21 @@ public class InternalSystemBundle extends BundleHost implements org.osgi.framewo
 		public String get(Object key) {
 			if (!(key instanceof String))
 				return null;
-			if (!Boolean.valueOf(FrameworkProperties.getProperty(Constants.PROP_SYSTEM_ORIGINAL_HEADERS, "false"))) { //$NON-NLS-1$
-				// by default we append the extra capabilities to the Export-Package and Provide-Capability headers
-				if (org.osgi.framework.Constants.EXPORT_PACKAGE.equalsIgnoreCase((String) key)) {
-					return getExtra(org.osgi.framework.Constants.EXPORT_PACKAGE, org.osgi.framework.Constants.FRAMEWORK_SYSTEMPACKAGES, org.osgi.framework.Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
-				} else if (org.osgi.framework.Constants.PROVIDE_CAPABILITY.equalsIgnoreCase((String) key)) {
-					return getExtra(org.osgi.framework.Constants.PROVIDE_CAPABILITY, org.osgi.framework.Constants.FRAMEWORK_SYSTEMCAPABILITIES, org.osgi.framework.Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
-				}
+			String sKey = (String) key;
+			if (Constants.EXPORT_PACKAGE.equalsIgnoreCase(sKey) || Constants.PROVIDE_CAPABILITY.equalsIgnoreCase(sKey)) {
+				String systemProvideHeader = FrameworkProperties.getProperty(Constants.PROP_SYSTEM_PROVIDE_HEADER, Constants.SYSTEM_PROVIDE_HEADER_SYSTEM_EXTRA);
+				boolean useSystemExtra = systemProvideHeader.equals(Constants.SYSTEM_PROVIDE_HEADER_SYSTEM_EXTRA);
+				boolean useSystem = systemProvideHeader.equals(Constants.SYSTEM_PROVIDE_HEADER_SYSTEM) || useSystemExtra;
+				String systemProp = useSystem ? (Constants.EXPORT_PACKAGE.equalsIgnoreCase(sKey) ? Constants.FRAMEWORK_SYSTEMPACKAGES : Constants.FRAMEWORK_SYSTEMCAPABILITIES) : null;
+				String systemExtraProp = useSystemExtra ? (Constants.EXPORT_PACKAGE.equalsIgnoreCase(sKey) ? Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA : Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA) : null;
+				return getExtra(sKey, systemProp, systemExtraProp);
 			}
 			return headers.get(key);
 		}
 
 		private String getExtra(String header, String systemProp, String systemExtraProp) {
-			String systemValue = FrameworkProperties.getProperty(systemProp);
-			String systemExtraValue = FrameworkProperties.getProperty(systemExtraProp);
+			String systemValue = systemProp != null ? FrameworkProperties.getProperty(systemProp) : null;
+			String systemExtraValue = systemExtraProp != null ? FrameworkProperties.getProperty(systemExtraProp) : null;
 			if (systemValue == null)
 				systemValue = systemExtraValue;
 			else if (systemExtraValue != null && systemExtraValue.trim().length() > 0)

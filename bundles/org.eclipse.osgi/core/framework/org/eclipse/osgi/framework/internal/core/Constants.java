@@ -132,7 +132,10 @@ public class Constants implements org.osgi.framework.Constants {
 
 	public static String OSGI_COMPATIBILITY_BOOTDELEGATION = "osgi.compatibility.bootdelegation"; //$NON-NLS-1$
 
-	public static final String PROP_SYSTEM_ORIGINAL_HEADERS = "equinox.system.bundle.headers.original"; //$NON-NLS-1$
+	public static final String PROP_SYSTEM_PROVIDE_HEADER = "equinox.system.provide.header"; //$NON-NLS-1$
+	public static final String SYSTEM_PROVIDE_HEADER_ORIGINAL = "original"; //$NON-NLS-1$
+	public static final String SYSTEM_PROVIDE_HEADER_SYSTEM = "system"; //$NON-NLS-1$
+	public static final String SYSTEM_PROVIDE_HEADER_SYSTEM_EXTRA = "system.extra"; //$NON-NLS-1$
 
 	/** Eclipse-SystemBundle header */
 	public static final String ECLIPSE_SYSTEMBUNDLE = "Eclipse-SystemBundle"; //$NON-NLS-1$

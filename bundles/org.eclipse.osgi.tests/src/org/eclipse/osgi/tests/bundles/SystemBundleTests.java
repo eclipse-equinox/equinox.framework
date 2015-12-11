@@ -1733,33 +1733,72 @@ public class SystemBundleTests extends AbstractBundleTests {
 		assertEquals("Wrong state for SystemBundle", Bundle.RESOLVED, equinox.getState()); //$NON-NLS-1$
 	}
 
+	public static final String PROP_SYSTEM_PROVIDE_HEADER = "equinox.system.provide.header"; //$NON-NLS-1$
+	public static final String SYSTEM_PROVIDE_HEADER_ORIGINAL = "original"; //$NON-NLS-1$
+	public static final String SYSTEM_PROVIDE_HEADER_SYSTEM = "system"; //$NON-NLS-1$
+	public static final String SYSTEM_PROVIDE_HEADER_SYSTEM_EXTRA = "system.extra"; //$NON-NLS-1$
+
 	public void testExtraSystemBundleHeaders() throws BundleException, InterruptedException {
 		File config = OSGiTestsActivator.getContext().getDataFile(getName());
 		config.mkdirs();
 		Map<String, Object> configuration = new HashMap<String, Object>();
 		configuration.put(Constants.FRAMEWORK_STORAGE, config.getAbsolutePath());
-		configuration.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA, "something.extra; attr1=value2");
-		configuration.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "some.extra.pkg");
+		configuration.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES, "osgi.ee; osgi.ee=JavaSE; version:Version=1.6, something.system; attr1=val1");
+		configuration.put(Constants.FRAMEWORK_SYSTEMPACKAGES, "something.system");
+		configuration.put(Constants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA, "something.extra; attr1=val1");
+		configuration.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "something.extra");
 
 		Equinox equinox = new Equinox(configuration);
 		equinox.start();
 		Dictionary<String, String> headers = equinox.getHeaders();
 		String provideCapability = headers.get(Constants.PROVIDE_CAPABILITY);
 		String exportPackage = headers.get(Constants.EXPORT_PACKAGE);
+		assertTrue("Unexpected Provide-Capability header: " + provideCapability, provideCapability.contains("something.system"));
+		assertTrue("Unexpected Export-Package header: " + exportPackage, exportPackage.contains("something.system"));
 		assertTrue("Unexpected Provide-Capability header: " + provideCapability, provideCapability.contains("something.extra"));
-		assertTrue("Unexpected Export-Package header: " + exportPackage, exportPackage.contains("some.extra.pkg"));
+		assertTrue("Unexpected Export-Package header: " + exportPackage, exportPackage.contains("something.extra"));
 		equinox.stop();
 
 		equinox.waitForStop(5000);
 
-		configuration.put("equinox.system.bundle.headers.original", "true");
+		configuration.put(PROP_SYSTEM_PROVIDE_HEADER, SYSTEM_PROVIDE_HEADER_ORIGINAL);
 		equinox = new Equinox(configuration);
 		equinox.start();
 		headers = equinox.getHeaders();
 		provideCapability = headers.get(Constants.PROVIDE_CAPABILITY);
 		exportPackage = headers.get(Constants.EXPORT_PACKAGE);
+		assertFalse("Unexpected Provide-Capability header: " + provideCapability, provideCapability != null && provideCapability.contains("something.system"));
+		assertFalse("Unexpected Export-Package header: " + exportPackage, exportPackage.contains("something.system"));
 		assertFalse("Unexpected Provide-Capability header: " + provideCapability, provideCapability != null && provideCapability.contains("something.extra"));
-		assertFalse("Unexpected Export-Package header: " + exportPackage, exportPackage.contains("some.extra.pkg"));
+		assertFalse("Unexpected Export-Package header: " + exportPackage, exportPackage.contains("something.extra"));
+		equinox.stop();
+
+		equinox.waitForStop(5000);
+
+		configuration.put(PROP_SYSTEM_PROVIDE_HEADER, SYSTEM_PROVIDE_HEADER_SYSTEM);
+		equinox = new Equinox(configuration);
+		equinox.start();
+		headers = equinox.getHeaders();
+		provideCapability = headers.get(Constants.PROVIDE_CAPABILITY);
+		exportPackage = headers.get(Constants.EXPORT_PACKAGE);
+		assertTrue("Unexpected Provide-Capability header: " + provideCapability, provideCapability.contains("something.system"));
+		assertTrue("Unexpected Export-Package header: " + exportPackage, exportPackage.contains("something.system"));
+		assertFalse("Unexpected Provide-Capability header: " + provideCapability, provideCapability != null && provideCapability.contains("something.extra"));
+		assertFalse("Unexpected Export-Package header: " + exportPackage, exportPackage.contains("something.extra"));
+		equinox.stop();
+
+		equinox.waitForStop(5000);
+
+		configuration.put(PROP_SYSTEM_PROVIDE_HEADER, SYSTEM_PROVIDE_HEADER_SYSTEM_EXTRA);
+		equinox = new Equinox(configuration);
+		equinox.start();
+		headers = equinox.getHeaders();
+		provideCapability = headers.get(Constants.PROVIDE_CAPABILITY);
+		exportPackage = headers.get(Constants.EXPORT_PACKAGE);
+		assertTrue("Unexpected Provide-Capability header: " + provideCapability, provideCapability.contains("something.system"));
+		assertTrue("Unexpected Export-Package header: " + exportPackage, exportPackage.contains("something.system"));
+		assertTrue("Unexpected Provide-Capability header: " + provideCapability, provideCapability.contains("something.extra"));
+		assertTrue("Unexpected Export-Package header: " + exportPackage, exportPackage.contains("something.extra"));
 		equinox.stop();
 
 		equinox.waitForStop(5000);
