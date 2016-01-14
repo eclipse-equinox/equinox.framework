@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2012 IBM Corporation and others.
+ * Copyright (c) 2003, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,10 +16,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import org.eclipse.osgi.framework.adaptor.BundleClassLoader;
+import org.eclipse.osgi.framework.adaptor.ClassLoaderDelegate;
 import org.eclipse.osgi.framework.internal.core.BundleHost;
 import org.eclipse.osgi.framework.internal.core.Constants;
 import org.eclipse.osgi.framework.util.KeyedElement;
 import org.eclipse.osgi.internal.loader.BundleLoaderProxy;
+import org.eclipse.osgi.internal.loader.SystemBundleLoader;
 import org.eclipse.osgi.service.resolver.*;
 import org.osgi.framework.*;
 import org.osgi.framework.wiring.*;
@@ -1226,7 +1228,17 @@ public final class BundleDescriptionImpl extends BaseDescriptionImpl implements 
 				sm.checkPermission(GET_CLASSLOADER_PERM);
 			if (!isInUse())
 				return null;
-			return (ClassLoader) getBundleClassLoader();
+			BundleClassLoader bcl = getBundleClassLoader();
+			if (bcl instanceof ClassLoader) {
+				return (ClassLoader) bcl;
+			}
+			if (bcl != null) {
+				ClassLoaderDelegate delegate = bcl.getDelegate();
+				if (delegate instanceof SystemBundleLoader) {
+					return ((SystemBundleLoader) delegate).getSystemClassLoader();
+				}
+			}
+			return null;
 		}
 
 		private BundleClassLoader getBundleClassLoader() {
