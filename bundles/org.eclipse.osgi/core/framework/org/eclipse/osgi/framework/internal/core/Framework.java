@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2012 IBM Corporation and others.
+ * Copyright (c) 2003, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -109,7 +109,8 @@ public class Framework implements EventPublisher, Runnable {
 	private Map<String, Thread> installLock;
 	/** System Bundle object */
 	protected InternalSystemBundle systemBundle;
-	private String[] bootDelegation;
+	@SuppressWarnings("unchecked")
+	private Set<String> bootDelegation = Collections.EMPTY_SET;
 	private String[] bootDelegationStems;
 	private boolean bootDelegateAll = false;
 	public final boolean contextBootDelegation = "true".equals(FrameworkProperties.getProperty("osgi.context.bootdelegation", "true")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -190,7 +191,7 @@ public class Framework implements EventPublisher, Runnable {
 			Profile.logTime("Framework.initialze()", "adapter initialized"); //$NON-NLS-1$//$NON-NLS-2$
 		try {
 			adaptor.initializeStorage();
-		} catch (IOException e) /* fatal error */{
+		} catch (IOException e) /* fatal error */ {
 			throw new RuntimeException(e.getMessage(), e);
 		}
 		if (Profile.PROFILE && Profile.STARTUP)
@@ -205,7 +206,7 @@ public class Framework implements EventPublisher, Runnable {
 		try {
 			// always create security admin even with security off
 			securityAdmin = new SecurityAdmin(null, this, adaptor.getPermissionStorage());
-		} catch (IOException e) /* fatal error */{
+		} catch (IOException e) /* fatal error */ {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage(), e);
 		}
@@ -406,7 +407,7 @@ public class Framework implements EventPublisher, Runnable {
 		if (bootDelegationProp.trim().length() == 0)
 			return;
 		String[] bootPackages = ManifestElement.getArrayFromList(bootDelegationProp);
-		List<String> exactMatch = new ArrayList<String>(bootPackages.length);
+		HashSet<String> exactMatch = new HashSet<String>(bootPackages.length);
 		List<String> stemMatch = new ArrayList<String>(bootPackages.length);
 		for (int i = 0; i < bootPackages.length; i++) {
 			if (bootPackages[i].equals("*")) { //$NON-NLS-1$
@@ -419,8 +420,7 @@ public class Framework implements EventPublisher, Runnable {
 				exactMatch.add(bootPackages[i]);
 			}
 		}
-		if (!exactMatch.isEmpty())
-			bootDelegation = exactMatch.toArray(new String[exactMatch.size()]);
+		bootDelegation = exactMatch;
 		if (!stemMatch.isEmpty())
 			bootDelegationStems = stemMatch.toArray(new String[stemMatch.size()]);
 	}
@@ -1979,10 +1979,8 @@ public class Framework implements EventPublisher, Runnable {
 	public boolean isBootDelegationPackage(String name) {
 		if (bootDelegateAll)
 			return true;
-		if (bootDelegation != null)
-			for (int i = 0; i < bootDelegation.length; i++)
-				if (name.equals(bootDelegation[i]))
-					return true;
+		if (bootDelegation.contains(name))
+			return true;
 		if (bootDelegationStems != null)
 			for (int i = 0; i < bootDelegationStems.length; i++)
 				if (name.startsWith(bootDelegationStems[i]))
