@@ -28,6 +28,7 @@ public class URLStreamHandlerFactoryProxyFor15 extends URLStreamHandlerProxy {
 	protected URLConnection openConnection(URL u, Proxy p) throws IOException {
 		try {
 			Method openConn = realHandlerService.getClass().getMethod("openConnection", new Class[] {URL.class, Proxy.class}); //$NON-NLS-1$
+			openConn.setAccessible(true);
 			return (URLConnection) openConn.invoke(realHandlerService, new Object[] {u, p});
 		} catch (InvocationTargetException e) {
 			if (e.getTargetException() instanceof IOException)

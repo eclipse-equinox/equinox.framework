@@ -1150,6 +1150,11 @@ public class SystemBundleTests extends AbstractBundleTests {
 			throw new IOException();
 		}
 
+		@Override
+		public URLConnection openConnection(URL u, Proxy p) throws IOException {
+			throw new IOException();
+		}
+
 	}
 
 	public void testURLMultiplexing01() throws BundleException {
