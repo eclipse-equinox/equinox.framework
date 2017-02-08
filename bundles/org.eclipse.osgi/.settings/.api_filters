@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.osgi" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter comment="Bug 511593: Issue resolving split packages" id="924844039">
+            <message_arguments>
+                <message_argument value="3.11.3"/>
+                <message_argument value="3.11.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="container/src/org/eclipse/osgi/container/ModuleWiring.java" type="org.eclipse.osgi.container.ModuleWiring">
+        <filter comment="Bug 511593: Issue resolving split packages" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.12"/>
+                <message_argument value="3.11"/>
+                <message_argument value="getSubstitutionWires()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>
