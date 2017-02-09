@@ -1502,6 +1502,11 @@ final class ModuleResolver {
 			}
 			adaptor.getResolverExecutor().execute(command);
 		}
+
+		@Override
+		public Collection<Wire> getSubstitutionWires(Wiring wiring) {
+			return ((ModuleWiring) wiring).getSubstitutionWires();
+		}
 	}
 
 	protected boolean threadResolving() {

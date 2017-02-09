@@ -14,7 +14,6 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
-import org.apache.felix.resolver.FelixWiring;
 import org.eclipse.osgi.container.ModuleRevisionBuilder.GenericInfo;
 import org.eclipse.osgi.internal.container.AtomicLazyInitializer;
 import org.eclipse.osgi.internal.container.InternalUtils;
@@ -29,7 +28,7 @@ import org.osgi.resource.*;
  * An implementation of {@link BundleWiring}.
  * @since 3.10
  */
-public final class ModuleWiring implements BundleWiring, FelixWiring {
+public final class ModuleWiring implements BundleWiring {
 	class LoaderInitializer implements Callable<ModuleLoader> {
 		@Override
 		public ModuleLoader call() throws Exception {
@@ -455,11 +454,7 @@ public final class ModuleWiring implements BundleWiring, FelixWiring {
 		}
 	}
 
-	/**
-	 * @since 3.12
-	 */
-	@Override
-	public Collection<Wire> getSubstitutionWires() {
+	Collection<Wire> getSubstitutionWires() {
 		if (substitutedPkgNames.isEmpty()) {
 			return Collections.emptyList();
 		}
