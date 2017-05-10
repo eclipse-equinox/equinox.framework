@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2016 IBM Corporation and others.
+ * Copyright (c) 2004, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -241,9 +241,17 @@ public class BundleLoader extends ModuleLoader {
 
 		if (classloader.compareAndSet(null, result)) {
 			// only send to hooks if this thread wins in creating the class loader.
-			for (ClassLoaderHook hook : hooks) {
-				hook.classLoaderCreated(result);
-			}
+			final ModuleClassLoader cl = result;
+			// protect with doPriv to avoid bubbling up permission checks that hooks may require
+			AccessController.doPrivileged(new PrivilegedAction<Object>() {
+				@Override
+				public Object run() {
+					for (ClassLoaderHook hook : hooks) {
+						hook.classLoaderCreated(cl);
+					}
+					return null;
+				}
+			});
 		} else {
 			result = classloader.get();
 			if (debug.DEBUG_LOADER) {
