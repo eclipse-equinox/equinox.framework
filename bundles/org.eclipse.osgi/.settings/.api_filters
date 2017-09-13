@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.osgi" version="2">
+    <resource path="container/src/org/eclipse/osgi/container/ModuleDatabase.java" type="org.eclipse.osgi.container.ModuleDatabase">
+        <filter comment="Backport API to 3.12" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.13"/>
+                <message_argument value="3.12"/>
+                <message_argument value="getAndIncrementNextId()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="container/src/org/eclipse/osgi/container/ModuleRevisionBuilder.java" type="org.eclipse.osgi.container.ModuleRevisionBuilder">
+        <filter comment="Backport API to 3.12" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.13"/>
+                <message_argument value="3.12"/>
+                <message_argument value="getId()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Backport API to 3.12" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.13"/>
+                <message_argument value="3.12"/>
+                <message_argument value="setId(long)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>
