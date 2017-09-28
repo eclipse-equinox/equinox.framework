@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.eclipse.osgi" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter comment="Backported Java 9 work" id="924844039">
+            <message_arguments>
+                <message_argument value="3.12.50"/>
+                <message_argument value="3.12.0"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Backported Java 9" id="924844039">
+            <message_arguments>
+                <message_argument value="3.12.50"/>
+                <message_argument value="3.12.1"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="container/src/org/eclipse/osgi/container/ModuleDatabase.java" type="org.eclipse.osgi.container.ModuleDatabase">
         <filter comment="Backport API to 3.12" id="1141899266">
             <message_arguments>
