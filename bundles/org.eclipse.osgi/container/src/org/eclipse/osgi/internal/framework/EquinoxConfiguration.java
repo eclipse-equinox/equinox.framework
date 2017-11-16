@@ -120,10 +120,6 @@ public class EquinoxConfiguration implements EnvironmentInfo {
 	public static final String PROP_JVM_OS_VERSION = "os.version"; //$NON-NLS-1$
 	public static final String PROP_JVM_SPEC_VERSION = "java.specification.version"; //$NON-NLS-1$
 	public static final String PROP_JVM_SPEC_NAME = "java.specification.name"; //$NON-NLS-1$
-	// J2ME configuration property name
-	public static final String PROP_J2ME_MICROEDITION_CONFIGURATION = "microedition.configuration"; //$NON-NLS-1$
-	// J2ME profile property name
-	public static final String PROP_J2ME_MICROEDITION_PROFILES = "microedition.profiles"; //$NON-NLS-1$
 
 	public static final String PROP_SETPERMS_CMD = "osgi.filepermissions.command"; //$NON-NLS-1$
 	public static final String PROP_DEBUG = "osgi.debug"; //$NON-NLS-1$
