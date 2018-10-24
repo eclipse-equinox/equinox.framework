@@ -2764,7 +2764,9 @@ public class SystemBundleTests extends AbstractBundleTests {
 			for (Map<String, String> entryMap : entries) {
 				for (Map.Entry<String, String> entry : entryMap.entrySet()) {
 					jos.putNextEntry(new JarEntry(entry.getKey()));
-					jos.write(entry.getValue().getBytes());
+					if (entry.getValue() != null) {
+						jos.write(entry.getValue().getBytes());
+					}
 					jos.closeEntry();
 				}
 			}
