@@ -105,7 +105,7 @@ public final class ModuleContainer implements DebugOptionsListener {
 		this.moduleDatabase = moduledataBase;
 		this.frameworkWiring = new ContainerWiring();
 		this.frameworkStartLevel = new ContainerStartLevel();
-		long tempModuleLockTimeout = 5;
+		long tempModuleLockTimeout = 30;
 		String moduleLockTimeoutProp = adaptor.getProperty(EquinoxConfiguration.PROP_MODULE_LOCK_TIMEOUT);
 		if (moduleLockTimeoutProp != null) {
 			try {
@@ -115,7 +115,7 @@ public final class ModuleContainer implements DebugOptionsListener {
 					tempModuleLockTimeout = 1;
 				}
 			} catch (NumberFormatException e) {
-				// will default to 5
+				// will default to 30
 			}
 		}
 		this.moduleLockTimeout = tempModuleLockTimeout;
