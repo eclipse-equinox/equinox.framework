@@ -287,13 +287,14 @@ public abstract class NLS {
 	 */
 	private static String getAdditionalSuffix(String nl) {
 		String additional = null;
-		switch (nl) {
-			case "he": //$NON-NLS-1$
+		if (nl != null) {
+			if ("he".equals(nl)) { //$NON-NLS-1$
 				additional = "iw"; //$NON-NLS-1$
-				break;
-			default:
-				break;
+			} else if (nl.startsWith("he" + '_')) { //$NON-NLS-1$
+				additional = "iw" + '_' + nl.substring(3); //$NON-NLS-1$
+			}
 		}
+
 		return additional;
 	}
 
