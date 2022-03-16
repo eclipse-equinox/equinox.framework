@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2021 IBM Corporation and others.
+ * Copyright (c) 2005, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -261,6 +261,10 @@ public abstract class NLS {
 			int lastSeparator;
 			while (true) {
 				result.add('_' + nl + EXTENSION);
+				String additional = getAdditionalSuffix(nl);
+				if (additional != null) {
+					result.add('_' + additional + EXTENSION);
+				}
 				lastSeparator = nl.lastIndexOf('_');
 				if (lastSeparator == -1)
 					break;
@@ -275,6 +279,23 @@ public abstract class NLS {
 		for (int i = 0; i < variants.length; i++)
 			variants[i] = root + nlSuffixes[i];
 		return variants;
+	}
+
+	/*
+	 * This is a temporary fix due to
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=579215 This needs to be removed
+	 * once the Eclipse minimum support moves to Java 17
+	 */
+	private static String getAdditionalSuffix(String nl) {
+		String additional = null;
+		switch (nl) {
+			case "he": //$NON-NLS-1$
+				additional = "iw"; //$NON-NLS-1$
+				break;
+			default:
+				break;
+		}
+		return additional;
 	}
 
 	private static void computeMissingMessages(String bundleName, Class<?> clazz, Map<Object, Object> fieldMap, Field[] fieldArray, boolean isAccessible) {
