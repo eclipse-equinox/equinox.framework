@@ -282,9 +282,8 @@ public abstract class NLS {
 	}
 
 	/*
-	 * This is a temporary fix due to
-	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=579215 This needs to be removed
-	 * once the Eclipse minimum support moves to Java 17
+	 * This is a fix due to https://bugs.eclipse.org/bugs/show_bug.cgi?id=579215
+	 * Ideally, this needs to be removed once the Eclipse minimum support moves to Java 17
 	 */
 	private static String getAdditionalSuffix(String nl) {
 		String additional = null;
