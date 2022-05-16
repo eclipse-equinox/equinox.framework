@@ -107,6 +107,7 @@ public class ReliableFile {
 	private static File lastGenerationFile = null;
 	private static int[] lastGenerations = null;
 	private static final Object lastGenerationLock = new Object();
+	private static final int MAX_TEMP_NUM = 100000;
 	private static final AtomicInteger nextTemp = new AtomicInteger(1);
 
 	static {
@@ -713,20 +714,16 @@ public class ReliableFile {
 		if (suffix == null) {
 			suffix = ".tmp"; //$NON-NLS-1$
 		}
-		File f;
-		do {
-			// just increments a global integer between 1 and 100000
-			f = new File(directory, prefix + nextTemp.getAndUpdate(n -> {
-				if (n > 100000) {
-					return 1;
-				}
-				return n + 1;
+		for (int i = 0; i < MAX_TEMP_NUM; i++) {
+			File f = new File(directory, prefix + nextTemp.getAndUpdate(n -> {
+				int next = n + 1;
+				return next > MAX_TEMP_NUM ? 1 : next;
 			}) + suffix);
-		} while (f.exists());
-		if (!f.createNewFile()) {
-			throw new IOException("Failed to create temporary file:" + f.getName()); //$NON-NLS-1$
+			if (f.createNewFile()) {
+				return f;
+			}
 		}
-		return f;
+		throw new IOException("Maximum number of attempts reached to create a temporary file."); //$NON-NLS-1$
 	}
 
 	/**
