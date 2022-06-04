@@ -28,6 +28,7 @@ import org.junit.runners.Suite;
 		XFriendsInternalResolverTest.class, //
 		GenericCapabilityTest.class, //
 		OSGiCapabilityTest.class, //
-		DevModeTest.class })
+		DevModeTest.class, //
+		LazyServiceComponentActivationDeadLockTest.class })
 public class AllTests {
 }
