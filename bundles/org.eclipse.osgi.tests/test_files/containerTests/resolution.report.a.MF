@@ -1,2 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: resolution.report.a; singleton:=true

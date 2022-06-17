@@ -1,4 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: singleton1; singleton:=true
-Bundle-Version: 1.0.0
-Export-Package: singleton.a

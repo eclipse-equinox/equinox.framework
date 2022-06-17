@@ -1,5 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: resolution.report.f
-Export-Package: resolution.report.f
-Require-Capability: does.not.exist
-

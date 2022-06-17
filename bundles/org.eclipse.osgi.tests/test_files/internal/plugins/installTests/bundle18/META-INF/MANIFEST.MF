@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: bundle18
-Bundle-SymbolicName: bundle18
-Fragment-Host: system.bundle; extension:=bootclasspath

@@ -1,4 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: ee1
-Bundle-Version: 1.0.0
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6

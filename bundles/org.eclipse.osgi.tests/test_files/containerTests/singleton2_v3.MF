@@ -1,4 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: singleton2
-Bundle-Version: 3.0.0
-Import-Package: singleton.c

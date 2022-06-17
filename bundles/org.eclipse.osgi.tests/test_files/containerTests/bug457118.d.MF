@@ -1,5 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: d
-Bundle-Version: 1.0.0
-Export-Package: 
- d; version=1.0

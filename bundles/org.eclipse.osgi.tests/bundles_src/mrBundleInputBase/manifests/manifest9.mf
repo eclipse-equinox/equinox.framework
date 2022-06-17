@@ -1,2 +1,0 @@
-Import-Package: pkg9
-Require-Capability: cap9
