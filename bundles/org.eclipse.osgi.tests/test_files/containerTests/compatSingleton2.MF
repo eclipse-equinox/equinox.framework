@@ -1,4 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: compatSingleton2; singleton=false
-Bundle-Version: 1.0.0
-

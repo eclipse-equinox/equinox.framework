@@ -1,4 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: sub2
-Bundle-Version: 1.0.0
-Import-Package: org.osgi.framework, sub1.a; version="[1.0, 2.0)"

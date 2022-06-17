@@ -1,4 +1,0 @@
-Bundle-SymbolicName: test.bug438904.global
-Bundle-Version: 1.0
-Eclipse-BuddyPolicy: global
-

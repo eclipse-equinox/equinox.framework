@@ -1,4 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: resolution.report.e
-Export-Package: resolution.report.e
-

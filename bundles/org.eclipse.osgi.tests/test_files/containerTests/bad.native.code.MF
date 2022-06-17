@@ -1,5 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: bad.native.code
-Bundle-Version: 1.0.0
-Bundle-NativeCode: *
-

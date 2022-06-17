@@ -1,3 +1,0 @@
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: resolution.report.b
-Import-Package: resolution.report.a

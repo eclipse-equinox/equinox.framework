@@ -1,2 +1,0 @@
-Import-Package: pkg11
-Require-Capability: cap11
